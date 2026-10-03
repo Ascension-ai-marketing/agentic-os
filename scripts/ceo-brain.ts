@@ -40,13 +40,18 @@ type Access = { apiKey: string; model: string; /** For a key that is not tied to
 const claude = (access: Access) =>
   new Anthropic({ apiKey: access.apiKey, fetch: access.fetcher, maxRetries: 1, timeout: 60_000, defaultHeaders: access.workspaceId ? { "anthropic-workspace-id": access.workspaceId } : undefined });
 
-/** Why this key cannot use this model, in the API's own words, or "" when it can. Asked once at start, so a bad key shows up before anyone speaks. */
+/**
+ * Why the API turns this key away for this model, in its own words, or "" when it does not.
+ * Asked once at start, so a bad key shows up before anyone speaks. An outage is not a
+ * verdict on the key: being offline or overloaded for a moment answers "".
+ */
 export async function claudeProblem(access: Access): Promise<string> {
   try {
-    await claude(access).models.retrieve(access.model);
+    await claude(access).models.retrieve(access.model, undefined, { maxRetries: 0, timeout: 10_000 });
     return "";
   } catch (e) {
     if (!(e instanceof Anthropic.APIError)) throw e;
+    if (![400, 401, 403, 404].includes(e.status ?? 0)) return "";
     const detail = (e.error as { error?: { message?: string } } | undefined)?.error?.message;
     return (detail || e.message).slice(0, 300);
   }
@@ -58,6 +63,8 @@ export function anthropicReply(options: Access & {
   system: string;
   /** What changes between turns (the time, what is waiting). Read once per spoken turn. */
   context?: () => string;
+  /** The scripted first message, for a transcript that does not carry it. */
+  greeting?: string;
   tools?: Anthropic.Tool[]; runTool?: RunTool;
   effort?: "low" | "medium" | "high";
   /** Sonnet 5.5 only: no thinking before the first words, only between tool calls. */
@@ -67,8 +74,9 @@ export function anthropicReply(options: Access & {
   const client = claude(options);
   const rounds = options.maxRounds ?? 5;
   return async function* (transcript, signal) {
-    const { opening, messages } = toMessages(transcript);
+    const { opening: spoken, messages } = toMessages(transcript);
     if (!messages.length) return;
+    const opening = spoken || options.greeting || "";
     // Built once per spoken turn: a system prompt that changed between tool rounds would invalidate that turn's thinking.
     const live = [options.context?.(), opening && OPENING + opening].filter(Boolean).join("\n\n");
     const system: Anthropic.TextBlockParam[] = [{ type: "text", text: options.system, cache_control: { type: "ephemeral" } }, ...(live ? [{ type: "text" as const, text: live }] : [])];

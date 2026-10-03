@@ -104,9 +104,9 @@ export function openAiReply(options: { apiKey: string; model: string; system: st
 }
 
 /** The voice's Claude brain: the CEO persona, the saved profile and read-only OS lookups. */
-export function ceoReply(options: { root: string; apiKey: string; model: string; workspaceId?: string; effort?: string; betweenTools?: boolean; log?: (line: string) => void }): Reply {
+export function ceoReply(options: { root: string; apiKey: string; model: string; workspaceId?: string; greeting?: string; effort?: string; betweenTools?: boolean; log?: (line: string) => void }): Reply {
   return anthropicReply({
-    apiKey: options.apiKey, model: options.model, workspaceId: options.workspaceId, log: options.log, betweenTools: options.betweenTools, ...brainTools(),
+    apiKey: options.apiKey, model: options.model, workspaceId: options.workspaceId, greeting: options.greeting, log: options.log, betweenTools: options.betweenTools, ...brainTools(),
     system: `${CEO_PERSONA}\n\n${profileContext(options.root)}`,
     context: () => `It is ${new Date().toLocaleString("en-GB", { dateStyle: "full", timeStyle: "short" })} where the person is.`,
     effort: options.effort === "medium" || options.effort === "high" ? options.effort : "low",
@@ -128,6 +128,8 @@ export function startBrain(options: {
     onTranscript(transcript, signal, session) {
       const heard = transcript.at(-1);
       if (heard?.role === "user") log(`heard: ${heard.content}`);
+      // Shows, on the first turns, whether the spoken greeting arrives as part of the transcript.
+      if (transcript.length < 3) log(`turns so far: ${transcript.map((turn) => turn.role).join(", ")}`);
       session.sendResponse((async function* () {
         try { yield* options.reply(transcript, signal); }
         catch (e) {
@@ -230,7 +232,7 @@ if (import.meta.main) {
       if (problem) { console.error(`\nClaude cannot answer yet: ${problem}\nUsing gpt-4.1-mini, without OS lookups, until ANTHROPIC_API_KEY in ~/.config/agentic-os.env is fixed.`); model = "gpt-4.1-mini"; }
     }
     const reply = model.startsWith("claude")
-      ? ceoReply({ root: ROOT, ...claude, model, log, effort: providerKey(ROOT, "SPEECH_ENGINE_EFFORT"), betweenTools: providerKey(ROOT, "SPEECH_ENGINE_THINKING") === "between_tools" })
+      ? ceoReply({ root: ROOT, ...claude, model, log, greeting: firstMessage, effort: providerKey(ROOT, "SPEECH_ENGINE_EFFORT"), betweenTools: providerKey(ROOT, "SPEECH_ENGINE_THINKING") === "between_tools" })
       : openAiReply({ apiKey: openAiKey || stop("Add OPENAI_API_KEY to ~/.config/agentic-os.env for the model that answers."), model, system: `${firstMessage ? `${GREETED}\n\n` : ""}${PERSONA}\n\n${profileContext(ROOT)}` });
     await startBrain({ engineId, apiKey, reply, port: 3001, debug: process.argv.includes("--debug"), log });
     await startPage({ engineId, apiKey, port: 3002, firstMessage });

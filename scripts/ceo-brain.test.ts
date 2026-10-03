@@ -138,6 +138,26 @@ test("a key that cannot use the model is reported in the API's words, and a work
   expect(headers).toEqual([null, "wrkspc_fixture"]);
 });
 
+test("an outage at start is not held against the key", async () => {
+  const overloaded = async () => Response.json({ type: "error", error: { type: "overloaded_error", message: "Overloaded" } }, { status: 529 });
+  expect(await claudeProblem({ apiKey, model: "fixture-model", fetcher: overloaded })).toBe("");
+  const offline = async (): Promise<Response> => { throw new TypeError("fetch failed"); };
+  expect(await claudeProblem({ apiKey, model: "fixture-model", fetcher: offline })).toBe("");
+  const revoked = async () => Response.json({ type: "error", error: { type: "authentication_error", message: "invalid x-api-key" } }, { status: 401 });
+  expect(await claudeProblem({ apiKey, model: "fixture-model", fetcher: revoked })).toBe("invalid x-api-key");
+});
+
+test("the saved greeting stands in when the transcript does not carry it", async () => {
+  const { sent, fetcher } = model(response("end_turn", text(0, "Very good.")), response("end_turn", text(0, "Very good.")));
+  const reply = anthropicReply({ apiKey, model: "fixture-model", system: "persona", greeting: "All systems are online, sir.", fetcher });
+  await spoken(reply([{ role: "user", content: "Yes, proceed." }], signal()));
+  expect(sent[0].system[1].text).toContain("All systems are online, sir.");
+  expect(sent[0].messages).toEqual([{ role: "user", content: "Yes, proceed." }]);
+  await spoken(reply([{ role: "agent", content: "What was actually said." }, { role: "user", content: "Yes, proceed." }], signal()));
+  expect(sent[1].system[1].text).toContain("What was actually said.");
+  expect(sent[1].system[1].text).not.toContain("All systems are online, sir.");
+});
+
 test("lookups go to the local OS route with its token, and only read", async () => {
   const seen: { url: string; init?: RequestInit }[] = [];
   const request = async (url: string, init?: RequestInit) => {

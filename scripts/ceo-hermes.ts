@@ -4,9 +4,11 @@
  * Hands work to Hermes through its task board and reads it back. The always-on
  * Hermes gateway picks a card up within a minute and runs it as the profile it is
  * assigned to. This file only ever assigns "ceo-worker", and only while that
- * profile's own settings keep it to files, web reading and notes: the narrow tool
- * list is what stops a worker from sending, posting or running commands, so a
- * missing or widened list turns dispatch off.
+ * profile's own settings hold it in: a short tool list that never has files and
+ * the web together, and a hook that refuses every tool but the worker's own.
+ * Hermes gives each board worker tools that hand work to other profiles whatever
+ * its tool list says, so the list alone does not stop it. Anything missing or
+ * widened turns dispatch off.
  *
  * CLI contracts verified against the installed Hermes source (hermes_cli/kanban_parser.py, kanban_output.py).
  */
@@ -20,8 +22,17 @@ import { loadKnownSecrets, redactSecrets, setKnownSecrets } from "./hermes-progr
 import type { CeoTaskStatus } from "./ceo-store";
 
 export const WORKER = "ceo-worker";
-/** Everything a worker may be given: files, reading the web, and its own notes and skills. */
-const ALLOWED_TOOLSETS = ["file", "web", "memory", "skills", "todo", "session_search", "clarify", "vision"];
+/** Everything a worker may be given: files or reading the web (never both), and its own notes and skills. "no_mcp" keeps connected services out. */
+const ALLOWED_TOOLSETS = ["file", "web", "memory", "skills", "todo", "session_search", "clarify", "vision", "no_mcp"];
+/** The one hook command whose effect is known without reading another file: it always refuses. */
+const BLOCK_COMMAND = '/bin/sh -c "exit 2"';
+/** The reviewed shape of the hook's pattern: it fires for every tool that is not on its list, so a tool Hermes adds later is refused too. */
+const BLOCK_ALL_BUT = /^\(\?!\(\?:([a-z0-9_]+(?:\|[a-z0-9_]+)*)\)\$\)\.\+$/;
+/** What a worker needs to read its card and end it, and the board tools it may keep. Every other board tool hands work to another profile or pulls files into a card. */
+const CARD_TOOLS = ["kanban_show", "kanban_complete", "kanban_block"];
+const BOARD_TOOLS = [...CARD_TOOLS, "kanban_comment", "kanban_heartbeat"];
+/** Never let through, whatever the tool list says: commands, code, other agents, schedules, connections. */
+const NEVER = ["terminal", "execute_code", "delegate_task", "cronjob_manage", "manage_connections"];
 const NOT_SET_UP = `Hermes has no "${WORKER}" profile yet, so nothing can be handed to it until that is set up.`;
 /** Goes first in every card: the worker has no way to act outside, and is told what to do instead of trying. */
 const RULES =
@@ -59,6 +70,13 @@ function cardStatus(card: { status?: unknown; last_failure_error?: unknown }): C
   return status === "running" || status === "review" ? "running" : "queued";
 }
 
+/** The tools a hook entry lets through, when it is the reviewed block: failing closed, the refusing command, the list-shaped pattern. */
+function letsThrough(hook: any): string[] | undefined {
+  if (hook?.fail_closed !== true || typeof hook.command !== "string" || hook.command.trim() !== BLOCK_COMMAND || typeof hook.matcher !== "string") return undefined;
+  return BLOCK_ALL_BUT.exec(hook.matcher.trim())?.[1].split("|");
+}
+const safeList = (tools: string[]) => tools.every((tool) => !NEVER.includes(tool) && (!tool.startsWith("kanban_") || BOARD_TOOLS.includes(tool)));
+
 /** Why the worker blocked its card. Hermes records it as an object, or as that object written out as text. */
 function blockReason(payload: unknown): string {
   let data = payload;
@@ -82,6 +100,14 @@ export function hermesBoard(options: { root: string; home?: string; run?: Run })
     try { return JSON.parse(stdout); } catch { throw new Error("Hermes answered with something unreadable."); }
   }
 
+  /** Whether the worker's own environment file switches a setting on. Only that setting's lines are looked at. */
+  function envSet(name: string): boolean {
+    let text = "";
+    try { text = readFileSync(join(home, ".hermes", "profiles", WORKER, ".env"), "utf8"); } catch { return false; }
+    return [...text.matchAll(new RegExp(`^[ \\t]*(?:export[ \\t]+)?${name}[ \\t]*=[ \\t]*(.*)$`, "gm"))]
+      .some((line) => !/^(?:|0|false|no|off)$/i.test(line[1].trim().replace(/^["']|["']$/g, "")));
+  }
+
   /** Why nothing may be handed to the worker right now, or "" when it may. */
   function workerProblem(): string {
     const file = join(home, ".hermes", "profiles", WORKER, "config.yaml");
@@ -93,10 +119,18 @@ export function hermesBoard(options: { root: string; home?: string; run?: Run })
     if (!Array.isArray(tools) || !tools.length) return `The "${WORKER}" profile has no tool list of its own, so it would start with every tool. Nothing is handed out until it is narrowed.`;
     const extra = tools.filter((name) => !ALLOWED_TOOLSETS.includes(name));
     if (extra.length) return `The "${WORKER}" profile allows ${extra.join(", ")}, which a background worker must not have. Nothing is handed out until that is removed.`;
+    if (tools.includes("file") && tools.includes("web")) return `The "${WORKER}" profile has both files and the web, so a page it reads could have it send a file out. Nothing is handed out until one of them is removed.`;
     if (config.mcp_servers && Object.keys(config.mcp_servers).length) return `The "${WORKER}" profile has connected services, which a background worker must not have. Nothing is handed out until they are removed.`;
     const approvals = config.approvals ?? {};
     if (approvals.mode === "off" || ["single_query_mode", "cron_mode", "unattended_mode"].some((mode) => approvals[mode] !== undefined && approvals[mode] !== "deny"))
       return `The "${WORKER}" profile approves risky steps on its own. Nothing is handed out until that is set back to deny.`;
+    if (config.security?.allow_private_urls || config.browser?.allow_private_urls || envSet("HERMES_ALLOW_PRIVATE_URLS"))
+      return `The "${WORKER}" profile may open this computer's own addresses, which a background worker must not. Nothing is handed out until that is switched off.`;
+    if (envSet("HERMES_SAFE_MODE")) return `The "${WORKER}" profile has HERMES_SAFE_MODE set, which switches its block on other tools off. Nothing is handed out until that line is removed.`;
+    // Hermes refuses a tool when any hook does, so one safe block is enough, and every block must leave the card tools.
+    const blocks = (Array.isArray(config.hooks?.pre_tool_call) ? config.hooks.pre_tool_call : []).map(letsThrough).filter((list: string[] | undefined): list is string[] => !!list);
+    if (!blocks.some(safeList)) return `The "${WORKER}" profile has no block on the tools a background worker must not use, such as handing work to other agents. Nothing is handed out until that hook is in place.`;
+    if (!blocks.every((list: string[]) => CARD_TOOLS.every((tool) => list.includes(tool)))) return `The "${WORKER}" profile's block also refuses the tools for its own card, so it could not end its own card. Nothing is handed out until that is fixed.`;
     return "";
   }
 

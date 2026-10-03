@@ -7,10 +7,14 @@ import { hermesBoard, WORKER, type Run } from "./ceo-hermes";
 const folders: string[] = [];
 afterEach(() => { for (const folder of folders.splice(0)) rmSync(folder, { recursive: true, force: true }); });
 
-const NARROW = "platform_toolsets:\n  cli:\n    - file\n    - web\n    - memory\n    - skills\n    - todo\n    - session_search\napprovals:\n  single_query_mode: deny\n  cron_mode: deny\n  unattended_mode: deny\n";
+const TOOLS = "web_search|web_extract|todo_list|kanban_show|kanban_complete|kanban_block|kanban_comment|kanban_heartbeat";
+const DENY = "approvals:\n  single_query_mode: deny\n  cron_mode: deny\n  unattended_mode: deny\n";
+/** The block on every tool but the worker's own, as Hermes reads it from the profile. */
+const hook = (tools = TOOLS) => `hooks:\n  pre_tool_call:\n    - matcher: '(?!(?:${tools})$).+'\n      command: '/bin/sh -c "exit 2"'\n      timeout: 5\n      fail_closed: true\n`;
+const NARROW = `platform_toolsets:\n  cli:\n    - web\n    - todo\n    - no_mcp\n${DENY}${hook()}`;
 
 /** A Hermes that is never started: a made-up home folder and a stand-in for the command. */
-function fixture(profile?: string, answer: (args: string[]) => { code?: number; stdout?: string; stderr?: string } = () => ({})) {
+function fixture(profile?: string, answer: (args: string[]) => { code?: number; stdout?: string; stderr?: string } = () => ({}), env?: string) {
   const root = mkdtempSync(join(tmpdir(), "ceo-hermes-root-")), home = mkdtempSync(join(tmpdir(), "ceo-hermes-home-"));
   folders.push(root, home);
   mkdirSync(join(home, ".hermes"), { recursive: true });
@@ -18,6 +22,7 @@ function fixture(profile?: string, answer: (args: string[]) => { code?: number; 
   if (profile !== undefined) {
     mkdirSync(join(home, ".hermes", "profiles", WORKER), { recursive: true });
     writeFileSync(join(home, ".hermes", "profiles", WORKER, "config.yaml"), profile);
+    if (env !== undefined) writeFileSync(join(home, ".hermes", "profiles", WORKER, ".env"), env);
   }
   const calls: { args: string[]; input?: string }[] = [];
   const run: Run = async (args, options) => {
@@ -35,23 +40,54 @@ test("nothing is handed out until the worker profile exists", async () => {
   expect(calls).toHaveLength(0);
 });
 
-test("a worker profile that is missing its tool list, or is wider than files and reading, turns dispatch off", async () => {
+test("a worker profile that is missing its tool list, is wider than a worker may be, or has no block on other tools turns dispatch off", async () => {
   for (const [profile, why] of [
     ["model: sample-model\n", "no tool list of its own"],
     ["platform_toolsets:\n  cli: []\n", "no tool list of its own"],
     ["platform_toolsets: [not: valid: yaml\n", "no tool list of its own"],
-    ["platform_toolsets:\n  cli:\n    - file\n    - terminal\n    - browser\n", "allows terminal, browser"],
+    [`platform_toolsets:\n  cli:\n    - file\n    - terminal\n    - browser\n${hook()}`, "allows terminal, browser"],
+    // A page it reads could have it send a file out.
+    [`platform_toolsets:\n  cli:\n    - file\n    - web\n${DENY}${hook()}`, "both files and the web"],
     [`${NARROW}mcp_servers:\n  mail:\n    command: sample\n`, "connected services"],
     [NARROW.replace("cron_mode: deny", "cron_mode: approve"), "approves risky steps on its own"],
-    ["platform_toolsets:\n  cli:\n    - file\napprovals:\n  mode: \"off\"\n", "approves risky steps on its own"],
+    [`platform_toolsets:\n  cli:\n    - web\napprovals:\n  mode: "off"\n${hook()}`, "approves risky steps on its own"],
+    [`${NARROW}security:\n  allow_private_urls: true\n`, "this computer's own addresses"],
+    [`${NARROW}browser:\n  allow_private_urls: true\n`, "this computer's own addresses"],
+    // The block: missing, failing open, another command, another shape, or with an opening to hand work on or run commands.
+    [NARROW.replace(hook(), ""), "no block on the tools"],
+    [NARROW.replace("fail_closed: true", "fail_closed: false"), "no block on the tools"],
+    [NARROW.replace("      fail_closed: true\n", ""), "no block on the tools"],
+    [NARROW.replace('/bin/sh -c "exit 2"', "~/bin/check-tool.sh"), "no block on the tools"],
+    [NARROW.replace(`'(?!(?:${TOOLS})$).+'`, "'kanban_create|terminal'"), "no block on the tools"],
+    [NARROW.replace(`'(?!(?:${TOOLS})$).+'`, `'(?!(?:${TOOLS})).+'`), "no block on the tools"],
+    [NARROW.replace("pre_tool_call", "post_tool_call"), "no block on the tools"],
+    [NARROW.replace(hook(), hook(`${TOOLS}|kanban_create`)), "no block on the tools"],
+    [NARROW.replace(hook(), hook(`${TOOLS}|kanban_request_review`)), "no block on the tools"],
+    [NARROW.replace(hook(), hook(`${TOOLS}|kanban_attach_url`)), "no block on the tools"],
+    [NARROW.replace(hook(), hook(`${TOOLS}|terminal`)), "no block on the tools"],
+    [NARROW.replace(hook(), hook("web_search|web_extract|kanban_show|kanban_block")), "could not end its own card"],
   ] as const) {
     const { board, calls } = fixture(profile);
     expect(board.workerProblem()).toContain(why);
     await expect(board.dispatch(dispatch)).rejects.toThrow(why);
     expect(calls).toHaveLength(0);
   }
+  // Settings in the profile's own environment file that would undo the block.
+  for (const [env, why] of [
+    ["SAMPLE_API_TOKEN=fixtureonlysecretvalue\nHERMES_SAFE_MODE=1\n", "HERMES_SAFE_MODE"],
+    ["export HERMES_ALLOW_PRIVATE_URLS = \"true\"\n", "this computer's own addresses"],
+  ] as const) {
+    const { board, calls } = fixture(NARROW, undefined, env);
+    expect(board.workerProblem()).toContain(why);
+    expect(board.workerProblem()).not.toContain("fixtureonlysecretvalue");
+    await expect(board.dispatch(dispatch)).rejects.toThrow(why);
+    expect(calls).toHaveLength(0);
+  }
   expect(fixture(NARROW).board.workerProblem()).toBe("");
-  expect(fixture("platform_toolsets:\n  cli:\n    - file\n    - web\n").board.workerProblem()).toBe("");
+  expect(fixture(NARROW, undefined, "# Keys for this profile\nSAMPLE_API_TOKEN=fixtureonlysecretvalue\n# HERMES_SAFE_MODE=1\nHERMES_SAFE_MODE=\n").board.workerProblem()).toBe("");
+  // A worker with files and no web passes the same checks.
+  const files = `platform_toolsets:\n  cli:\n    - file\n    - todo\n    - no_mcp\n${DENY}${hook("read_file|write_file|patch|search_files|todo_list|kanban_show|kanban_complete|kanban_block|kanban_comment|kanban_heartbeat")}`;
+  expect(fixture(files).board.workerProblem()).toBe("");
 });
 
 test("a card goes to the worker only, with its rules first, the task on standard input and no approvals switched off", async () => {

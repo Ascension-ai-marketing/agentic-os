@@ -81,7 +81,6 @@ export function ceoSync(options: {
   /** A caller that gives up stops its own wait; the refresh carries on for the others. */
   function until(work: Promise<void>, signal?: AbortSignal): Promise<void> {
     if (!signal) return work;
-    if (signal.aborted) return Promise.resolve();
     return new Promise((done, fail) => {
       const stop = () => done();
       signal.addEventListener("abort", stop, { once: true });
@@ -93,6 +92,8 @@ export function ceoSync(options: {
   return {
     /** Brings unfinished work up to date. Calls close together share one refresh; "force" skips the pause between refreshes. */
     refresh(signal?: AbortSignal, force = false): Promise<void> {
+      // A caller that has already given up starts nothing.
+      if (signal?.aborted) return Promise.resolve();
       if (!running) {
         if (!force && now() < next) return Promise.resolve();
         next = now() + gap;

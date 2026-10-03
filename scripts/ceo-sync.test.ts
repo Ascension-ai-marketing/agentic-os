@@ -114,13 +114,36 @@ test("records that cannot be read are told to a caller who could have given up, 
   const { board, jobs } = fixture();
   const store = { tasks: () => { throw new Error("The CEO records could not be read. They were left untouched."); } } as unknown as CeoStore;
   const loose: unknown[] = [];
-  const seen = (reason: unknown) => { loose.push(reason); };
+  // Only this test's own error counts; another test's loose error is not this one's failure.
+  const seen = (reason: unknown) => { if (String(reason).includes("could not be read")) loose.push(reason); };
   process.on("unhandledRejection", seen);
   try {
     await expect(ceoSync({ store, board, jobs }).refresh(new AbortController().signal, true)).rejects.toThrow("could not be read");
     await new Promise((done) => setTimeout(done, 0));
     expect(loose).toEqual([]);
   } finally { process.off("unhandledRejection", seen); }
+});
+
+test("a caller that had already given up starts nothing and uses up no refresh", async () => {
+  const unreadable = { tasks: () => { throw new Error("The CEO records could not be read. They were left untouched."); } } as unknown as CeoStore;
+  const { store, world, board, jobs, hand } = fixture();
+  hand("hermes", "t_1");
+  const gaveUp = new AbortController();
+  gaveUp.abort();
+  const loose: unknown[] = [];
+  // Only this test's own error counts; another test's loose error is not this one's failure.
+  const seen = (reason: unknown) => { if (String(reason).includes("could not be read")) loose.push(reason); };
+  process.on("unhandledRejection", seen);
+  try {
+    await ceoSync({ store: unreadable, board, jobs }).refresh(gaveUp.signal, true);
+    await new Promise((done) => setTimeout(done, 0));
+    expect(loose).toEqual([]);
+  } finally { process.off("unhandledRejection", seen); }
+  const sync = ceoSync({ store, board, jobs });
+  await sync.refresh(gaveUp.signal);
+  expect(world.listed).toBe(0);
+  await sync.refresh();
+  expect(world.listed).toBe(1);
 });
 
 test("an agent that did not answer is asked again sooner", async () => {

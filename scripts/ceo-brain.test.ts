@@ -1,7 +1,13 @@
-import { expect, test } from "bun:test";
+import { afterEach, expect, test } from "bun:test";
 import Anthropic from "@anthropic-ai/sdk";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { anthropicReply, claudeProblem, toMessages } from "./ceo-brain";
+import type { HermesBoard, HermesCard } from "./ceo-hermes";
+import { ceoStore } from "./ceo-store";
 import { brainTools } from "./ceo-tools";
+import { ceoReply, type Turn } from "./speech-engine";
 
 const apiKey = "sk_unit_test_only_no_real_credentials";
 const signal = () => new AbortController().signal;
@@ -198,4 +204,146 @@ test("a stopped dashboard becomes a sentence the voice can say", async () => {
   await expect(runTool("os_lookup", { name: "inbox" }, signal())).rejects.toThrow("dashboard is not running");
   const refused = brainTools({ request: async (url) => (url.endsWith("/__token") ? Response.json({ token: "fixture-token-0123456789" }) : Response.json({ error: "Local workspace token required" }, { status: 403 })) });
   await expect(refused.runTool("os_lookup", { name: "inbox" }, signal())).rejects.toThrow("could not run the inbox lookup");
+});
+
+// The whole voice CEO: Claude (canned), the tools, the records and the yes-gate, in a temporary folder.
+const roots: string[] = [];
+afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
+const user = (content: string): Turn => ({ role: "user", content });
+const agent = (content: string): Turn => ({ role: "agent", content });
+const ACTION = "Email Dana Lee the March invoice";
+const QUESTION = "To confirm, sir: Email Dana Lee the March invoice. Yes or no?";
+const proposes = response("tool_use", toolUse(0, "toolu_1", "propose_external_action", JSON.stringify({ action: ACTION, detail: "Hello Dana, the March invoice is attached." })));
+const says = (words: string) => response("end_turn", text(0, words));
+
+function ceo(fetcher: Parameters<typeof ceoReply>[0]["fetcher"]) {
+  const root = mkdtempSync(join(tmpdir(), "ceo-reply-"));
+  roots.push(root);
+  const cards: HermesCard[] = [], tasks: string[] = [], logged: string[] = [];
+  const board: HermesBoard = {
+    workerProblem: () => "",
+    async dispatch(input) { tasks.push(input.task); cards.push({ id: `t_${cards.length + 1}`, title: input.title, status: "queued" }); return cards.at(-1)!; },
+    async cards() { return cards; },
+    async show(id) { return cards.find((card) => card.id === id)!; },
+  };
+  // No dashboard: nothing here may need it.
+  const request = async (): Promise<Response> => { throw new TypeError("fetch failed"); };
+  const reply = ceoReply({ root, apiKey, model: "fixture-model", fetcher, os: { request }, board, log: (line) => logged.push(line) });
+  return { root, store: ceoStore(root), tasks, logged, say: (transcript: Turn[], conversation = "conv-1", interrupt = signal()) => spoken(reply(transcript, interrupt, conversation)) };
+}
+const asks = [agent("Good evening, sir."), user("Email Dana the March invoice.")];
+
+test("an outside action is read back by code, and only the person's own yes approves it", async () => {
+  const { sent, fetcher } = model(proposes, says("Filed, sir."), says("Approved and waiting in the OS, sir."), says("As I said, sir."));
+  const { store, say, logged } = ceo(fetcher);
+  const first = await say(asks);
+  expect(first).toBe(`One moment, sir. Filed, sir. ${QUESTION}`);
+  expect(sent[0].tools.map((t: any) => t.name)).toEqual(["os_lookup", "search_memory", "task_status", "dispatch_agent", "propose_external_action", "list_pending"]);
+  expect(sent[0].system[0].text).toContain("File it with propose_external_action");
+  expect(sent[0].system[0].text).not.toContain("You cannot yet send");
+  expect(sent[0].system[1].text).toContain("Nothing is waiting for the person's approval.\nNo work is handed out.");
+  expect(sent[1].messages[2].content[0].content).toContain(`they will hear, word for word: "${QUESTION}"`);
+  expect(store.approvals()).toMatchObject([{ action: ACTION, status: "pending", conversationId: "conv-1" }]);
+
+  const answered = [...asks, agent(first), user("Yes.")];
+  expect(await say(answered)).toBe("Approved and waiting in the OS, sir.");
+  expect(store.approvals()).toMatchObject([{ action: ACTION, status: "approved", by: "voice" }]);
+  expect(sent[2].system[1].text).toContain(`The person has just said yes to: "${ACTION}". It is approved and recorded.`);
+  expect(sent[2].system[1].text).toContain("never say it was sent or done");
+  expect(sent[2].system[1].text).toContain("Nothing is waiting for the person's approval.");
+  expect(sent[2].system[0]).toEqual(sent[0].system[0]);
+  expect(logged).toContain(`approval approved: ${ACTION}`);
+
+  // The same turn delivered again changes nothing and asks nothing.
+  expect(await say(answered)).toBe("As I said, sir.");
+  expect(store.approvals()).toMatchObject([{ status: "approved", by: "voice" }]);
+  expect(sent[3].system[1].text).toContain("The person has just said yes to");
+});
+
+test("a no declines, and a yes in another conversation or after another action answers nothing", async () => {
+  const { sent, fetcher } = model(proposes, says("Filed, sir."), says("Very good."), says("Left alone, sir."));
+  const { store, say } = ceo(fetcher);
+  const first = await say(asks);
+  // Someone else's conversation hears nothing of it.
+  expect(await say([agent(first), user("Yes.")], "conv-2")).toBe("Very good.");
+  expect(sent[2].system[1].text).not.toContain("has just said");
+  expect(store.approvals()).toMatchObject([{ status: "pending" }]);
+
+  expect(await say([...asks, agent(first), user("No, leave it.")])).toBe("Left alone, sir.");
+  expect(store.approvals()).toMatchObject([{ status: "declined", by: "voice" }]);
+  expect(sent[3].system[1].text).toContain(`The person has just said no to: "${ACTION}". It is declined`);
+});
+
+test("a yes cannot approve an action the person did not hear; asked again and heard, it can", async () => {
+  const { sent, fetcher } = model(proposes, says("Filed, sir."), proposes, says("Asking again, sir."), says("Approved and waiting, sir."));
+  const { store, say, logged } = ceo(fetcher);
+  await say(asks);
+  // The person talked over the question: the record of what was spoken stops before the action.
+  const cut = [...asks, agent("One moment, sir. Filed, sir. To confirm, sir: Email"), user("Yes.")];
+  const again = await say(cut);
+  expect(store.approvals()).toMatchObject([{ status: "pending" }]);
+  expect(sent[2].system[1].text).toContain("did not count as a yes or a no");
+  expect(sent[2].system[1].text).toContain(`Waiting for the person's yes (1): "${ACTION}"`);
+  expect(logged).toContain(`approval still waiting, no plain yes or no: ${ACTION}`);
+  expect(again).toBe(`One moment, sir. Asking again, sir. ${QUESTION}`);
+  expect(store.approvals()).toHaveLength(1);
+
+  expect(await say([...cut, agent(again), user("Yes, go ahead.")])).toBe("Approved and waiting, sir.");
+  expect(store.approvals()).toMatchObject([{ status: "approved", by: "voice" }]);
+});
+
+test("talking over the reply leaves the action unasked, and the next yes approves nothing", async () => {
+  const interrupt = new AbortController();
+  let requests = 0;
+  const later = model(says("Still waiting on that, sir."));
+  const fetcher = async (url: RequestInfo | URL, init?: RequestInit) => {
+    if (++requests === 1) return new Response(proposes, { status: 200, headers: { "content-type": "text/event-stream" } });
+    if (requests === 2) { interrupt.abort(); throw new DOMException("The request was aborted.", "AbortError"); }
+    return later.fetcher(url, init);
+  };
+  const { store, say } = ceo(fetcher);
+  await expect(say(asks, "conv-1", interrupt.signal)).rejects.toBeInstanceOf(Anthropic.APIUserAbortError);
+  expect(store.approvals()).toMatchObject([{ status: "pending" }]);
+
+  expect(await say([...asks, agent("One moment, sir."), user("Yes.")])).toBe("Still waiting on that, sir.");
+  expect(store.approvals()).toMatchObject([{ status: "pending" }]);
+  expect(later.sent[0].system[1].text).not.toContain("has just said");
+  expect(later.sent[0].system[1].text).toContain(`Waiting for the person's yes (1): "${ACTION}"`);
+});
+
+test("an action already decided by the button is not changed by a later spoken answer", async () => {
+  const { sent, fetcher } = model(proposes, says("Filed, sir."), says("Already declined, sir."));
+  const { store, say } = ceo(fetcher);
+  const first = await say(asks);
+  store.resolve(store.approvals()[0].id, "declined", "button");
+  expect(await say([...asks, agent(first), user("Yes.")])).toBe("Already declined, sir.");
+  expect(store.approvals()).toMatchObject([{ status: "declined", by: "button" }]);
+  expect(sent[2].system[1].text).toContain(`"${ACTION}" had already been declined in the OS before the person answered aloud, and that stands.`);
+});
+
+test("work handed to an agent shows in the next reply's records and is not handed out twice", async () => {
+  const hands = response("tool_use", toolUse(0, "toolu_1", "dispatch_agent", JSON.stringify({ agent: "hermes", title: "Competitor pricing", task: "List three competitors and their prices." })));
+  const { sent, fetcher } = model(hands, says("Under way, sir."), says("Still queued, sir."), hands, says("Already under way, sir."));
+  const { store, say, tasks } = ceo(fetcher);
+  const researches = [user("Research competitor pricing.")];
+  expect(await say(researches)).toBe("One moment, sir. Under way, sir.");
+  expect(tasks).toEqual(["List three competitors and their prices."]);
+  expect(store.tasks()).toMatchObject([{ agent: "hermes", title: "Competitor pricing", ref: "t_1", status: "queued" }]);
+
+  await say([...researches, agent("One moment, sir. Under way, sir."), user("How is it going?")]);
+  expect(sent[2].system[1].text).toContain(`Work you handed out: Hermes "Competitor pricing", queued (just now).`);
+
+  await say(researches);
+  expect(sent[4].messages[2].content[0].content).toContain("Already handed to Hermes");
+  expect(tasks).toHaveLength(1);
+  expect(store.tasks()).toHaveLength(1);
+});
+
+test("records that cannot be read do not silence the voice", async () => {
+  const { sent, fetcher } = model(says("Good evening, sir."));
+  const { root, say } = ceo(fetcher);
+  mkdirSync(join(root, ".operator-data", "ceo"), { recursive: true });
+  writeFileSync(join(root, ".operator-data", "ceo", "tasks.json"), "{ not json");
+  expect(await say([user("Hello.")])).toBe("Good evening, sir.");
+  expect(sent[0].system[1].text).toContain("The records of handed-out work and approvals could not be read just now.");
 });

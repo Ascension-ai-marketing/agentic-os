@@ -12,6 +12,7 @@ import { connectedGranolaNotes } from "./granola-connected";
 import { connectedNotionPages } from "./notion-connected";
 import { granolaApi } from "./granola-api";
 import { agentJobs } from "./agent-jobs";
+import { ceoRoutes } from "./ceo-routes";
 import { voiceLocalImages } from "./voice-local-images";
 import { voiceImages } from "./voice-images";
 import { voiceRecentCreations } from "./voice-recent-creations";
@@ -839,6 +840,7 @@ export function operatorPlugin({
     name: "operator-workspace",
     configureServer(server) {
       nativeTasks = agentJobs(root);
+      const ceo = ceoRoutes({ root, jobs: () => nativeTasks!.list().jobs });
       apps.startTimer();
       getMailSync();
       server.httpServer?.once("close", () => { apps.stop(); vault.stop(); photoIndex.close(); mailSync?.close(); existingConnections.close(); nativeTasks?.close(); });
@@ -901,6 +903,7 @@ export function operatorPlugin({
           if (path === "/agent-jobs/respond" && method === "POST") return send(nativeTasks!.respond(body));
           if (path === "/agent-jobs/cancel" && method === "POST") return send(nativeTasks!.cancel(body));
           if (path === "/agent-jobs/continue" && method === "POST") return send(nativeTasks!.continue(body), 202);
+          if (path === "/ceo" || path.startsWith("/ceo/")) return send(await ceo.handle(path, method, body));
           if (path === "/connections/youtube" || path.startsWith("/connections/youtube/")) return send(await youtubeQueue.handle(path, method, body));
           if (path === "/connections/outbox" || path.startsWith("/connections/outbox/")) return send(await outbox.handle(path, method, body));
           if (path.startsWith("/connections"))

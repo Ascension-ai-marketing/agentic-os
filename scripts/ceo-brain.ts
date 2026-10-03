@@ -10,7 +10,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { Reply, Turn } from "./speech-engine";
 
-export type RunTool = (name: string, input: unknown, signal: AbortSignal) => Promise<string>;
+/** The spoken turn being answered: which conversation, and everything said in it so far. */
+export type SpokenTurn = { conversationId: string; transcript: Turn[] };
+export type RunTool = (name: string, input: unknown, signal: AbortSignal, turn?: SpokenTurn) => Promise<string>;
 type Fetch = (url: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 const FILLER = "One moment, sir.";
@@ -62,7 +64,7 @@ export function anthropicReply(options: Access & {
   /** Stable for the life of the process: it is cached together with the tools. */
   system: string;
   /** What changes between turns (the time, what is waiting). Read once per spoken turn. */
-  context?: () => string;
+  context?: (turn: SpokenTurn) => string;
   /** The scripted first message, for a transcript that does not carry it. */
   greeting?: string;
   tools?: Anthropic.Tool[]; runTool?: RunTool;
@@ -73,12 +75,13 @@ export function anthropicReply(options: Access & {
 }): Reply {
   const client = claude(options);
   const rounds = options.maxRounds ?? 5;
-  return async function* (transcript, signal) {
+  return async function* (transcript, signal, conversationId = "") {
     const { opening: spoken, messages } = toMessages(transcript);
     if (!messages.length) return;
+    const turn: SpokenTurn = { conversationId, transcript };
     const opening = spoken || options.greeting || "";
     // Built once per spoken turn: a system prompt that changed between tool rounds would invalidate that turn's thinking.
-    const live = [options.context?.(), opening && OPENING + opening].filter(Boolean).join("\n\n");
+    const live = [options.context?.(turn), opening && OPENING + opening].filter(Boolean).join("\n\n");
     const system: Anthropic.TextBlockParam[] = [{ type: "text", text: options.system, cache_control: { type: "ephemeral" } }, ...(live ? [{ type: "text" as const, text: live }] : [])];
     const started = Date.now();
     let heard = false, unparsed = 0;
@@ -126,7 +129,7 @@ export function anthropicReply(options: Access & {
       }
       const run = options.runTool;
       const results = await Promise.all(calls.map(async (call): Promise<Anthropic.ToolResultBlockParam> => {
-        try { return { type: "tool_result", tool_use_id: call.id, content: await run(call.name, call.input, signal) }; }
+        try { return { type: "tool_result", tool_use_id: call.id, content: await run(call.name, call.input, signal, turn) }; }
         catch (e) { return { type: "tool_result", tool_use_id: call.id, is_error: true, content: e instanceof Error ? e.message.slice(0, 400) : "The tool failed." }; }
       }));
       if (signal.aborted) return;

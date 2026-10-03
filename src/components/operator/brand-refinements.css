@@ -1,0 +1,71 @@
+.op-brand.ar-brand-refined {
+  gap: 9px;
+  color: var(--op-ink);
+}
+
+.ar-brand-refined .op-brand-os {
+  color: inherit;
+}
+
+.ar-brand-refined small {
+  letter-spacing: 1.7px;
+}
+
+.ar-provider-rotation {
+  position: relative;
+  display: block;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  isolation: isolate;
+}
+.ar-provider-rotation .ar-brand-provider-image {
+  position: absolute;
+  inset: 0;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 8px;
+  opacity: 0;
+  animation: ar-provider-crossfade 8.8s linear infinite;
+}
+.ar-provider-rotation .ar-brand-provider-image--claude {
+  animation-delay: 0s;
+}
+.ar-provider-rotation .ar-brand-provider-image--openai {
+  padding: 1px;
+  animation-delay: -6.6s;
+}
+.dark .ar-provider-rotation .ar-brand-provider-image--openai {
+  filter: invert(1);
+}
+.ar-provider-rotation .ar-brand-provider-image--hermes {
+  border-radius: 6px;
+  animation-delay: -4.4s;
+}
+.ar-provider-rotation .ar-brand-provider-image--codex {
+  animation-delay: -2.2s;
+}
+/* Preserve the approved single-logo cycle, including its overlapping transitions. */
+@keyframes ar-provider-crossfade {
+  0%,
+  22.5% {
+    opacity: 1;
+  }
+  25%,
+  97.5% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ar-provider-rotation .ar-brand-provider-image {
+    animation: none;
+  }
+  .ar-provider-rotation .ar-brand-provider-image--claude {
+    opacity: 1;
+  }
+}

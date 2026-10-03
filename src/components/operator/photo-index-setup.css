@@ -1,0 +1,220 @@
+.photo-index-setup {
+  display: grid;
+  gap: 16px;
+  color: var(--op-ink);
+  font-size: 13px;
+  min-width: 0;
+}
+.photo-index-intro {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+}
+.photo-index-folder-details > summary {
+  color: var(--op-muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 5px 0;
+}
+.photo-index-folder-details .photo-index-path {
+  margin: 12px 0;
+}
+.photo-index-folder-details > summary:focus-visible {
+  outline: 2px solid var(--op-accent);
+  outline-offset: 3px;
+}
+.photo-index-intro > svg {
+  color: var(--op-accent);
+  flex: none;
+}
+.photo-index-intro h3 {
+  font-size: 18px;
+  letter-spacing: -0.4px;
+  margin: 0 0 4px;
+  font-weight: 500;
+}
+.photo-index-intro p,
+.photo-index-hint {
+  margin: 0;
+  color: var(--op-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.photo-index-folders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.photo-index-folders button,
+.photo-index-progress button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--op-border);
+  border-radius: 9px;
+  padding: 9px 12px;
+  background: var(--op-panel);
+  font-size: 12px;
+}
+.photo-index-folders button[aria-pressed="true"] {
+  background: var(--op-accent-soft);
+  border-color: var(--op-accent);
+}
+.photo-index-path,
+.photo-index-settings label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.photo-index-path > span,
+.photo-index-settings label > span {
+  font-size: 11px;
+  color: var(--op-muted);
+}
+.photo-index-path input,
+.photo-index-settings input,
+.photo-index-settings select {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--op-border);
+  border-radius: 9px;
+  background: var(--op-inset);
+  padding: 11px 12px;
+  color: var(--op-ink);
+  font: inherit;
+  outline: none;
+}
+.photo-index-setup :is(input, select, button):focus-visible {
+  outline: 2px solid var(--op-accent);
+  outline-offset: 3px;
+}
+.photo-index-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  justify-self: start;
+  border-radius: 10px;
+  padding: 12px 17px;
+  background: linear-gradient(140deg, #eee1ff, #ceacee);
+  color: #281832;
+  font-weight: 600;
+  box-shadow:
+    inset 0 1px #ffffffc0,
+    0 4px 18px #b88dd51a;
+}
+.photo-index-setup button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.photo-index-review {
+  display: grid;
+  gap: 15px;
+  border-top: 1px solid var(--op-border);
+  padding-top: 15px;
+}
+.photo-index-preview {
+  display: grid;
+  gap: 6px;
+}
+.photo-index-preview strong {
+  font-size: 14px;
+  font-weight: 500;
+}
+.photo-index-preview span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--op-muted);
+  font-size: 11px;
+}
+.photo-index-preview small {
+  color: var(--op-muted);
+}
+.photo-index-settings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.photo-index-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.6;
+  font-size: 12px;
+}
+.photo-index-consent input {
+  accent-color: #ba9bdd;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-top: 3px;
+}
+.photo-index-progress {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--op-border);
+  border-radius: 12px;
+  background: var(--op-inset);
+}
+.photo-index-progress > div {
+  display: grid;
+  gap: 5px;
+}
+.photo-index-progress strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.photo-index-progress span,
+.photo-index-progress p {
+  font-size: 11px;
+  color: var(--op-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+.photo-index-progress progress {
+  width: 100%;
+  height: 5px;
+  accent-color: #bf9ce9;
+  border: 0;
+}
+.photo-index-progress button {
+  justify-self: start;
+}
+.photo-index-progress details {
+  font-size: 11px;
+}
+.photo-index-progress summary {
+  cursor: pointer;
+}
+.photo-index-error {
+  color: #d65f65;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+}
+.dark .photo-index-error {
+  color: #f8b1b6;
+}
+.photo-index-setup.is-compact {
+  gap: 13px;
+}
+.photo-index-setup.is-compact .photo-index-intro h3 {
+  font-size: 17px;
+}
+@media (max-width: 500px) {
+  .photo-index-settings {
+    grid-template-columns: 1fr;
+  }
+  .photo-index-primary {
+    width: 100%;
+    justify-self: stretch;
+  }
+  .photo-index-folders button {
+    padding: 8px 10px;
+  }
+}
+
+.photo-index-action { justify-self: start; }
+@media (max-width: 600px) { .photo-index-action { width: 100%; } }

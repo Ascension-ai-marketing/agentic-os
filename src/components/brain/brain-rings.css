@@ -1,0 +1,126 @@
+.brain-rings {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 60% at 50% 50%, color-mix(in srgb, #8affd0 5%, transparent), transparent 70%);
+}
+.brain-rings canvas {
+  display: block;
+  cursor: crosshair;
+}
+.brain-rings-tip {
+  position: absolute;
+  z-index: 3;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--tip, #8affd0) 45%, var(--op-border, #2a282f));
+  background: color-mix(in srgb, var(--op-panel, #18181c) 92%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 30px -12px #000c;
+  pointer-events: none;
+  font-size: 12px;
+  color: var(--op-muted, #96919f);
+}
+.brain-rings-tip b {
+  color: var(--op-ink, #f0edf5);
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* The detail levels and render count belong to the 3D views. */
+[data-layout="rings"] .neural-detail-bar,
+[data-layout="timeline"] .neural-detail-bar { display: none; }
+
+.brain-key {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--op-border, #2a282f);
+  background: color-mix(in srgb, var(--op-panel, #18181c) 80%, transparent);
+  backdrop-filter: blur(8px);
+  font-size: 11.5px;
+  color: var(--op-muted, #96919f);
+  pointer-events: none;
+}
+.brain-key span { display: flex; align-items: center; gap: 7px; }
+.brain-key b { margin-left: auto; padding-left: 10px; color: var(--op-ink, #f0edf5); font-weight: 600; font-variant-numeric: tabular-nums; }
+.brain-key i { width: 8px; height: 8px; flex: none; background: #b9b2cf; border-radius: 50%; }
+.brain-key i[data-kind="decision"] { border-radius: 1px; transform: rotate(45deg) scale(0.85); }
+.brain-key i[data-kind="session"] { background: none; border: 2px solid #b9b2cf; }
+.brain-key i[data-kind="skill"] { border-radius: 1px; }
+.brain-key i[data-kind="fresh"] { background: none; border: 1px solid #8affd0; box-shadow: 0 0 6px #8affd0; }
+.brain-key i[data-kind="related"] { width: 12px; height: 2px; border-radius: 1px; background: #f386a1; }
+
+/* Sector labels are real buttons: a logo, the name and the count. */
+.brain-sector-label {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 4px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--sec);
+  font: 600 10px ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.brain-sector-label b { font-weight: 600; color: color-mix(in srgb, var(--sec) 70%, var(--op-muted, #96919f)); }
+.brain-sector-label:hover, .brain-sector-label:focus-visible {
+  background: color-mix(in srgb, var(--sec) 12%, transparent);
+  border-color: color-mix(in srgb, var(--sec) 40%, transparent);
+  outline: none;
+}
+.brain-sector-label[data-empty] span { opacity: 0.7; text-decoration: underline dotted; text-underline-offset: 3px; }
+.brain-sector-label[data-off] { opacity: 0.25; }
+
+/* An open record panel moves the flat maps out of its way. */
+/* The map makes room a beat after a click, so a double-click still lands on the same record. */
+
+.ar-universe[data-panel="open"] .brain-rings { right: 336px; }
+
+.brain-lane-label {
+  position: absolute;
+  left: 10px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.brain-lane-label > span { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; min-width: 0; order: -1; }
+.brain-lane-label b { color: var(--sec); font-size: 11.5px; font-weight: 620; white-space: nowrap; }
+.brain-lane-label small { font: 500 10px ui-monospace, "SF Mono", Menlo, monospace; color: var(--op-muted, #96919f); }
+.brain-lane-label button {
+  pointer-events: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #f386a1;
+  font: 500 10.5px ui-sans-serif, system-ui, sans-serif;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.ar-universe[data-panel="open"] .brain-key { display: none; }
+.brain-sector-label em { font-style: normal; font-size: 12px; line-height: 1; color: #f386a1; }
+.ar-universe:not([data-scope="all"]) .brain-key { display: none; }

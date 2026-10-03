@@ -1,0 +1,254 @@
+/* The film sits UNDER the whole card, not beside the copy. Two panels side
+   by side always show their seam: the poster's left edge is #16171a, the
+   card is #18151e, and a 22% fade could not hide the hard rectangle. With
+   the video full-bleed there is no second surface to meet — the copy floats
+   on a scrim that lets the crystals come through on the right. */
+.os-setup-invitation {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(220px, 0.95fr);
+  min-height: 272px;
+  overflow: hidden;
+  background: #18151e;
+  border: 1px solid #c6a4ee30;
+  border-radius: 19px;
+  margin: 0 0 27px;
+  color: #f2edf7;
+  box-shadow: 0 12px 45px #0000000c;
+}
+.os-setup-invitation-copy {
+  padding: 34px 36px 32px;
+  position: relative;
+  z-index: 2;
+  align-self: center;
+}
+.os-setup-kicker {
+  display: block;
+  color: #c3b1dd;
+  font-size: 9.5px;
+  font-weight: 550;
+  letter-spacing: 0.24em;
+  margin-bottom: 12px;
+}
+.os-setup-invitation h2 {
+  font-size: clamp(26px, 3vw, 38px);
+  line-height: 1.1;
+  letter-spacing: -1.2px;
+  font-weight: 500;
+  margin: 0 0 10px;
+  text-wrap: balance;
+}
+.os-setup-invitation h2 > span {
+  color: #c3a0eb;
+}
+.os-setup-invitation p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #c4b9d2;
+  margin: 0;
+  max-width: 40ch;
+}
+.os-setup-stages {
+  display: flex;
+  gap: 18px;
+  margin-top: 18px;
+}
+.os-setup-stages > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #bcb0cc;
+}
+.os-setup-stages i {
+  font-style: normal;
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #b89cd344;
+  border-radius: 50%;
+  font-size: 9px;
+  color: #c9b1e4;
+}
+.os-setup-stages .done i {
+  background: #c8afe9;
+  color: #281935;
+}
+.os-setup-bottom {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 22px;
+}
+.os-setup-bottom > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 12px;
+  font-weight: 550;
+  color: #e6d8f8;
+  border-bottom: 1px solid #c4a9e353;
+  padding-bottom: 5px;
+}
+.os-setup-bottom > a:hover {
+  color: white;
+  border-color: #e6d8f8;
+}
+.os-setup-brands {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.75;
+}
+.os-setup-brands .mc-source-brand[data-brand="notion"] {
+  padding: 2px;
+  border-radius: 4px;
+  background: #eee;
+}
+
+/* Film: absolute, behind everything. The grid column it used to occupy is
+   kept only so the copy stays on the left half at desktop widths. */
+.os-setup-film {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  min-height: 0;
+}
+/* The card is ~3.3:1 and the film is 16:9. Cover-fit on the full card
+   scales by WIDTH, so only a 30%-tall band of the obelisk shows: a blurry
+   slab, not a crystal. Instead the media occupies the right 58% of the
+   card at full height, so cover scales by height and the whole obelisk is
+   in frame. Its left edge lands at 42%, under the solid part of the scrim
+   below, so there is no seam. The wrapper stays full-bleed so the scrim
+   pseudo-element can span the entire card. */
+.os-setup-film > .biz-ambient-video {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: auto;
+  width: 58%;
+  height: 100%;
+}
+.os-setup-film img,
+.os-setup-film video {
+  object-fit: cover;
+  object-position: right center;
+}
+/* Legibility scrim + edge vignette, one layer. Left: solid card colour under
+   the copy, releasing to clear by ~72% so the crystals read at full strength.
+   Top/bottom: a faint fade so the video's own frame edges (#0c0c0e top,
+   #252431 bottom) never print a line against the rounded border. */
+.os-setup-film:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Above the <video>, which ambient-video.css positions with its own
+     z-index. Without this the scrim paints UNDER the film and the film's
+     left edge prints a hard vertical seam at 42%. Clicks still pass. */
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, #18151e 0%, #18151e 38%, #18151eee 47%, #18151ea6 57%, #18151e38 67%, transparent 77%),
+    linear-gradient(180deg, #18151e55 0%, transparent 18%, transparent 84%, #18151e66 100%);
+}
+.os-setup-film .biz-ambient-control {
+  z-index: 3;
+}
+
+@media (max-width: 950px) {
+  .os-setup-invitation-copy {
+    padding: 26px;
+  }
+  .os-setup-invitation {
+    grid-template-columns: 1.2fr 0.8fr;
+  }
+  .os-setup-stages {
+    gap: 10px;
+  }
+  .os-setup-stages > span {
+    font-size: 9px;
+  }
+}
+@media (max-width: 650px) {
+  .os-setup-invitation {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+  .os-setup-invitation-copy {
+    padding: 132px 23px 24px;
+    align-self: end;
+  }
+  .os-setup-film > .biz-ambient-video {
+    left: 0;
+    width: 100%;
+  }
+  .os-setup-film img,
+  .os-setup-film video {
+    object-position: center 30%;
+  }
+  /* Stacked: the copy sits at the bottom, so the scrim rises from below. */
+  .os-setup-film:after {
+    background: linear-gradient(0deg, #18151e 0%, #18151e 34%, #18151ecc 48%, #18151e55 62%, transparent 80%);
+  }
+  .os-setup-stages {
+    gap: 18px;
+  }
+  .os-setup-stages > span {
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .os-setup-invitation {
+    animation: os-setup-appear 0.5s ease-out both;
+  }
+  @keyframes os-setup-appear {
+    from {
+      opacity: 0;
+      transform: translateY(7px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@property --os-invitation-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.os-setup-invitation::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 4;
+  padding: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--os-invitation-angle),
+    transparent 0deg 265deg,
+    #c3a0eb25 285deg,
+    #f4e3ff99 306deg,
+    #c3a0eb18 330deg,
+    transparent 350deg
+  );
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .os-setup-invitation::after {
+    animation: os-invitation-beam 14s linear infinite;
+  }
+  @keyframes os-invitation-beam {
+    to {
+      --os-invitation-angle: 360deg;
+    }
+  }
+}

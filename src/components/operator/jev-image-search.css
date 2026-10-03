@@ -1,0 +1,40 @@
+/* Jev on image search. Jev pink: #D45BB6 / #F386A1. */
+.jis-stage { display: flex; align-items: center; gap: 16px; margin: 4px auto 20px; width: fit-content; padding: 12px 20px 12px 14px; border-radius: 18px; border: 1px solid rgb(243 134 161 / 0.22); background: linear-gradient(120deg, rgb(212 91 182 / 0.1), rgb(255 255 255 / 0.02)); }
+.jis-orb { position: relative; display: grid; place-items: center; width: 52px; height: 52px; color: #ffd3e4; }
+.jis-orb .jev-mark { position: relative; z-index: 2; animation: jis-beat 1.1s ease-in-out infinite; filter: drop-shadow(0 0 8px rgb(243 134 161 / 0.8)); }
+.jis-ring { position: absolute; inset: 6px; border-radius: 50%; border: 1.5px solid rgb(243 134 161 / 0.55); animation: jis-ping 1.6s cubic-bezier(0.2, 0.7, 0.3, 1) infinite; }
+.jis-ring-2 { animation-delay: 0.8s; }
+.jis-sweep { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0 70%, rgb(243 134 161 / 0.55) 92%, transparent 100%); -webkit-mask: radial-gradient(circle, transparent 54%, #000 56%); mask: radial-gradient(circle, transparent 54%, #000 56%); animation: jis-spin 1.2s linear infinite; }
+.jis-stage-text { display: grid; gap: 2px; }
+.jis-stage-text b { font-size: 14px; font-weight: 600; color: #fff; }
+.jis-stage-text span { font-size: 12px; color: rgb(255 255 255 / 0.5); }
+@keyframes jis-beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.14); } }
+@keyframes jis-ping { 0% { transform: scale(0.7); opacity: 0.9; } 100% { transform: scale(1.5); opacity: 0; } }
+@keyframes jis-spin { to { transform: rotate(360deg); } }
+
+/* The grid while ranking: tiles dim and a pink scan line passes over. */
+.jis-scanning { position: relative; }
+.jis-scanning > * { opacity: 0.35; filter: saturate(0.4); transition: opacity 0.3s, filter 0.3s; }
+.jis-scanning::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 0, rgb(212 91 182 / 0) 40%, rgb(243 134 161 / 0.35) 50%, rgb(212 91 182 / 0) 60%, transparent 100%); background-size: 100% 60%; background-repeat: no-repeat; animation: jis-scan 1.4s ease-in-out infinite; }
+@keyframes jis-scan { 0% { background-position: 0 -120%; } 100% { background-position: 0 260%; } }
+
+/* Results cascade in. */
+.jis-cascade { animation: jis-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(min(var(--i, 0), 24) * 55ms); }
+@keyframes jis-rise { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
+.jis-best { box-shadow: 0 0 0 2px #d45bb6, 0 0 36px -6px rgb(212 91 182 / 0.7); border-color: transparent !important; }
+
+.jis-chip { position: absolute; right: 8px; bottom: 8px; z-index: 5; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 650; font-variant-numeric: tabular-nums; color: #ffe1ec; background: rgb(20 12 20 / 0.78); border: 1px solid rgb(243 134 161 / 0.4); backdrop-filter: blur(8px); pointer-events: none; }
+.jis-chip.is-best { background: #d45bb6; border-color: #d45bb6; color: #fff; }
+
+.jis-line-wrap { margin: 2px auto 14px; max-width: 860px; }
+.jis-line { display: inline-flex; align-items: center; gap: 9px; padding: 7px 12px; border-radius: 999px; border: 1px solid rgb(243 134 161 / 0.22); background: rgb(212 91 182 / 0.06); color: rgb(255 255 255 / 0.62); font-size: 12.5px; cursor: pointer; transition: border-color 0.2s, background 0.2s; animation: jis-rise 0.4s ease both; }
+.jis-line:hover:not(:disabled) { border-color: rgb(243 134 161 / 0.5); background: rgb(212 91 182 / 0.1); }
+.jis-line .jev-mark { color: #f386a1; }
+.jis-line b { color: #fff; font-weight: 600; }
+.jis-sample { font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #f386a1; border: 1px solid rgb(243 134 161 / 0.4); border-radius: 5px; padding: 2px 5px; }
+.jis-line-more { color: #f386a1; font-weight: 600; }
+.jis-card { margin-top: 10px; max-width: 460px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .jis-orb .jev-mark, .jis-ring, .jis-sweep, .jis-scanning::after, .jis-cascade, .jis-line { animation: none !important; }
+}

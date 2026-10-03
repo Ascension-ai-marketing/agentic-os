@@ -1,0 +1,6 @@
+{
+  "jevReferenceCallUsd": 0.00002,
+  "source": "Published Jev reference price, 19 September 2026",
+  "kind": "estimated",
+  "note": "Used for preflight estimates only when this checkout has no measured decision history. Actual charges always come from provider usage.cost."
+}

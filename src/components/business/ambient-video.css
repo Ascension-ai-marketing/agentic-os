@@ -1,0 +1,45 @@
+.biz-ambient-video {
+  position: relative;
+  overflow: hidden;
+  background: #17131c;
+}
+.biz-ambient-video > img,
+.biz-ambient-video > video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.biz-ambient-video > video {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.biz-ambient-control {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ffffff35;
+  border-radius: 50%;
+  color: #fff;
+  background: #14121975;
+  backdrop-filter: blur(8px);
+}
+.biz-ambient-control:focus-visible {
+  outline: 2px solid #cbb0ed;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .biz-ambient-video > video {
+    display: none;
+    transition: none;
+  }
+}

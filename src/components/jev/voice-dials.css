@@ -1,0 +1,31 @@
+.vdl { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "label value" "bar bar"; align-items: center; gap: 7px 10px; font-size: 12px; color: #b9b2cf; position: relative; padding: 2px 0; }
+.vdl-label { grid-area: label; }
+.vdl-value { grid-area: value; }
+.vdl-track, .vdl-steps { grid-area: bar; }
+.vdl-label { letter-spacing: 0.01em; }
+.vdl-value { font: 650 12px/1 ui-monospace, "SF Mono", Menlo, monospace; color: #f7eaf6; text-align: right; animation: vdl-pop 0.45s cubic-bezier(0.2, 0.9, 0.2, 1.3) both; }
+.vdl-value.is-word { font-family: ui-sans-serif, system-ui; font-weight: 700; background: linear-gradient(90deg, #f7c6e6, #ffd9a8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+@keyframes vdl-pop { from { opacity: 0; transform: translateY(5px) scale(0.85); } }
+
+/* Speed: a glowing bar that slides to the value */
+.vdl-track { position: relative; height: 8px; margin: 4px 0; border-radius: 999px; background: rgba(255, 255, 255, 0.07); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5); }
+.vdl-fill { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: linear-gradient(90deg, #7b5cff, #d45bb6 60%, #f386a1); box-shadow: 0 0 14px -2px rgba(212, 91, 182, 0.7); transition: width 0.7s cubic-bezier(0.2, 0.9, 0.2, 1); overflow: hidden; }
+.vdl-fill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent); transform: translateX(-100%); animation: vdl-shine 3.2s ease-in-out infinite; }
+@keyframes vdl-shine { 60%, 100% { transform: translateX(100%); } }
+.vdl-ticks b { position: absolute; top: 50%; width: 2px; height: 4px; margin: -2px 0 0 -1px; border-radius: 1px; background: rgba(255, 255, 255, 0.22); }
+.vdl-knob { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px rgba(212, 91, 182, 0.45), 0 4px 10px rgba(0, 0, 0, 0.5); transition: left 0.7s cubic-bezier(0.2, 0.9, 0.2, 1); pointer-events: none; }
+.vdl-track input { position: absolute; inset: -8px 0; width: 100%; height: calc(100% + 16px); margin: 0; opacity: 0; cursor: pointer; }
+
+/* Humour: four steps that light up in turn */
+.vdl-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 4px 0; }
+.vdl-steps button { position: relative; height: 8px; padding: 0; border: 0; border-radius: 4px; background: rgba(255, 255, 255, 0.07); cursor: pointer; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45); }
+.vdl-steps button i { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, #d45bb6, #f386a1 70%, #ffc38a); transform: scaleX(0); transform-origin: left; transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.2, 1) calc(var(--i) * 70ms); }
+.vdl-steps button[data-on] i { transform: none; box-shadow: 0 0 12px -2px rgba(243, 134, 161, 0.8); }
+.vdl-steps button:hover { background: rgba(255, 255, 255, 0.12); }
+
+/* Changed by voice: a sweep of light and a glow ring for a moment */
+.vdl-glow { position: absolute; inset: -6px -8px; border-radius: 12px; background: radial-gradient(60% 120% at 50% 50%, rgba(243, 134, 161, 0.28), transparent 70%); animation: vdl-glow 1.4s ease-out both; pointer-events: none; }
+@keyframes vdl-glow { 0% { opacity: 0; transform: scale(0.96); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(1.03); } }
+.vdl-glow ~ .vdl-track .vdl-fill, .vdl-glow ~ .vdl-steps button[data-on] i { animation: vdl-flash 1.4s ease-out; }
+@keyframes vdl-flash { 20% { filter: brightness(1.5) saturate(1.3); } }
+@media (prefers-reduced-motion: reduce) { .vdl-fill, .vdl-knob, .vdl-steps button i { transition: none; } .vdl-fill::after, .vdl-glow, .vdl-value { animation: none; } }

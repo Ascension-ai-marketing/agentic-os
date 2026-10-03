@@ -1,0 +1,396 @@
+/* "Jev is choosing": odds fill, the winner snaps forward, the rest dim.
+   Jev pink: #D45BB6 → #F386A1. Dark glass to sit in the chat transcript. */
+.jc {
+  --jc-pink: #d45bb6;
+  --jc-pink-2: #f386a1;
+  --jc-ink: var(--op-ink, #f2eef6);
+  --jc-muted: var(--op-muted, #948ea0);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  width: fit-content;
+  min-width: min(100%, 470px);
+  max-width: 100%;
+  margin: 2px 0 14px;
+  padding: 14px 14px 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(243, 134, 161, 0.16);
+  background:
+    radial-gradient(90% 140% at 0% 0%, rgba(212, 91, 182, 0.14), transparent 55%),
+    radial-gradient(70% 120% at 100% 100%, rgba(243, 134, 161, 0.07), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 18px 50px -30px rgba(212, 91, 182, 0.55);
+  color: var(--jc-ink);
+  font-variant-numeric: tabular-nums;
+  animation: jc-in 380ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+@keyframes jc-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
+}
+
+/* Head: spinner + "Choosing a model" → winner logo + "Jev picked Sonnet 5". */
+.jc-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0 2px 12px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: default;
+}
+.jc[data-phase="snap"] .jc-head { cursor: pointer; }
+.jc-spin {
+  display: grid;
+  border-radius: 9px;
+  animation: jc-breathe 1.1s ease-in-out infinite;
+}
+@keyframes jc-breathe {
+  50% { box-shadow: 0 0 22px -2px rgba(212, 91, 182, 0.75); }
+}
+/* While choosing, the three dots of the mark light up in turn. */
+.jc-spin circle { animation: jc-choose 1.2s ease-in-out infinite; }
+.jc-spin circle:nth-of-type(2) { animation-delay: 0.2s; }
+.jc-spin circle:nth-of-type(3) { animation-delay: 0.4s; }
+@keyframes jc-choose { 0%, 100% { opacity: 0.3; } 35% { opacity: 1; } }
+
+.jc-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1.1;
+}
+.jc-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--jc-pink-2);
+}
+.jc-title b {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.jc[data-phase="think"] .jc-title b,
+.jc[data-phase="fill"] .jc-title b {
+  background: linear-gradient(90deg, var(--jc-muted) 0%, #fff 45%, var(--jc-muted) 90%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: jc-shine 1.6s linear infinite;
+}
+@keyframes jc-shine { from { background-position: 120% 0; } to { background-position: -100% 0; } }
+
+.jc-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.jc-chip {
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--jc-ink);
+  white-space: nowrap;
+}
+.jc-chip.is-dim { color: var(--jc-muted); }
+.jc-chip.is-odds {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--jc-pink), var(--jc-pink-2));
+  box-shadow: 0 4px 14px -6px var(--jc-pink);
+}
+.jc-chip.is-extra { color: var(--jc-muted); }
+.jc-chip.is-sample {
+  color: var(--jc-muted);
+  font: 600 9.5px/1.3 ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.jc-chev { color: var(--jc-muted); transition: transform 200ms ease; }
+.jc[data-open] .jc-chev { transform: rotate(180deg); }
+
+/* The snap: winner logo pops in, the headline and chips slide up. */
+.jc[data-phase="snap"] .jc-win-logo { animation: jc-pop 520ms cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.jc[data-phase="snap"] .jc-title,
+.jc[data-phase="snap"] .jc-meta { animation: jc-rise 420ms 80ms cubic-bezier(0.2, 0.9, 0.2, 1) both; }
+.jc-win-logo {
+  position: relative;
+  display: grid;
+  border-radius: 9px;
+  box-shadow: 0 0 0 1.5px var(--jc-pink-2), 0 0 22px -2px var(--jc-pink);
+}
+@keyframes jc-pop { from { opacity: 0; transform: scale(0.4) rotate(-12deg); } }
+@keyframes jc-rise { from { opacity: 0; transform: translateY(6px); } }
+
+/* Candidate tiles. */
+.jc-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--n, 7), minmax(0, 98px));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.jc-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 11px 6px 9px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.025);
+  transition:
+    transform 460ms cubic-bezier(0.2, 1.5, 0.4, 1),
+    opacity 380ms ease,
+    filter 380ms ease,
+    border-color 300ms ease,
+    background 300ms ease,
+    box-shadow 380ms ease;
+  animation: jc-tile-in 420ms calc(var(--i) * 45ms) cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+@keyframes jc-tile-in { from { opacity: 0; transform: translateY(8px); } }
+.jc-logo {
+  display: block;
+  flex: none;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.jc-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--jc-ink);
+}
+.jc-bar {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  border-radius: 99px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.07);
+}
+.jc-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 30%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--jc-pink), var(--jc-pink-2));
+}
+.jc-pct {
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--jc-muted);
+  letter-spacing: 0.02em;
+}
+
+/* Thinking: every bar searches, and a light sweeps across the tiles. */
+.jc[data-phase="think"] .jc-bar i {
+  opacity: 0.75;
+  animation: jc-search calc(1.1s + var(--i) * 0.13s) calc(var(--i) * -0.29s) ease-in-out infinite alternate;
+}
+@keyframes jc-search {
+  0% { width: 8%; }
+  45% { width: 64%; }
+  100% { width: 22%; }
+}
+.jc[data-phase="think"] .jc-grid::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 0%, rgba(243, 134, 161, 0.16) 12%, transparent 24%);
+  background-size: 260% 100%;
+  animation: jc-scan 1.5s linear infinite;
+  mix-blend-mode: screen;
+}
+@keyframes jc-scan { from { background-position: 130% 0; } to { background-position: -40% 0; } }
+.jc[data-phase="fill"] .jc-pct { color: var(--jc-ink); }
+.jc-dots { display: inline-flex; gap: 3px; height: 13px; align-items: center; }
+.jc-dots i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--jc-pink-2);
+  animation: jc-dot 900ms calc(var(--i) * 70ms) ease-in-out infinite;
+}
+.jc-dots i:nth-child(2) { animation-delay: calc(var(--i) * 70ms + 150ms); }
+.jc-dots i:nth-child(3) { animation-delay: calc(var(--i) * 70ms + 300ms); }
+@keyframes jc-dot { 0%, 100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
+
+/* Snap: the winner steps forward and glows, the rest fade back. */
+.jc-tile.is-win {
+  z-index: 1;
+  transform: translateY(-4px) scale(1.08);
+  border-color: rgba(243, 134, 161, 0.75);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(243, 134, 161, 0.28), transparent 70%),
+    rgba(212, 91, 182, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(243, 134, 161, 0.35),
+    0 14px 34px -10px rgba(212, 91, 182, 0.85),
+    0 0 44px -8px rgba(243, 134, 161, 0.6);
+}
+.jc-tile.is-win .jc-pct { color: #fff; }
+.jc-tile.is-win .jc-name { color: #fff; }
+.jc-tile.is-win::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  border: 1.5px solid var(--jc-pink-2);
+  pointer-events: none;
+  animation: jc-ring 700ms ease-out both;
+}
+@keyframes jc-ring {
+  from { opacity: 0.9; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.35); }
+}
+.jc-tile.is-lose {
+  opacity: 0.42;
+  filter: saturate(0.2);
+  transform: scale(0.96);
+}
+
+/* One beam of light across the card at the moment of the pick. */
+.jc-beam {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(243, 134, 161, 0.22) 48%, rgba(255, 255, 255, 0.12) 50%, transparent 66%);
+  background-size: 250% 100%;
+}
+.jc[data-phase="snap"] .jc-beam { animation: jc-beam 900ms ease-out both; }
+@keyframes jc-beam {
+  0% { opacity: 1; background-position: 140% 0; }
+  100% { opacity: 0; background-position: -60% 0; }
+}
+
+.jc-card { margin-top: 12px; animation: jc-rise 260ms ease both; }
+.jc-card .jev-card { max-width: none; }
+
+/* A later turn in the same chat: one quiet line. */
+.jc.jc-kept {
+  padding: 0;
+  border-color: rgba(243, 134, 161, 0.12);
+  background: rgba(212, 91, 182, 0.06);
+  box-shadow: none;
+  max-width: max-content;
+  border-radius: 999px;
+}
+.jc.jc-kept[data-open] { max-width: 760px; border-radius: 16px; padding-bottom: 12px; }
+.jc.jc-kept .jc-card { margin: 4px 12px 0; }
+.jc-kept-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 6px;
+  border: 0;
+  background: none;
+  color: var(--jc-ink);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.jc-kept-line .jc-logo { border-radius: 6px; }
+.jc-kept-note { color: var(--jc-muted); }
+.jc-kept-note::before { content: "·"; margin-right: 8px; }
+
+/* The answer waits for the pick, then fades in under it. */
+.jc-answer-in { animation: jc-rise 360ms ease both; }
+
+@media (max-width: 900px) {
+  .jc { width: auto; }
+  .jc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .jc-meta .jc-chip:not(.is-odds) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jc, .jc *, .jc *::before, .jc *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}
+/* Settled rows (already played) render without entrance or replay. */
+.jc[data-still],
+.jc[data-still] .jc-tile,
+.jc[data-still] .jc-tile::after,
+.jc[data-still] .jc-beam,
+.jc[data-still] .jc-win-logo,
+.jc[data-still] .jc-title,
+.jc[data-still] .jc-meta { animation: none; }
+.jc[data-still] .jc-tile { transition: none; }
+.jc[data-still] .jc-tile::after { display: none; }
+
+/* A spoken reply lands with its pick: the text waits for the snap. */
+.jc-answer-wait { animation: jc-rise 380ms 1.25s ease both; }
+
+/* Executor: four doors, wider tiles with a second line (the model or page). */
+.jc-grid[data-kind="executor"] { grid-template-columns: repeat(var(--n, 5), minmax(0, 124px)); }
+.jc-logo-page.is-memory { color: #f7c6e6; background: radial-gradient(90% 90% at 70% 20%, rgba(243, 134, 161, 0.3), transparent 70%), linear-gradient(160deg, #2b1f2c, #151118); }
+.jc-sub {
+  max-width: 100%;
+  margin-top: -4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  color: var(--jc-muted);
+}
+.jc-tile.is-win .jc-sub { color: var(--jc-pink-2); font-weight: 600; }
+.jc-title b em { font-style: normal; font-weight: 550; color: var(--jc-pink-2); }
+.jc-logo-page {
+  display: grid;
+  place-items: center;
+  color: #e9e4f0;
+  background: linear-gradient(160deg, #2a2831, #17161b);
+}
+
+/* Reading: one small line while Jev decides who handles the message. */
+.jc.jc-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: auto;
+  min-width: 0;
+  padding: 6px 12px 6px 6px;
+  border-radius: 999px;
+  box-shadow: none;
+}
+.jc-spin.is-small { border-radius: 6px; }
+.jc-line-text { font-size: 12.5px; color: var(--jc-muted); }
+.jc-line-text b { color: var(--jc-ink); font-weight: 650; }
+.jc-mini { display: inline-flex; gap: 4px; padding-left: 4px; border-left: 1px solid rgba(255, 255, 255, 0.08); }
+.jc-mini > span { display: grid; animation: jc-mini 1.2s calc(var(--i) * 0.15s) ease-in-out infinite; }
+.jc-mini .jc-logo, .jc-mini .jev-logo { border-radius: 5px !important; }
+@keyframes jc-mini { 0%, 100% { opacity: 0.35; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
+.jc-kept .jc-chip.is-sample { padding: 2px 6px; }
+
+/* A signed-out agent: shown, dimmed, never picked. */
+.jc-tile.is-off { opacity: 0.35; filter: grayscale(1); }
+.jc-tile.is-off .jc-sub { color: #f5b84d; }

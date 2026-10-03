@@ -1,0 +1,20 @@
+# Inbox-only OpenRouter mapping. Apply after the shared no-tools patch.
+- insert:
+    - id: inbox-openrouter
+      name: '@deepseek-ai/dsh-llm-pi-ai'
+      config:
+        providers:
+          openrouter:
+            apiKeyEnv: DEEPSEEK_API_KEY
+            api: openai-completions
+            baseURL: https://openrouter.ai/api/v1
+            timeoutMs: 30000
+            streamIdleTimeoutMs: 20000
+            compat:
+              thinkingFormat: openrouter
+              maxTokensField: max_tokens
+            models:
+              - id: deepseek/deepseek-v4.1-flash
+                reasoningEfforts:
+                  off: none
+                  high: high

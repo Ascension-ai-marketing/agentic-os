@@ -1,0 +1,61 @@
+.brain-logo {
+  flex: none;
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 27%;
+  overflow: hidden;
+  background: #1b1a22;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1), 0 1px 2px rgb(0 0 0 / 0.35);
+}
+.brain-logo > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: auto;
+}
+.brain-logo[data-brand="hermes"] > img,
+.brain-logo[data-brand="claude"] > img,
+.brain-logo[data-brand="meetings"] > img,
+.brain-logo[data-brand="granola"] > img { object-fit: cover; }
+.brain-logo > img[data-invert] { filter: invert(1); }
+.brain-logo[data-art] .mc-source-brand,
+.brain-logo[data-art] .mc-brand { background: transparent; }
+/* 3D views: the sources with nothing in them yet, each with a how-to. */
+.brain-missing {
+  position: absolute;
+  z-index: 4;
+  top: 14px;
+  left: 14px;
+  right: auto;
+  bottom: auto;
+  height: auto;
+  display: flex;
+  align-items: center;
+  align-content: flex-start;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: calc(100% - 420px);
+  font: 600 10px ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--op-muted, #96919f);
+}
+.brain-missing[data-scoped] { top: 52px; }
+.brain-missing > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 4px;
+  border-radius: 999px;
+  border: 1px dashed color-mix(in srgb, var(--op-muted, #96919f) 45%, transparent);
+  background: color-mix(in srgb, #000 35%, transparent);
+  color: var(--op-ink, #f0edf5);
+  font: 500 11px ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: pointer;
+  opacity: 0.8;
+}
+.brain-missing > button:hover, .brain-missing > button[aria-expanded="true"] { opacity: 1; border-color: #f386a1; }

@@ -1,0 +1,1081 @@
+/* The memory canvas comes first; capture and source management sit beneath it. */
+.cortex-workspace .ar-page-title {
+  margin-bottom: 18px;
+  padding-bottom: 0;
+}
+.cortex-workspace .ar-page-title h1 {
+  font-size: 30px;
+  letter-spacing: -1.2px;
+}
+.cortex-workspace .ar-page-title p {
+  margin-top: 5px;
+  font-size: 12px;
+}
+.cortex-workspace .ar-universe {
+  margin: 0 0 32px;
+  border-radius: 19px;
+  box-shadow: 0 12px 36px #0000000b;
+}
+.cortex-workspace .ar-universe-top {
+  padding: 17px 22px;
+  border-bottom: 0;
+  gap: 14px;
+}
+.cortex-visual-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cortex-workspace .ar-universe-top h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 550;
+  letter-spacing: -0.3px;
+}
+.cortex-live-dot {
+  height: 6px;
+  width: 6px;
+  background: #a5d4c7;
+  border-radius: 50%;
+  box-shadow: 0 0 12px #a5d4c745;
+}
+.cortex-workspace .ar-graph-count {
+  font-size: 10px;
+  gap: 7px;
+}
+.cortex-visual-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 0 22px 15px;
+  border-bottom: 1px solid var(--op-border);
+}
+.cortex-layout-switch {
+  display: flex;
+  gap: 4px;
+  background: var(--op-inset);
+  border: 1px solid var(--op-border);
+  padding: 3px;
+  border-radius: 9px;
+}
+.cortex-layout-switch button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--op-muted);
+  padding: 7px 13px;
+  border-radius: 6px;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+.cortex-layout-switch button[aria-pressed="true"] {
+  background: var(--op-panel);
+  color: var(--op-ink);
+  box-shadow: 0 1px 5px #00000015;
+}
+.cortex-detail-select {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 10px;
+  color: var(--op-muted);
+}
+.cortex-detail-select select {
+  font-size: 11px;
+  max-width: 150px;
+  background: transparent;
+  color: var(--op-ink);
+  border: 0;
+  padding: 6px 0;
+  outline: none;
+}
+.cortex-detail-select option {
+  background: var(--op-panel);
+  color: var(--op-ink);
+}
+.cortex-workspace .ar-universe-body {
+  grid-template-columns: minmax(0, 1fr) 266px;
+  min-height: 500px;
+}
+.cortex-workspace .ar-universe-canvas {
+  min-height: 500px;
+  height: 500px;
+  background: radial-gradient(ellipse at 50% 48%, #141925 0%, #0a0d13 60%, #090b0f 100%);
+}
+.cortex-workspace .ar-universe-canvas > div > div:first-child {
+  min-height: 100% !important;
+}
+.cortex-workspace .ar-universe-canvas .ar-graph-caption {
+  left: 18px;
+  bottom: 16px;
+  background: transparent;
+  padding: 0;
+  color: #838f9e;
+  font-size: 9px;
+  letter-spacing: 0.1px;
+}
+.cortex-workspace .ar-graph-controls {
+  top: 14px;
+  right: 14px;
+  gap: 4px;
+}
+.cortex-workspace .ar-graph-controls button {
+  font-size: 9px;
+  background: #111823c9;
+  border-color: #a4b3cc28;
+  color: #bdc7d7;
+  padding: 6px 9px;
+  backdrop-filter: blur(8px);
+}
+.cortex-workspace .ar-graph-controls button[aria-label^="Zoom"] {
+  font-size: 14px;
+  padding: 4px 9px;
+}
+.cortex-workspace .ar-universe-rail {
+  max-height: 500px;
+  padding: 20px;
+  background: var(--op-panel);
+}
+.cortex-workspace .ar-universe-rail .op-search {
+  padding: 9px 11px;
+  font-size: 11px;
+}
+.cortex-workspace .ar-rail-intro {
+  margin: 25px 0 13px;
+}
+.cortex-rail-kicker {
+  font-size: 8px;
+  letter-spacing: 1.4px;
+  color: var(--op-muted);
+}
+.cortex-workspace .ar-rail-intro h3 {
+  font-size: 19px;
+  letter-spacing: -0.55px;
+  line-height: 1.25;
+  margin: 9px 0 8px;
+  font-weight: 500;
+}
+.cortex-workspace .ar-rail-intro p {
+  font-size: 11px;
+  line-height: 1.75;
+  margin: 0;
+}
+.cortex-workspace .ar-node-row {
+  font-size: 11px;
+  padding: 11px 0;
+}
+.cortex-workspace .ar-graph-provenance {
+  font-size: 9px;
+  line-height: 1.7;
+  margin-top: 19px;
+}
+.cortex-workspace .ar-node-detail h3 {
+  font-size: 19px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.cortex-workspace .ar-node-detail > p {
+  font-size: 11px;
+  line-height: 1.75;
+}
+.cortex-workspace .ar-node-actions .op-button {
+  font-size: 10px;
+}
+.cortex-workspace .ar-universe.is-expanded .ar-universe-body {
+  height: calc(100% - 112px);
+}
+.cortex-workspace .ar-universe.is-expanded .ar-universe-canvas {
+  height: 100%;
+  min-height: 0;
+}
+.cortex-workspace .ar-universe.is-expanded .ar-universe-rail {
+  max-height: none;
+}
+.cortex-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 17px;
+}
+.cortex-section-heading h2 {
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.6px;
+}
+.cortex-section-heading p {
+  font-size: 11px;
+  color: var(--op-muted);
+  margin: 5px 0 0;
+}
+.cortex-section-heading > .op-text-link {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.cortex-space-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.cortex-space {
+  min-width: 0;
+  border: 1px solid var(--op-border);
+  background: var(--op-panel);
+  border-radius: 13px;
+  overflow: hidden;
+  position: relative;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.cortex-space.is-selected {
+  border-color: var(--space-color);
+  background: color-mix(in srgb, var(--space-color) 6%, var(--op-panel));
+}
+.cortex-space-select {
+  display: block;
+  position: relative;
+  width: 100%;
+  text-align: left;
+  padding: 18px 18px 13px;
+}
+.cortex-space-icon {
+  height: 33px;
+  width: 33px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--space-color);
+  background: color-mix(in srgb, var(--space-color) 10%, transparent);
+  margin-bottom: 18px;
+}
+.cortex-space-count {
+  position: absolute;
+  top: 28px;
+  right: 15px;
+  color: var(--op-muted);
+  font-size: 8px;
+  letter-spacing: 0.1px;
+}
+.cortex-space h3 {
+  font-size: 17px;
+  font-weight: 550;
+  letter-spacing: -0.4px;
+  margin: 0 0 7px;
+}
+.cortex-space p {
+  font-size: 11px;
+  line-height: 1.65;
+  color: var(--op-muted);
+  min-height: 36px;
+  max-width: 190px;
+  margin: 0;
+}
+.cortex-space-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--op-ink);
+  width: 100%;
+  text-align: left;
+  border-top: 1px solid var(--op-border);
+  padding: 12px 18px;
+}
+.cortex-space-add:hover,
+.cortex-space-select:hover {
+  background: color-mix(in srgb, var(--space-color) 5%, transparent);
+}
+.cortex-space-add svg {
+  color: var(--space-color);
+  flex: none;
+}
+.cortex-capture-section {
+  margin: 22px 0 30px;
+  scroll-margin-top: 100px;
+}
+.cortex-capture-section .ar-memory-capture {
+  margin: 0;
+}
+.cortex-capture-section .ar-memory-capture form {
+  background: transparent;
+  border-style: dashed;
+  padding: 12px 15px;
+}
+.cortex-capture-section .ar-memory-capture .op-button {
+  font-size: 10px;
+}
+.cortex-capture-section .ar-memory-capture input {
+  font-size: 11px;
+}
+.cortex-workspace .op-library-header {
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.cortex-workspace .op-library-header h2 {
+  font-size: 18px;
+  letter-spacing: -0.45px;
+}
+.cortex-library-empty {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  border-top: 1px solid var(--op-border);
+  border-bottom: 1px solid var(--op-border);
+  padding: 21px 3px;
+  margin-top: 14px;
+}
+.cortex-library-empty > svg {
+  color: var(--op-muted);
+  flex: none;
+  margin-top: 2px;
+}
+.cortex-library-empty strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+.cortex-library-empty p {
+  font-size: 11px;
+  color: var(--op-muted);
+  line-height: 1.7;
+  margin-top: 5px;
+  max-width: 650px;
+}
+.cortex-management {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 18px 0 22px;
+}
+.cortex-management > .op-button {
+  font-size: 10px;
+  background: transparent;
+  border-color: transparent;
+  padding: 7px 10px;
+  color: var(--op-muted);
+}
+.cortex-management > .op-button:hover {
+  background: var(--op-panel);
+  color: var(--op-ink);
+}
+.cortex-manage-sources > span {
+  font-size: 9px;
+  padding: 2px 6px;
+  border: 1px solid var(--op-border);
+  border-radius: 5px;
+  color: var(--op-muted);
+}
+.op-modal:has(.cortex-source-dialog) {
+  max-width: 900px !important;
+}
+.cortex-source-dialog .ar-source-groups {
+  border: 1px solid var(--op-border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 7px;
+}
+.cortex-source-dialog .ar-source-groups > div {
+  padding: 18px;
+}
+.cortex-source-dialog .ar-brain-source {
+  padding: 13px 0;
+}
+.cortex-source-dialog .ar-brain-source strong {
+  font-size: 12px;
+}
+.cortex-source-dialog .ar-brain-source p {
+  font-size: 10px;
+}
+.cortex-source-dialog .ar-source-switch {
+  width: 34px;
+  height: 20px;
+}
+.cortex-source-dialog .ar-source-switch span {
+  width: 14px;
+  height: 14px;
+}
+.cortex-source-dialog .ar-source-switch[aria-checked="true"] span {
+  transform: translateX(12px);
+}
+.cortex-source-dialog .ar-sources-note {
+  background: transparent;
+  border: 0;
+  padding: 14px 0 0;
+  margin: 0;
+  font-size: 10px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cortex-workspace * {
+    scroll-behavior: auto !important;
+  }
+}
+@media (max-width: 1120px) {
+  .cortex-space-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cortex-space p {
+    max-width: none;
+    min-height: 18px;
+  }
+  .cortex-workspace .ar-universe-body {
+    grid-template-columns: minmax(0, 1fr) 230px;
+  }
+  .cortex-workspace .ar-universe-rail {
+    padding: 16px;
+  }
+  .cortex-workspace .ar-graph-count {
+    display: flex;
+  }
+}
+@media (max-width: 760px) {
+  .cortex-workspace .ar-universe-body {
+    grid-template-columns: 1fr;
+  }
+  .cortex-workspace .ar-universe-canvas {
+    height: 440px;
+    min-height: 440px;
+  }
+  .cortex-workspace .ar-universe-rail {
+    max-height: 260px;
+    border-left: 0;
+    border-top: 1px solid var(--op-border);
+  }
+  .cortex-workspace .ar-universe-rail:has(.ar-rail-intro) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 20px;
+    max-height: 265px;
+  }
+  .cortex-workspace .ar-universe-rail > .op-search,
+  .cortex-workspace .ar-universe-rail > .ar-rail-intro,
+  .cortex-workspace .ar-universe-rail > .ar-graph-provenance {
+    grid-column: 1/-1;
+  }
+  .cortex-workspace .ar-rail-intro {
+    margin: 17px 0 8px;
+  }
+  .cortex-workspace .ar-rail-intro p {
+    display: none;
+  }
+  .cortex-workspace .ar-rail-intro h3 {
+    font-size: 16px;
+    margin: 5px 0;
+  }
+  .cortex-workspace .ar-graph-count {
+    font-size: 9px;
+  }
+  .cortex-workspace .ar-universe-top {
+    padding: 16px;
+  }
+  .cortex-visual-toolbar {
+    padding: 0 16px 13px;
+    gap: 8px;
+  }
+  .cortex-detail-select > span {
+    display: none;
+  }
+  .cortex-layout-switch button {
+    padding: 6px 9px;
+    font-size: 10px;
+  }
+  .cortex-detail-select select {
+    font-size: 10px;
+    max-width: 125px;
+  }
+  .cortex-workspace .ar-universe.is-expanded .ar-universe-body {
+    display: flex;
+    flex-direction: column;
+  }
+  .cortex-workspace .ar-universe.is-expanded .ar-universe-canvas {
+    flex: 1;
+    min-height: 260px;
+  }
+  .cortex-workspace .ar-universe.is-expanded .ar-universe-rail {
+    max-height: 230px;
+    flex: none;
+  }
+}
+@media (max-width: 480px) {
+  .cortex-workspace .ar-page-title h1 {
+    font-size: 27px;
+  }
+  .cortex-workspace .ar-graph-count {
+    gap: 5px;
+    font-size: 8px;
+  }
+  .cortex-workspace .ar-universe-top {
+    gap: 8px;
+  }
+  .cortex-workspace .ar-universe-top h2 {
+    font-size: 14px;
+  }
+  .cortex-space-grid {
+    gap: 9px;
+  }
+  .cortex-space-select {
+    padding: 15px 13px 12px;
+  }
+  .cortex-space h3 {
+    font-size: 16px;
+  }
+  .cortex-space p {
+    font-size: 10px;
+    min-height: 34px;
+  }
+  .cortex-space-count {
+    top: 25px;
+    right: 12px;
+    font-size: 7px;
+  }
+  .cortex-space-icon {
+    width: 27px;
+    height: 27px;
+  }
+  .cortex-space-icon svg {
+    width: 16px;
+  }
+  .cortex-space-add {
+    font-size: 9px;
+    padding: 11px 12px;
+    gap: 4px;
+  }
+  .cortex-section-heading h2 {
+    font-size: 17px;
+  }
+  .cortex-section-heading > .op-text-link {
+    font-size: 9px;
+  }
+  .cortex-management {
+    justify-content: space-between;
+    gap: 5px;
+  }
+  .cortex-management > .op-button {
+    padding: 6px 2px;
+    font-size: 9px;
+  }
+  .cortex-workspace .op-library-tools {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .cortex-workspace .op-library-tools .op-search {
+    flex: 1;
+  }
+  .cortex-workspace .ar-universe-canvas {
+    height: 390px;
+    min-height: 390px;
+  }
+}
+/* Import tools stay in the inline composer, leaving the cortex unobstructed. */
+.cortex-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.cortex-header-actions .cortex-manage-sources {
+  background: transparent;
+}
+.cortex-source-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  color: var(--op-accent);
+  margin-top: 9px;
+  text-align: left;
+}
+.cortex-source-add:hover {
+  text-decoration: underline;
+}
+.cortex-imports {
+  margin-top: 24px;
+  max-width: 900px;
+}
+.cortex-import-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+.cortex-import-heading h3 {
+  font-size: 17px;
+  letter-spacing: -0.35px;
+  font-weight: 500;
+}
+.cortex-import-heading p {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--op-muted);
+  margin-top: 6px;
+}
+.cortex-import-heading > svg {
+  color: var(--op-muted);
+}
+.cortex-agent-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px;
+}
+.cortex-agent-options > button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 15px;
+  border: 1px solid var(--op-border);
+  border-radius: 11px;
+  background: var(--op-inset);
+}
+.cortex-agent-options > button[aria-pressed="true"] {
+  border-color: var(--op-accent);
+  background: var(--op-accent-soft);
+}
+.cortex-agent-options > button > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.cortex-agent-options > button strong {
+  font-size: 12px;
+  font-weight: 550;
+  display: block;
+}
+.cortex-agent-options > button small {
+  display: block;
+  font-size: 10px;
+  color: var(--op-muted);
+  margin-top: 5px;
+  line-height: 1.5;
+}
+.cortex-agent-options > button > svg {
+  color: var(--op-accent);
+  flex: none;
+}
+.cortex-agent-symbol {
+  display: grid;
+  place-items: center;
+  height: 35px;
+  width: 35px;
+  flex: none;
+  border: 1px solid var(--op-border);
+  border-radius: 9px;
+  background: var(--op-panel);
+  font-size: 24px;
+  color: var(--op-ink);
+}
+.cortex-agent-symbol.claude {
+  color: #d78b70;
+}
+.cortex-scan-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 17px 0;
+}
+.cortex-scan-line p {
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--op-muted);
+  max-width: 440px;
+}
+.cortex-scan-line button {
+  font-size: 11px;
+  flex: none;
+}
+.cortex-local-picker {
+  border: 1px solid var(--op-border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.cortex-local-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--op-border);
+  background: var(--op-inset);
+}
+.cortex-local-toolbar > .op-search {
+  flex: 1;
+  background: var(--op-panel);
+  max-width: 500px;
+  padding: 8px 10px;
+  font-size: 11px;
+}
+.cortex-local-toolbar > .op-text-link {
+  font-size: 10px;
+  white-space: nowrap;
+}
+.cortex-local-files {
+  max-height: 300px;
+  overflow: auto;
+}
+.cortex-local-file {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--op-border);
+  cursor: pointer;
+}
+.cortex-local-file:last-child {
+  border: 0;
+}
+.cortex-local-file:has(input:checked) {
+  background: var(--op-accent-soft);
+}
+.cortex-local-file > input {
+  accent-color: var(--op-accent);
+  height: 15px;
+  width: 15px;
+  flex: none;
+}
+.cortex-local-file > svg {
+  flex: none;
+  color: var(--op-muted);
+}
+.cortex-local-file > span:not(.cortex-file-meta) {
+  min-width: 0;
+  flex: 1;
+}
+.cortex-local-file strong {
+  font-size: 11px;
+  font-weight: 500;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cortex-local-file small {
+  display: block;
+  font-size: 9px;
+  color: var(--op-muted);
+  margin-top: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cortex-file-meta {
+  font-size: 10px;
+  text-align: right;
+  color: var(--op-muted);
+  flex: none;
+}
+.cortex-import-empty {
+  padding: 27px 16px;
+  font-size: 11px;
+  color: var(--op-muted);
+}
+.cortex-import-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px;
+  border-top: 1px solid var(--op-border);
+}
+.cortex-import-footer button {
+  font-size: 11px;
+}
+.cortex-collection-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 10px;
+  color: var(--op-muted);
+  max-width: 230px;
+  flex: 1;
+}
+.cortex-collection-field select {
+  border: 1px solid var(--op-border);
+  border-radius: 8px;
+  background: var(--op-inset);
+  color: var(--op-ink);
+  font-size: 11px;
+  padding: 10px 12px;
+  width: 100%;
+}
+.cortex-local-picker > .op-form-help {
+  padding: 12px 16px;
+  margin: 0;
+  border-top: 1px solid var(--op-border);
+}
+.cortex-notion-mark {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--op-border);
+  border-radius: 7px;
+  height: 36px;
+  width: 36px;
+  font-family: Georgia, serif;
+  font-size: 25px;
+  font-weight: 700;
+  background: var(--op-inset);
+}
+.cortex-notion-connected {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 15px;
+  border: 1px solid var(--op-border);
+  border-radius: 9px;
+  font-size: 11px;
+  background: var(--op-inset);
+  margin-bottom: 20px;
+}
+.cortex-notion-connected > svg {
+  color: var(--op-mint);
+}
+.cortex-notion-connected > .op-text-link {
+  margin-left: auto;
+  font-size: 10px;
+}
+.cortex-notion-connect {
+  padding: 18px;
+  border: 1px solid var(--op-border);
+  border-radius: 12px;
+  background: var(--op-inset);
+  margin-bottom: 23px;
+}
+.cortex-notion-connect > p {
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--op-muted);
+  margin: 0 0 8px;
+}
+.cortex-notion-connect > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--op-accent);
+  margin-bottom: 20px;
+}
+.cortex-notion-connect > label,
+.cortex-notion-import > label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--op-muted);
+}
+.cortex-notion-connect input,
+.cortex-notion-import input {
+  background: var(--op-panel);
+  border: 1px solid var(--op-border);
+  color: var(--op-ink);
+  border-radius: 8px;
+  padding: 11px 13px;
+  font-size: 12px;
+  outline: none;
+  min-width: 0;
+}
+.cortex-notion-connect input:focus,
+.cortex-notion-import input:focus {
+  border-color: var(--op-accent);
+}
+.cortex-notion-connect > div {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 14px;
+}
+.cortex-notion-connect button {
+  font-size: 11px;
+}
+.cortex-notion-import > .op-form-help {
+  font-size: 10px;
+  margin-top: 8px;
+}
+.cortex-notion-import .cortex-import-footer {
+  padding: 17px 0;
+  border: 0;
+}
+.cortex-notion-export {
+  font-size: 10px;
+  margin-top: 4px;
+}
+.cortex-imports > .op-notice {
+  margin-top: 15px;
+}
+.cortex-upload-area {
+  grid-column: 1/-1;
+}
+.cortex-dropzone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  border: 1px dashed var(--op-border);
+  border-radius: 12px;
+  padding: 33px 20px;
+  background: var(--op-inset);
+  cursor: pointer;
+  text-align: center;
+  min-width: 0;
+}
+.cortex-dropzone:focus-within,
+.cortex-dropzone:hover {
+  border-color: var(--op-accent);
+}
+.cortex-dropzone > svg {
+  color: var(--op-accent);
+}
+.cortex-dropzone strong {
+  font-size: 13px;
+  font-weight: 500;
+  word-break: break-word;
+  max-width: 100%;
+}
+.cortex-dropzone span {
+  font-size: 10px;
+  color: var(--op-muted);
+  line-height: 1.6;
+}
+.cortex-dropzone > input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+.cortex-upload-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 10px;
+  color: var(--op-muted);
+  line-height: 1.8;
+}
+.cortex-upload-note > svg {
+  flex: none;
+  margin-top: 2px;
+}
+.cortex-upload-note > span {
+  flex: 1;
+}
+.cortex-upload-note > small {
+  white-space: nowrap;
+  font-size: 8px;
+  letter-spacing: 0.6px;
+  border: 1px solid var(--op-border);
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+@media (max-width: 650px) {
+  .cortex-header-actions {
+    gap: 7px;
+  }
+  .cortex-header-actions .cortex-manage-sources > span {
+    display: none;
+  }
+  .cortex-agent-options {
+    grid-template-columns: 1fr;
+  }
+  .cortex-import-heading h3 {
+    font-size: 16px;
+  }
+  .cortex-agent-options > button {
+    padding: 12px;
+  }
+  .cortex-scan-line {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .cortex-scan-line button {
+    font-size: 10px;
+  }
+  .cortex-scan-line p {
+    font-size: 9px;
+  }
+  .cortex-local-toolbar {
+    padding: 11px;
+    gap: 10px;
+  }
+  .cortex-local-toolbar > .op-text-link {
+    font-size: 9px;
+  }
+  .cortex-local-file {
+    padding: 12px 11px;
+    gap: 8px;
+  }
+  .cortex-local-file > svg {
+    display: none;
+  }
+  .cortex-local-file strong {
+    font-size: 10px;
+  }
+  .cortex-local-file small {
+    font-size: 8px;
+  }
+  .cortex-file-meta {
+    font-size: 9px;
+  }
+  .cortex-import-footer {
+    padding: 13px;
+    gap: 12px;
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .cortex-collection-field {
+    max-width: none;
+  }
+  .cortex-import-footer button {
+    justify-content: center;
+    font-size: 10px;
+  }
+  .cortex-notion-connected {
+    flex-wrap: wrap;
+    font-size: 10px;
+  }
+  .cortex-notion-connected > .op-text-link {
+    margin-left: 0;
+  }
+  .cortex-dropzone {
+    padding: 25px 14px;
+  }
+  .cortex-upload-note > small {
+    display: none;
+  }
+  .cortex-notion-connect {
+    padding: 14px;
+  }
+  .cortex-imports {
+    margin-top: 18px;
+  }
+}
+
+.cortex-agent-symbol > img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 5px;
+}
+
+@media (max-width: 650px) {
+  .cortex-capture-section .ar-memory-entry > .op-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    border-radius: 12px;
+    overflow: visible;
+  }
+  .cortex-capture-section .ar-memory-entry > .op-tabs button {
+    font-size: 9px;
+    padding: 8px 4px;
+    white-space: nowrap;
+  }
+}

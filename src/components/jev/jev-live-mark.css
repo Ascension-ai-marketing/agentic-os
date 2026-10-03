@@ -1,0 +1,47 @@
+.jlm {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  filter: drop-shadow(0 6px 18px rgba(212, 91, 182, 0.35));
+}
+.jlm svg { position: relative; z-index: 1; overflow: visible; }
+.jlm-ring {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  border: 1.5px solid rgba(243, 134, 161, 0.7);
+  opacity: 0;
+  pointer-events: none;
+}
+.jlm-spark { stroke-dasharray: 9 91; stroke-dashoffset: 0; opacity: 0; }
+.jlm-j { stroke-dasharray: 100; stroke-dashoffset: 0; }
+.jlm-hex-fill { transform-origin: 24px 24px; }
+
+.jlm[data-mood="idle"] svg { animation: jlm-breathe 3.6s ease-in-out infinite; }
+.jlm[data-mood="thinking"] svg { animation: jlm-throb 0.9s ease-in-out infinite; }
+.jlm[data-mood="thinking"] .jlm-spark { opacity: 1; animation: jlm-run 0.8s linear infinite; }
+.jlm[data-mood="thinking"] .jlm-ring { animation: jlm-ripple 1.2s cubic-bezier(0.2, 0.7, 0.3, 1) infinite; }
+.jlm[data-mood="thinking"] .jlm-ring-2 { animation-delay: 0.6s; }
+.jlm[data-mood="done"] .jlm-j { animation: jlm-draw 0.7s cubic-bezier(0.3, 0.8, 0.3, 1) both; }
+.jlm[data-mood="done"] .jlm-hex-fill { animation: jlm-flash 0.9s ease-out both; }
+.jlm[data-mood="done"] .jlm-ring { animation: jlm-ripple 1s cubic-bezier(0.2, 0.7, 0.3, 1) 1 both; }
+
+@keyframes jlm-breathe { 50% { transform: scale(1.04); } }
+@keyframes jlm-throb { 50% { transform: scale(1.08) rotate(-4deg); } }
+@keyframes jlm-run { to { stroke-dashoffset: -100; } }
+@keyframes jlm-ripple {
+  0% { opacity: 0.9; transform: scale(0.8); }
+  100% { opacity: 0; transform: scale(1.9); }
+}
+@keyframes jlm-draw { from { stroke-dashoffset: 100; } }
+@keyframes jlm-flash {
+  0% { transform: scale(1); filter: brightness(1); }
+  30% { transform: scale(1.12); filter: brightness(2.2); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jlm svg, .jlm-spark, .jlm-ring, .jlm-j, .jlm-hex-fill { animation: none !important; }
+  .jlm[data-mood="thinking"] .jlm-spark { opacity: 0.9; stroke-dasharray: 100 0; }
+}

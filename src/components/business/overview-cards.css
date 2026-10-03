@@ -1,0 +1,88 @@
+.overview-arrange-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.overview-arrange-actions small {
+  font-size: 10px;
+  color: var(--op-muted);
+}
+.overview-arrange-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--op-muted);
+  cursor: pointer;
+}
+.overview-arrange-actions button:hover {
+  color: var(--op-ink);
+}
+.overview-arrange-actions button:focus-visible,
+.overview-card-handle:focus-visible {
+  outline: 2px solid var(--op-accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.overview-arrange-hint {
+  color: var(--op-muted);
+  font-size: 11px;
+  margin: -2px 0 12px;
+}
+.overview-card-slot {
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: 22px;
+}
+.overview-card-slot > .biz-bank {
+  flex: 1;
+  width: 100%;
+}
+.overview-card-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 8px;
+  border: 1px dashed var(--op-border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  color: var(--op-muted);
+  font-size: 11px;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.overview-card-handle:active {
+  cursor: grabbing;
+}
+.overview-card-slot[data-dragging] {
+  pointer-events: none;
+  opacity: 0.88;
+  filter: drop-shadow(0 12px 20px #0004);
+}
+.overview-card-slot[data-drop-target] {
+  outline: 2px dashed var(--op-accent);
+  outline-offset: 5px;
+}
+.biz-overview-money-row[data-arranging] {
+  isolation: isolate;
+}
+@media (min-width: 601px) and (max-width: 950px) {
+  .overview-card-slot:last-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 700px) {
+  .overview-arrange-actions {
+    justify-content: flex-start;
+    gap: 10px;
+  }
+}

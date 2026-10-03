@@ -1,0 +1,278 @@
+.ar-site-showcase {
+  width: 100%;
+  min-width: 0;
+  --preview-width: clamp(280px, 29vw, 420px);
+  margin: 26px auto 0;
+  text-align: left;
+  color: var(--op-ink);
+}
+.ar-site-showcase-heading,
+.ar-site-showcase-controls,
+.ar-site-showcase-credit,
+.ar-site-showcase-credit a {
+  display: flex;
+  align-items: center;
+}
+.ar-site-showcase-heading {
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+  padding: 0 24px;
+}
+.ar-site-showcase-heading h2 {
+  font-size: 13px;
+  letter-spacing: -0.2px;
+  font-weight: 500;
+}
+.ar-site-showcase-controls {
+  gap: 5px;
+}
+.ar-site-showcase-controls button {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  background: var(--op-panel);
+  border: 1px solid var(--op-border);
+  border-radius: 50%;
+  color: var(--op-muted);
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.ar-site-showcase-controls button:hover {
+  color: var(--op-ink);
+  border-color: var(--op-accent);
+}
+.ar-site-showcase :is(button, a):focus-visible {
+  outline: 2px solid var(--op-accent);
+  outline-offset: 3px;
+}
+.ar-site-showcase-window {
+  overflow: hidden;
+  width: 100%;
+  border-radius: 0;
+  padding: 4px 0;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 20px,
+    #000 calc(100% - 20px),
+    transparent
+  );
+}
+.ar-site-showcase-track {
+  width: max-content;
+  display: flex;
+  animation: ar-site-showcase-drift 90s linear infinite;
+  animation-play-state: paused;
+  will-change: transform;
+}
+.ar-site-showcase-rows {
+  display: grid;
+  gap: 10px;
+}
+.ar-site-showcase-track[data-direction="left"] {
+  animation-direction: reverse;
+  animation-duration: 100s;
+}
+.ar-site-showcase-track[data-playing="true"] {
+  animation-play-state: running;
+}
+.ar-site-showcase-group {
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  padding: 0 14px 0 0;
+  list-style: none;
+}
+.ar-site-showcase-group li {
+  width: var(--preview-width);
+  flex: 0 0 var(--preview-width);
+  border: 1px solid var(--op-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--op-panel);
+}
+.ar-site-showcase-group a {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.ar-site-showcase-screen {
+  position: relative;
+  aspect-ratio: 1.7;
+  overflow: hidden;
+  background: var(--op-inset);
+}
+.ar-site-showcase-screen video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ar-site-showcase-visit {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #18181cbb;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.ar-site-showcase-group a:is(:hover, :focus-visible) .ar-site-showcase-visit {
+  opacity: 1;
+}
+.ar-site-showcase-credit {
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+  color: var(--op-muted);
+  font-size: 9px;
+  padding: 0 24px;
+}
+.ar-site-showcase-credit a {
+  gap: 4px;
+}
+.ar-site-showcase-window[data-manual="true"] {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--op-border) transparent;
+}
+.ar-site-showcase-track[data-manual="true"] {
+  animation: none;
+  transform: none;
+}
+.ar-site-showcase-track[data-manual="true"] .ar-site-showcase-group[aria-hidden="true"] {
+  display: none;
+}
+@keyframes ar-site-showcase-drift {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@media (max-width: 600px) {
+  .ar-site-showcase {
+    --preview-width: min(78vw, 340px);
+    margin-top: 22px;
+  }
+  .ar-site-showcase-heading h2 {
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ar-site-showcase-track {
+    animation: none;
+    transform: none;
+    will-change: auto;
+  }
+  .ar-site-showcase-window {
+    overflow-x: auto;
+  }
+  .ar-site-showcase-group[aria-hidden="true"] {
+    display: none;
+  }
+  .ar-site-showcase-controls button,
+  .ar-site-showcase-visit {
+    transition: none;
+  }
+}
+
+/* The Website OS connection form uses the current theme in both color modes. */
+.op-websites .ar-website-start > form {
+  background: var(--op-panel) !important;
+  border-color: var(--op-border) !important;
+  color: var(--op-ink);
+}
+.op-websites .ar-website-start > form:focus-within {
+  border-color: var(--op-accent) !important;
+}
+.op-websites .ar-website-start > form label {
+  color: var(--op-muted) !important;
+}
+.op-websites .ar-website-start > form input {
+  color: var(--op-ink);
+  caret-color: var(--op-accent);
+}
+.op-websites .ar-website-start > form input::placeholder {
+  color: var(--op-muted);
+  opacity: 1;
+}
+html:not(.dark) .op-websites .ar-website-start > form .wos-c-primary {
+  color: #fff !important;
+}
+
+/* A compact starting point leaves the website examples in view. */
+.ar-website-landing {
+  padding-top: clamp(24px, 4vh, 42px);
+  padding-bottom: 20px;
+}
+.ar-website-start {
+  max-width: 850px;
+  text-align: center;
+}
+.ar-website-start > h1 {
+  margin: 0;
+  font-size: clamp(32px, 3.9vw, 56px);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.055em;
+}
+.ar-website-start > p {
+  max-width: 540px;
+  margin: 12px auto 0;
+  color: var(--op-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.op-websites .ar-website-start > form {
+  max-width: 590px;
+  margin: 20px auto 0;
+  padding: 6px;
+  border-radius: 15px;
+  text-align: left;
+}
+.ar-website-start .ar-website-input-icon {
+  display: grid;
+  flex: 0 0 34px;
+  place-items: center;
+  color: var(--op-muted);
+}
+.ar-website-start > .ar-website-hint {
+  margin-top: 8px;
+  font-size: 10px;
+}
+.ar-website-recent {
+  max-width: 660px;
+  margin: 20px auto 0;
+  text-align: left;
+}
+.ar-website-recent-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.ar-website-recent-list > button {
+  flex: 0 0 190px;
+}
+@media (max-width: 600px) {
+  .ar-website-start > h1 {
+    font-size: clamp(30px, 8vw, 43px);
+  }
+  .ar-website-start > p {
+    font-size: 11px;
+  }
+  .ar-site-showcase-heading,
+  .ar-site-showcase-credit {
+    padding-inline: 16px;
+  }
+}

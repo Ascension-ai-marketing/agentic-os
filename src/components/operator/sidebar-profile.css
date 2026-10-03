@@ -1,0 +1,47 @@
+.op-identity.ar-sidebar-profile {
+  margin-top: 8px;
+  padding: 11px 8px;
+  gap: 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: background-color 160ms ease;
+}
+
+.ar-sidebar-profile:hover {
+  background: var(--op-accent-soft);
+}
+
+.ar-sidebar-profile:focus-visible {
+  outline: 2px solid var(--op-accent);
+  outline-offset: 2px;
+}
+
+.ar-sidebar-profile > img {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--op-border);
+}
+
+.ar-sidebar-profile > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 500;
+}
+
+.ar-sidebar-profile > svg {
+  flex-shrink: 0;
+  color: var(--op-muted);
+}
+
+#personal-profile {
+  scroll-margin-top: 96px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .op-identity.ar-sidebar-profile {
+    transition: none;
+  }
+}

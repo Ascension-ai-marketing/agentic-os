@@ -1,0 +1,777 @@
+/* The neural scene keeps its own contrast and visual rhythm in either app theme. */
+.cortex-workspace .ar-universe.neural-universe {
+  background: #0c1016;
+  border: 1px solid #26303c;
+  border-radius: 19px;
+  color: #e4ecf4;
+  box-shadow: 0 15px 60px #00000018;
+  overflow: hidden;
+  margin: 0 0 30px;
+}
+.cortex-workspace .neural-universe .ar-universe-top.neural-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 13px 18px;
+  background: #0f1319;
+  border-bottom: 1px solid #222c36;
+  min-height: 65px;
+}
+.cortex-workspace .neural-universe .cortex-visual-title {
+  gap: 8px;
+  flex: none;
+}
+.cortex-workspace .neural-universe .cortex-visual-title h2 {
+  font-size: 14px;
+  letter-spacing: -0.25px;
+  color: #edf5ff;
+  font-weight: 550;
+  margin: 0;
+}
+.cortex-workspace .neural-universe .cortex-live-dot {
+  background: #71efbc;
+  box-shadow: 0 0 11px #71efbc80;
+  width: 5px;
+  height: 5px;
+}
+.neural-layout-switch {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: #080c12;
+  border: 1px solid #26303d;
+  border-radius: 9px;
+  padding: 3px;
+}
+.neural-layout-switch button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 6px;
+  padding: 7px 11px;
+  color: #8392a5;
+  font-size: 10px;
+  white-space: nowrap;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+.neural-layout-switch button[aria-pressed="true"] {
+  background: #1a2930;
+  color: #b6ffe0;
+  box-shadow: inset 0 0 0 1px #6fddb622;
+}
+.neural-layout-switch button:hover {
+  color: #defff3;
+}
+.cortex-workspace .neural-universe .ar-graph-count {
+  display: flex;
+  font-size: 9px;
+  color: #8997a9;
+  margin-left: auto;
+  gap: 7px;
+  white-space: nowrap;
+}
+.cortex-workspace .neural-universe .ar-universe-top .op-icon-button {
+  color: #8a9bae;
+  flex: none;
+  margin: 0;
+}
+.cortex-workspace .neural-universe .ar-universe-top .op-icon-button:hover {
+  color: #d5ffe8;
+  background: #ffffff08;
+}
+.cortex-workspace .neural-universe .ar-universe-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 264px;
+  min-height: 610px;
+}
+.cortex-workspace .neural-universe .ar-universe-canvas {
+  min-height: 610px;
+  height: 610px;
+  background: #020508;
+  overflow: hidden;
+  position: relative;
+}
+.cortex-workspace .neural-universe .ar-universe-canvas > div > div:first-child {
+  min-height: 100% !important;
+}
+.cortex-workspace .neural-universe .op-search {
+  background: #080e15;
+  border-color: #263241;
+  color: #788ba1;
+  padding: 9px 11px;
+}
+.cortex-workspace .neural-universe .op-search input {
+  color: #e2ebf8;
+  font-size: 11px;
+  background: transparent;
+}
+.cortex-workspace .neural-universe .op-search input::placeholder {
+  color: #64778e;
+}
+.neural-source-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+.neural-record-meta {
+  display: block;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #829bac;
+  margin: 0 0 13px;
+}
+.cortex-workspace .neural-universe .ar-node-detail h3 {
+  font-size: 20px;
+  line-height: 1.3;
+  color: #e5f1fb;
+  margin: 13px 0;
+  letter-spacing: -0.5px;
+}
+.cortex-workspace .neural-universe .ar-node-detail p {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #9cafc2;
+}
+.cortex-workspace .neural-universe .op-eyebrow {
+  color: #6f859c;
+  font-size: 8px;
+  letter-spacing: 1.2px;
+}
+.cortex-workspace .neural-universe .ar-node-row {
+  font-size: 10px;
+  padding: 11px 0;
+  border-color: #24313e;
+  color: #a8bbce;
+}
+.cortex-workspace .neural-universe .ar-node-row:hover {
+  color: #a1ffd8;
+}
+.cortex-workspace .neural-universe .ar-node-actions .op-button {
+  font-size: 9px;
+  color: #bfd1e4;
+  background: #142331;
+  border-color: #2d4051;
+}
+.cortex-workspace .neural-universe .ar-node-actions .op-button.primary {
+  color: #c5ffe4;
+  background: #17362c;
+  border-color: #4f806549;
+}
+.neural-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #84b6a8;
+  font-size: 10px;
+  margin-top: 18px;
+}
+.cortex-workspace .neural-universe .ar-graph-controls {
+  top: 14px;
+  right: 14px;
+  left: 14px;
+  justify-content: flex-end;
+  gap: 5px;
+  pointer-events: none;
+}
+.cortex-workspace .neural-universe .ar-graph-controls > * {
+  pointer-events: auto;
+}
+.cortex-workspace .neural-universe .ar-graph-controls button,
+.neural-link-density {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #899eae;
+  background: #08111bce;
+  backdrop-filter: blur(10px);
+  border: 1px solid #7897b329;
+  border-radius: 7px;
+  font-size: 9px;
+  padding: 7px 9px;
+  white-space: nowrap;
+}
+.cortex-workspace .neural-universe .ar-graph-controls button[aria-pressed="true"] {
+  color: #8bf3c4;
+  border-color: #6fd3a944;
+}
+.cortex-workspace .neural-universe .ar-graph-controls button:hover {
+  color: #d8f5e9;
+  background: #172734;
+}
+.neural-link-density select {
+  font-size: 9px;
+  background: transparent;
+  color: #b4c9da;
+  max-width: 68px;
+  border: 0;
+  padding: 0;
+  outline: 0;
+}
+.neural-link-density option {
+  background: #111e2c;
+  color: #d4e7f6;
+}
+.neural-detail-bar {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  right: 18px;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  z-index: 3;
+  pointer-events: none;
+  height: auto !important;
+}
+.neural-detail-bar > * {
+  pointer-events: auto;
+}
+.neural-detail-levels {
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid #48637b40;
+  border-radius: 12px;
+  background: #081019d9;
+  backdrop-filter: blur(16px);
+}
+.neural-detail-levels button {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 5px;
+  width: 52px;
+  padding: 7px 5px 6px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 9px;
+  color: #718ba2;
+}
+.neural-detail-levels button[aria-pressed="true"] {
+  background: #14352c;
+  color: #a8f4d5;
+  border-color: #71c4a536;
+}
+.neural-detail-glyph {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 20px;
+  opacity: 0.7;
+  background:
+    radial-gradient(circle at 50% 50%, currentColor 0 2px, transparent 2.5px),
+    radial-gradient(circle at 15% 20%, currentColor 0 1px, transparent 1.5px),
+    radial-gradient(circle at 85% 25%, currentColor 0 1px, transparent 1.5px),
+    radial-gradient(circle at 22% 85%, currentColor 0 1px, transparent 1.5px),
+    radial-gradient(circle at 83% 80%, currentColor 0 1px, transparent 1.5px);
+}
+.neural-detail-glyph.mid {
+  background-size: 22px 18px;
+  transform: scale(0.9);
+}
+.neural-detail-glyph.micro {
+  background-size: 12px 12px;
+  transform: scale(0.92);
+}
+.neural-detail-glyph.full {
+  background-size: 8px 9px;
+}
+.neural-render-count {
+  color: #9cafc2;
+  font-size: 10px;
+  margin-left: auto;
+  text-align: right;
+  padding: 7px 0;
+  text-shadow: 0 1px 4px #000;
+  pointer-events: none;
+}
+.neural-render-count small {
+  display: block;
+  color: #657b90;
+  font-size: 8px;
+  margin-top: 5px;
+}
+.neural-scope-chip {
+  position: absolute;
+  left: 18px;
+  top: 61px;
+  height: auto !important;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  color: #c8ddf2;
+  padding: 7px 10px;
+  border-radius: 20px;
+  background: #0c1723c9;
+  border: 1px solid #49627a40;
+  backdrop-filter: blur(10px);
+  z-index: 3;
+}
+.neural-scope-chip i {
+  height: 5px;
+  width: 5px;
+  border-radius: 50%;
+}
+.cortex-workspace .neural-universe.is-expanded .ar-universe-body {
+  height: calc(100% - 65px);
+}
+.cortex-workspace .neural-universe.is-expanded .ar-universe-canvas {
+  height: 100%;
+  min-height: 0;
+}
+@media (max-width: 1150px) {
+  .cortex-workspace .neural-universe .ar-universe-top.neural-header {
+    gap: 12px;
+    padding: 12px;
+  }
+  .cortex-workspace .neural-universe .ar-universe-body {
+    grid-template-columns: minmax(0, 1fr) 225px;
+  }
+  .neural-layout-switch button {
+    font-size: 9px;
+    padding: 7px 8px;
+  }
+  .cortex-workspace .neural-universe .ar-graph-count {
+    font-size: 8px;
+  }
+  .neural-render-count small {
+    max-width: 110px;
+  }
+  .neural-source-grid {
+    gap: 6px;
+  }
+}
+@media (max-width: 850px) {
+  .cortex-workspace .neural-universe .ar-universe-body {
+    grid-template-columns: minmax(0, 1fr) 200px;
+  }
+  .cortex-workspace .neural-universe .ar-graph-count {
+    display: none;
+  }
+  .cortex-workspace .neural-universe .ar-universe-top .op-icon-button {
+    margin-left: auto;
+  }
+  .neural-render-count {
+    display: none;
+  }
+  .cortex-workspace .neural-universe .ar-graph-controls {
+    flex-wrap: wrap;
+    left: 10px;
+    right: 10px;
+  }
+  .cortex-workspace .neural-universe .ar-graph-controls button,
+  .neural-link-density {
+    font-size: 8px;
+    padding: 6px;
+  }
+}
+@media (max-width: 680px) {
+  .cortex-workspace .neural-universe .ar-universe-body {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+  .cortex-workspace .neural-universe .ar-universe-canvas {
+    height: 510px;
+    min-height: 510px;
+  }
+  .cortex-workspace .neural-universe .ar-universe-top.neural-header {
+    gap: 9px;
+    flex-wrap: wrap;
+    padding: 11px 12px;
+  }
+  .cortex-workspace .neural-universe .cortex-visual-title h2 {
+    font-size: 12px;
+  }
+  .neural-layout-switch {
+    margin-left: auto;
+  }
+  .neural-layout-switch button {
+    padding: 6px;
+    font-size: 9px;
+    gap: 4px;
+  }
+  .neural-layout-switch button svg {
+    width: 11px;
+  }
+  .cortex-workspace .neural-universe .ar-universe-top .op-icon-button {
+    margin-left: 0;
+  }
+  .neural-source-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .neural-detail-bar {
+    left: 12px;
+    bottom: 13px;
+    right: 12px;
+  }
+  .neural-detail-levels button {
+    width: 49px;
+  }
+  .neural-render-count {
+    display: block;
+    font-size: 8px;
+  }
+  .neural-render-count small {
+    font-size: 7px;
+    max-width: 80px;
+  }
+  .neural-scope-chip {
+    top: 58px;
+  }
+  .cortex-workspace .neural-universe.is-expanded .ar-universe-body {
+    height: calc(100% - 63px);
+    display: flex;
+    flex-direction: column;
+  }
+  .cortex-workspace .neural-universe.is-expanded .ar-universe-canvas {
+    flex: 1;
+    min-height: 270px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .neural-universe * {
+    transition: none !important;
+  }
+}
+
+/* One source shelf above the canvas. Inspectors appear only for selected records. */
+.cortex-workspace .neural-wide .ar-universe-body {
+  display: block;
+  min-height: 640px;
+}
+.cortex-workspace .neural-wide .ar-universe-canvas {
+  width: 100%;
+  height: 640px;
+  min-height: 640px;
+}
+.cortex-workspace .neural-wide .neural-header-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  width: 205px;
+  min-width: 120px;
+  flex: 0 1 205px;
+  padding: 7px 10px;
+  border-radius: 8px;
+}
+.cortex-workspace .neural-wide .neural-header-search input {
+  min-width: 0;
+  width: 100%;
+}
+.neural-header-search > button {
+  color: #8da3b7;
+  display: flex;
+}
+.cortex-workspace .neural-wide .ar-graph-count {
+  margin-left: 0;
+}
+.neural-node-inspector,
+.neural-search-results {
+  position: absolute;
+  right: 18px;
+  top: 61px;
+  z-index: 5;
+  width: min(330px, calc(100% - 36px));
+  max-height: calc(100% - 165px);
+  overflow: auto;
+  padding: 17px;
+  border: 1px solid #3b536652;
+  border-radius: 14px;
+  background: #0d1723ed;
+  color: #adbdcf;
+  box-shadow: 0 10px 45px #0007;
+  backdrop-filter: blur(18px);
+  scrollbar-width: thin;
+  scrollbar-color: #344a5c transparent;
+}
+.neural-inspector-top,
+.neural-search-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.neural-inspector-top > button,
+.neural-search-heading > button {
+  display: flex;
+  margin-left: auto;
+  color: #8197ac;
+  padding: 3px;
+}
+.neural-search-heading {
+  color: #c5d6e5;
+  font-size: 11px;
+  padding-bottom: 12px;
+}
+.neural-search-heading small {
+  color: #6e879f;
+}
+.neural-search-results > p {
+  color: #8b9fb3;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.cortex-workspace .neural-wide .ar-node-detail h3 {
+  font-size: 19px;
+}
+.cortex-workspace .neural-wide .neural-inspector-preview {
+  white-space: pre-wrap;
+  max-height: 190px;
+  overflow: auto;
+  font-size: 11px;
+  line-height: 1.75;
+  margin-bottom: 17px;
+}
+.cortex-workspace .neural-wide .ar-node-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.cortex-workspace .neural-wide .ar-node-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+}
+.cortex-workspace .neural-wide .ar-node-row i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex: none;
+}
+.cortex-workspace .neural-wide .ar-node-row span {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.neural-scope-chip > span {
+  font-size: 8px;
+  color: #819bb4;
+  margin-left: 7px;
+}
+.neural-quiet-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 50px 25px 100px;
+  background: radial-gradient(ellipse at 50% 45%, #10202780, transparent 65%);
+  color: #829baa;
+  text-align: center;
+}
+.neural-empty-symbol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  border: 1px solid #6baf9230;
+  border-radius: 50%;
+  color: #86bda7;
+  background: #13251f30;
+  margin-bottom: 22px;
+}
+.neural-quiet-empty h3 {
+  font-size: 20px;
+  font-weight: 450;
+  color: #c4d3dc;
+  letter-spacing: -0.4px;
+  margin: 0 0 12px;
+}
+.neural-quiet-empty p {
+  font-size: 12px;
+  line-height: 1.8;
+  max-width: 345px;
+  margin: 0;
+}
+.neural-detail-levels button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.neural-context-error {
+  position: absolute;
+  bottom: 94px;
+  left: 20px;
+  margin: 0;
+  font-size: 10px;
+  color: #b6a184;
+}
+.neural-context-error button {
+  text-decoration: underline;
+  margin-left: 5px;
+}
+.cortex-workspace .neural-wide.is-expanded {
+  display: flex;
+  flex-direction: column;
+}
+.cortex-workspace .neural-wide.is-expanded .neural-header {
+  flex: none;
+}
+.cortex-workspace .neural-wide.is-expanded .ar-universe-body {
+  height: auto;
+  min-height: 0;
+  flex: 1;
+}
+.cortex-workspace .neural-wide.is-expanded .ar-universe-canvas {
+  height: 100%;
+  min-height: 0;
+}
+@media (max-width: 1150px) {
+  .cortex-workspace .neural-wide .ar-graph-count {
+    display: none;
+  }
+  .cortex-workspace .neural-wide .neural-header-search {
+    flex: 1;
+    width: auto;
+  }
+}
+@media (max-width: 680px) {
+  .cortex-workspace .neural-wide .ar-universe-top.neural-header {
+    flex-wrap: wrap;
+    gap: 9px;
+  }
+  .cortex-workspace .neural-wide .neural-header-search {
+    order: 5;
+    flex: 1 0 100%;
+    margin: 2px 0 0;
+  }
+  .cortex-workspace .neural-wide .ar-universe-body {
+    min-height: 530px;
+  }
+  .cortex-workspace .neural-wide .ar-universe-canvas {
+    height: 530px;
+    min-height: 530px;
+  }
+  .neural-node-inspector,
+  .neural-search-results {
+    right: 12px;
+    top: 61px;
+    width: calc(100% - 24px);
+    max-height: calc(100% - 160px);
+    padding: 15px;
+  }
+  .cortex-workspace .neural-wide .neural-inspector-preview {
+    max-height: 130px;
+  }
+  .neural-quiet-empty h3 {
+    font-size: 18px;
+  }
+  .neural-quiet-empty p {
+    font-size: 11px;
+    max-width: 270px;
+  }
+  .neural-scope-chip {
+    max-width: calc(100% - 24px);
+  }
+}
+
+.cortex-workspace .neural-wide {
+  container-type: inline-size;
+}
+@container (max-width: 900px) {
+  .cortex-workspace .neural-wide .ar-graph-count {
+    display: none;
+  }
+  .cortex-workspace .neural-wide .neural-header-search {
+    flex: 1;
+    min-width: 105px;
+  }
+  .cortex-workspace .neural-wide .ar-universe-top.neural-header {
+    gap: 12px;
+    padding: 12px;
+  }
+  .neural-layout-switch button {
+    padding: 7px 8px;
+    font-size: 9px;
+  }
+}
+@container (max-width: 620px) {
+  .cortex-workspace .neural-wide .ar-universe-top.neural-header {
+    flex-wrap: wrap;
+  }
+  .cortex-workspace .neural-wide .neural-header-search {
+    order: 5;
+    flex: 1 0 100%;
+    margin: 2px 0 0;
+  }
+  .cortex-workspace .neural-wide .ar-universe-top .op-icon-button {
+    margin-left: auto;
+  }
+}
+
+.neural-immersive-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: none;
+  padding: 9px 12px;
+  border: 1px solid #6ed5b54a;
+  border-radius: 9px;
+  color: #c1f6e2;
+  background: #17312c;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.neural-immersive-button:hover {
+  background: #214237;
+  color: #e6fff5;
+}
+.neural-immersive-button:focus-visible {
+  outline: 2px solid #9ce9d1;
+  outline-offset: 3px;
+}
+.cortex-workspace .ar-universe.neural-wide.is-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.cortex-workspace .neural-wide.is-expanded .neural-header {
+  padding: 16px 24px;
+}
+.cortex-workspace .neural-wide.is-expanded .ar-universe-body {
+  min-height: 0;
+}
+.cortex-workspace .neural-wide.is-expanded .ar-universe-canvas > div > div:first-child {
+  min-height: 0 !important;
+}
+.cortex-workspace .neural-wide.is-expanded .neural-detail-bar {
+  bottom: max(20px, env(safe-area-inset-bottom));
+}
+.cortex-workspace .neural-universe .ar-graph-controls button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+@media (max-width: 680px) {
+  .neural-immersive-button {
+    padding: 7px 9px;
+    font-size: 10px;
+  }
+  .cortex-workspace .neural-wide.is-expanded .neural-header {
+    padding: 12px;
+  }
+  .cortex-workspace .neural-wide.is-expanded .ar-universe-canvas {
+    flex: 1;
+    height: 100%;
+    min-height: 0;
+  }
+  .cortex-workspace .neural-wide .ar-graph-controls {
+    gap: 4px;
+  }
+}

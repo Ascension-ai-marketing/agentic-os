@@ -1,0 +1,10 @@
+import { useId } from "react";
+import type { AudiencePlatform } from "@/lib/business-workspace";
+export function AudienceLogo({ platform }: { platform: AudiencePlatform }) {
+  const gradient = useId().replace(/:/g, "");
+  if (platform === "youtube") return <svg className="audience-logo" aria-hidden="true" viewBox="0 0 32 32"><rect x="2" y="6" width="28" height="20" rx="6" fill="#ff0033" /><path d="m13 11 9 5-9 5z" fill="white" /></svg>;
+  if (platform === "instagram") return <svg className="audience-logo" aria-hidden="true" viewBox="0 0 32 32"><defs><linearGradient id={gradient} x1="0" y1="1" x2="1" y2="0"><stop stopColor="#ffca66" /><stop offset=".45" stopColor="#e54180" /><stop offset="1" stopColor="#8159da" /></linearGradient></defs><rect x="2" y="2" width="28" height="28" rx="8" fill={`url(#${gradient})`} /><rect x="7.4" y="7.4" width="17.2" height="17.2" rx="5" fill="none" stroke="white" strokeWidth="1.9" /><circle cx="16" cy="16" r="4.2" fill="none" stroke="white" strokeWidth="1.9" /><circle cx="22" cy="10" r="1.3" fill="white" /></svg>;
+  if (platform === "linkedin") return <svg className="audience-logo" aria-hidden="true" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="5" fill="#0a66c2" /><path fill="white" d="M7 13h4v12H7zm2-6a2.1 2.1 0 1 1 0 4.2A2.1 2.1 0 0 1 9 7m5 6h3.8v1.6c.8-1.2 2-1.9 3.5-1.9 3.1 0 4.7 2 4.7 5.6V25h-4v-6.8c0-1.8-.6-2.7-1.9-2.7-1.5 0-2.1 1-2.1 2.8V25h-4z" /></svg>;
+  return <svg className="audience-logo" aria-hidden="true" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="7" fill="#19191c" /><path d="M18 7h3c.4 2.8 2 4.2 4 4.3v3.4c-1.9-.1-3.3-.7-4.4-1.7v8a6 6 0 1 1-5.3-6v3.5a2.6 2.6 0 1 0 2.7 2.6z" fill="#25f4ee" transform="translate(-.8 .5)" /><path d="M18 7h3c.4 2.8 2 4.2 4 4.3v3.4c-1.9-.1-3.3-.7-4.4-1.7v8a6 6 0 1 1-5.3-6v3.5a2.6 2.6 0 1 0 2.7 2.6z" fill="#fe2c55" transform="translate(.8 -.2)" /><path d="M18 7h3c.4 2.8 2 4.2 4 4.3v3.4c-1.9-.1-3.3-.7-4.4-1.7v8a6 6 0 1 1-5.3-6v3.5a2.6 2.6 0 1 0 2.7 2.6z" fill="white" /></svg>;
+}
+

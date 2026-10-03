@@ -1,0 +1,115 @@
+/* Agent usage: calm near-black panel, one meter and one number per agent.
+   Details open on request (see agent-usage.tsx). */
+.au-wrap { container-type: inline-size; margin: 0 0 22px; }
+.au {
+  position: relative;
+  padding: 26px 30px;
+  border-radius: 22px;
+  color: #eceef2;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.006) 60%), #0a0a0c;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 30px 60px -30px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+
+/* Controls: tiny, top right. */
+.au-controls { position: absolute; top: 14px; right: 16px; display: flex; align-items: center; gap: 8px; z-index: 2; }
+.au-switch { display: flex; padding: 2px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.07); }
+.au-switch button, .au-more {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: #62676f;
+  cursor: pointer;
+}
+.au-switch button:hover, .au-more:hover { color: #b9bdc6; }
+.au-switch button[aria-pressed="true"] { color: #e6e8ec; background: rgba(255, 255, 255, 0.07); }
+.au-more { display: inline-flex; align-items: center; gap: 5px; }
+.au-more svg { width: 10px; height: 10px; transition: rotate 0.2s ease; }
+.au-more[aria-expanded="true"] { color: #e6e8ec; }
+.au-more[aria-expanded="true"] svg { rotate: 180deg; }
+.au button:focus-visible { outline: 1px solid rgba(255, 255, 255, 0.4); outline-offset: 1px; }
+
+/* Stage */
+.au-stage { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
+.au-hero { display: flex; align-items: center; gap: 30px; min-width: 0; }
+.au-orb { position: relative; width: 236px; aspect-ratio: 1; flex: none; }
+.au-orb canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.au-logo {
+  width: 84px;
+  height: 84px;
+  border-radius: 21px;
+  flex: none;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 16px 34px -12px rgba(0, 0, 0, 0.95);
+}
+.au-orb .au-logo { position: absolute; left: 50%; top: 50%; translate: -50% -50%; }
+.au-hero[data-off] .au-logo { filter: grayscale(1) brightness(0.7); opacity: 0.6; }
+
+.au-read { display: grid; gap: 8px; min-width: 0; }
+.au-num { font-size: 76px; font-weight: 600; letter-spacing: -0.05em; line-height: 0.9; color: #fff; font-variant-numeric: tabular-nums; }
+.au-num small { font-size: 0.36em; font-weight: 500; letter-spacing: 0; margin-left: 3px; color: #8d929c; }
+.au-num-off { font-size: 26px; letter-spacing: -0.02em; color: #c6c9cf; }
+.au-label { font-size: 12.5px; color: #7d828c; white-space: nowrap; }
+.au-label::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--c); margin-right: 8px; vertical-align: 1px; }
+.au-warn { margin-left: 8px; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: 600; color: #16100c; background: var(--c); }
+
+/* Bar view: one full-width row per agent. */
+.au[data-view="bar"] .au-stage { grid-template-columns: minmax(0, 1fr); gap: 22px; padding-top: 24px; }
+.au[data-view="bar"] .au-hero {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 170px;
+  grid-template-areas: "logo bar read";
+  gap: 24px;
+}
+.au[data-view="bar"] .au-logo { grid-area: logo; width: 72px; height: 72px; border-radius: 18px; }
+.au[data-view="bar"] .au-read { grid-area: read; justify-items: end; }
+.au[data-view="bar"] .au-num { font-size: 60px; }
+.au-barwrap { grid-area: bar; position: relative; height: 52px; }
+.au-barwrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* Details */
+.au-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 30px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  animation: au-open 0.25s ease both;
+}
+@keyframes au-open { from { opacity: 0; translate: 0 -4px; } }
+.au-det { min-width: 0; font-size: 12.5px; color: #9aa0aa; }
+.au-det-head { margin: 0 0 8px; display: flex; gap: 10px; align-items: baseline; }
+.au-det-head b { color: #fff; font-weight: 600; font-size: 13.5px; }
+.au-det-price { color: #e6e8ec; font-weight: 600; }
+.au-det ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.au-det li { display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); gap: 12px; align-items: baseline; }
+.au-det-name::before { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--c); margin-right: 8px; vertical-align: 2px; }
+.au-det-name { color: #c6c9cf; }
+.au-det-pct { color: #fff; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.au-det-when { color: #767b85; font-variant-numeric: tabular-nums; }
+.au-det-src { margin: 8px 0 0; font-size: 11px; color: #62676f; }
+.au-det-off { margin: 0; }
+
+/* Sized by the panel, not the window. */
+@container (max-width: 1000px) {
+  .au-orb { width: 190px; }
+  .au-orb .au-logo { width: 68px; height: 68px; border-radius: 17px; }
+  .au-num { font-size: 60px; }
+  .au-hero { gap: 20px; }
+}
+@container (max-width: 780px) {
+  .au { padding: 44px 20px 22px; }
+  .au-stage, .au-details { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .au[data-view="bar"] .au-hero { grid-template-columns: 56px minmax(0, 1fr) 110px; gap: 14px; }
+  .au[data-view="bar"] .au-logo { width: 56px; height: 56px; border-radius: 14px; }
+  .au[data-view="bar"] .au-num { font-size: 44px; }
+}
+
+.au-placeholder { min-height: 290px; border-radius: 28px; background: #0c0c0f; border: 1px solid #ffffff0d; margin-bottom: 22px; }

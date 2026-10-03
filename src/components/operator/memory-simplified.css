@@ -1,0 +1,235 @@
+.cortex-workspace .ar-page-title {
+  margin-bottom: 16px;
+}
+.memory-cortex-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 14px;
+  align-items: stretch;
+  margin-bottom: 20px;
+}
+.cortex-workspace .memory-cortex-layout .ar-universe {
+  margin: 0;
+  min-width: 0;
+}
+.memory-cortex-sources {
+  min-width: 0;
+}
+.cortex-workspace .neural-wide:not(.is-expanded) .ar-universe-body {
+  min-height: 500px;
+}
+.cortex-workspace .neural-wide:not(.is-expanded) .ar-universe-canvas {
+  min-height: 500px;
+  height: 500px;
+}
+.cortex-workspace .mc-source-shelf {
+  padding: 14px;
+}
+.cortex-workspace .mc-shelf-heading {
+  margin-bottom: 8px;
+}
+.cortex-workspace .mc-shelf-actions {
+  margin-top: auto;
+  padding-top: 9px;
+}
+@media (max-width: 1100px) {
+  .memory-cortex-layout {
+    grid-template-columns: minmax(0, 1fr) 236px;
+    gap: 10px;
+  }
+}
+@media (max-width: 820px) {
+  .memory-cortex-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cortex-workspace .mc-source-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px 10px;
+  }
+  .cortex-workspace .mc-shelf-actions {
+    grid-template-columns: 1fr 1fr 1fr;
+    margin-top: 12px;
+  }
+  .cortex-workspace .mc-shelf-actions .mc-add-source {
+    grid-column: auto;
+    margin-top: 0;
+  }
+}
+.cortex-workspace .cortex-capture-section {
+  margin-top: 0;
+}
+.cortex-workspace .memory-capture-v5 {
+  margin-bottom: 0;
+  border-radius: 15px 15px 0 0;
+  border-bottom: 0;
+  padding: 22px;
+}
+.memory-capture-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.memory-storage-note {
+  border: 1px solid var(--op-border);
+  border-top: 0;
+  border-radius: 0 0 15px 15px;
+  background: var(--op-panel);
+  color: var(--op-muted);
+  font-size: 11px;
+}
+.memory-storage-note > summary {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 13px 22px;
+  cursor: pointer;
+  list-style: none;
+  border-top: 1px solid var(--op-border);
+}
+.memory-storage-note > summary::after {
+  content: "+";
+  margin-left: auto;
+  font-size: 15px;
+}
+.memory-storage-note[open] > summary::after {
+  content: "−";
+}
+.memory-storage-note > summary small {
+  font-size: 10px;
+  opacity: 0.7;
+}
+.memory-storage-detail {
+  padding: 0 22px 20px;
+  line-height: 1.8;
+}
+.memory-storage-detail p {
+  margin: 9px 0;
+}
+.memory-storage-detail code {
+  display: block;
+  overflow-wrap: anywhere;
+  padding: 10px;
+  background: var(--op-inset);
+  border-radius: 7px;
+  font-size: 10px;
+}
+.memory-storage-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: 12px;
+}
+.memory-storage-actions .op-button {
+  font-size: 11px;
+}
+.memory-storage-actions .op-text-link {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.memory-saved-drawer {
+  margin-top: 18px;
+  border-top: 1px solid var(--op-border);
+}
+.memory-saved-drawer > summary {
+  cursor: pointer;
+  padding: 20px 1px;
+  color: var(--op-ink);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  list-style: none;
+}
+.memory-saved-drawer > summary small {
+  color: var(--op-muted);
+  font-size: 11px;
+}
+.memory-saved-drawer > summary::after {
+  content: "+";
+  margin-left: auto;
+  font-size: 18px;
+  color: var(--op-muted);
+}
+.memory-saved-drawer[open] > summary::after {
+  content: "−";
+}
+.memory-saved-content {
+  padding-bottom: 20px;
+}
+.op-modal .memory-spaces-v5 {
+  margin: 0;
+}
+.op-modal .memory-spaces-v5 .cortex-section-heading h2,
+.op-modal .memory-spaces-v5 .cortex-section-heading p {
+  display: none;
+}
+.op-modal .memory-spaces-v5 .ms5-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 600px) {
+  .mc5-capture-types {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mc5-capture-types button {
+    justify-content: center;
+  }
+  .cortex-workspace .mc-source-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cortex-workspace .neural-wide:not(.is-expanded) .ar-universe-body {
+    min-height: 370px;
+  }
+  .cortex-workspace .neural-wide:not(.is-expanded) .ar-universe-canvas {
+    height: 370px;
+    min-height: 370px;
+  }
+  .cortex-workspace .ar-page-title {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .cortex-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cortex-header-actions .op-button {
+    font-size: 11px;
+    padding: 9px 10px;
+  }
+  .cortex-workspace .memory-capture-v5 {
+    padding: 16px;
+  }
+  .memory-capture-actions {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .memory-storage-note > summary {
+    padding: 12px 16px;
+  }
+  .memory-storage-detail {
+    padding: 0 16px 16px;
+  }
+  .memory-storage-note > summary small {
+    display: none;
+  }
+  .op-modal .memory-spaces-v5 .ms5-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The map fills its card to the height of the sources column, so no empty band sits under it. */
+.cortex-workspace .memory-cortex-layout .neural-wide:not(.is-expanded) {
+  display: flex;
+  flex-direction: column;
+}
+.cortex-workspace .memory-cortex-layout .neural-wide:not(.is-expanded) .ar-universe-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.cortex-workspace .memory-cortex-layout .neural-wide:not(.is-expanded) .ar-universe-canvas {
+  flex: 1;
+  height: auto;
+}

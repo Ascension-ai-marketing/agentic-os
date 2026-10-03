@@ -1,0 +1,129 @@
+/* Voice mode strip on top of Chat (chat-voice.tsx). Accent follows the state
+   through --vo-accent from voice-dock.css. */
+.cv {
+  --vo-accent: #a98be6;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 250px;
+  align-items: center;
+  gap: 8px 22px;
+  margin: 14px 18px 0;
+  padding: 10px 18px 10px 8px;
+  min-height: 150px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--vo-accent) 26%, #ffffff14);
+  background: #07060c;
+  color: #f1edff;
+  overflow: hidden;
+  animation: cv-in 0.45s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+  transition: border-color 0.5s;
+}
+.cv[data-mood="listening"] { --vo-accent: #2ee6c8; }
+.cv[data-mood="thinking"] { --vo-accent: #d45bb6; }
+.cv[data-mood="working"] { --vo-accent: #f5a524; }
+.cv[data-mood="speaking"] { --vo-accent: #8f7cff; }
+.cv[data-mood="error"] { --vo-accent: #f2957a; }
+@keyframes cv-in { from { opacity: 0; translate: 0 -8px; } }
+.cv .cv-orb { margin: -18px -6px; }
+.cv-now { display: flex; flex-direction: column; gap: 7px; min-width: 0; text-shadow: 0 1px 12px #07060ce6; }
+.cv-status { font: 600 11px/1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.12em; text-transform: uppercase; color: color-mix(in srgb, var(--vo-accent) 70%, #fff); }
+.cv-caption { margin: 0; font-size: 17px; line-height: 1.35; font-weight: 550; letter-spacing: -0.01em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cv-caption[data-quiet] { font-weight: 450; color: #cfc8e6; font-size: 15px; }
+.cv-controls { display: flex; gap: 6px; margin-top: 2px; }
+.cv-controls button, .cv-settings select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid #ffffff24;
+  background: #0b0914b3;
+  backdrop-filter: blur(8px);
+  color: #e4def5;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cv-controls button:hover:enabled { border-color: color-mix(in srgb, var(--vo-accent) 60%, transparent); }
+.cv-controls button[aria-pressed="true"] { background: color-mix(in srgb, var(--vo-accent) 28%, #0b0914); color: #fff; }
+.cv-controls button:disabled { opacity: 0.4; cursor: default; }
+.cv-settings { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; border-radius: 14px; background: #0b0914b8; border: 1px solid #ffffff14; backdrop-filter: blur(10px); }
+.cv-settings label { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 12px; color: #b9b2cf; }
+.cv-settings select { width: 100%; border-radius: 9px; padding: 6px 8px; font-weight: 550; }
+.cv-settings label:first-child { grid-template-columns: 44px minmax(0, 1fr); }
+.cv-settings input[type="range"] { width: 100%; accent-color: #d45bb6; }
+.cv-settings b { font: 600 11px/1 ui-monospace, "SF Mono", Menlo, monospace; color: #f1edff; }
+.cv-lane { margin: 0; display: flex; align-items: center; gap: 6px; font: 500 11px/1.2 ui-monospace, "SF Mono", Menlo, monospace; color: #f386a1; }
+@media (max-width: 1000px) { .cv { grid-template-columns: auto minmax(0, 1fr); } .cv-settings { grid-column: 1 / -1; } }
+@media (prefers-reduced-motion: reduce) { .cv { animation: none; } }
+.cv-live { font-size: 11.5px; color: #cfc8e6; text-decoration: underline dotted; text-underline-offset: 3px; }
+.cv-live:hover { color: #fff; }
+.cv-controls .is-primary { background: linear-gradient(135deg, #d45bb6, #f386a1); color: #fff; border-color: transparent; }
+.cv-latency { align-self: center; font-size: 11px; color: var(--op-muted, #948ea0); }
+.cv-controls .is-warn { border-color: #f5b84d; color: #f5b84d; background: rgba(245, 184, 77, 0.12); font-weight: 650; }
+.cv-side { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 8px; min-width: 0; max-width: 400px; align-self: stretch; justify-content: center; }
+.cv-recent { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: #d9d3e2; }
+.cv-recent li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: opacity 0.4s; }
+.cv-recent li[data-role="user"] { color: #9fd8ff; }
+.cv-recent li[data-role="action"] { color: #5fe3aa; }
+.cv-taskchat { align-self: flex-start; padding: 4px 10px; border-radius: 999px; background: rgba(243, 134, 161, 0.14); border: 1px solid rgba(243, 134, 161, 0.35); color: #f7c6e6; font-size: 12px; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+/* Orb · now · what it shows (cards, the last turns) · settings */
+.cv { grid-template-columns: auto minmax(0, 1fr) minmax(0, 400px) 200px; }
+@media (max-width: 1100px) { .cv { grid-template-columns: auto minmax(0, 1fr) 200px; } .cv-side { grid-column: 1 / -1; } }
+/* The email / agenda card floats just under the strip, over the chat. */
+.cv { overflow: visible; }
+.cv-card { position: absolute; top: calc(100% + 8px); right: 12px; z-index: 30; }
+.cv .cv-controls button { white-space: nowrap; }
+.cv-recent li:nth-last-child(n + 4) { display: none; }
+.cv > .jev-backdrop, .cv > .vo-touch { border-radius: inherit; }
+.cv > .jev-backdrop { clip-path: inset(0 round 20px); }
+.cv-personality { display: flex; flex-direction: column; gap: 6px; font-size: 11px; color: var(--op-muted, #948ea0); }
+.cv-humour { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+.cv-humour button { padding: 4px 0; border-radius: 7px; border: 1px solid #ffffff14; background: #ffffff08; color: #d9d3e2; font-size: 10.5px; cursor: pointer; }
+.cv-humour button[aria-checked="true"] { border-color: #f386a1; background: rgba(243, 134, 161, 0.18); color: #fff; font-weight: 650; }
+.cv-persona-toggle { align-self: flex-start; padding: 0; border: 0; background: none; color: #f386a1; font-size: 11px; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.cv-persona { position: absolute; right: 12px; top: calc(100% + 8px); z-index: 40; width: 320px; padding: 10px; border-radius: 12px; border: 1px solid #ffffff1a; background: rgba(14, 12, 18, 0.96); display: flex; flex-direction: column; gap: 8px; }
+.cv-persona textarea { width: 100%; resize: vertical; border-radius: 9px; border: 1px solid #ffffff1a; background: #0b0a0f; color: #f2eef6; font: inherit; font-size: 12.5px; padding: 8px; }
+.cv-persona div { display: flex; gap: 6px; }
+.cv-persona button { padding: 5px 12px; border-radius: 8px; border: 1px solid #ffffff1a; background: #ffffff0a; color: #f2eef6; cursor: pointer; }
+.cv-persona .is-primary { border-color: transparent; background: linear-gradient(135deg, #d45bb6, #f386a1); }
+
+.cv-voicepick { grid-template-columns: 44px minmax(0, 1fr) auto !important; }
+.cv-voicepick select { width: 100%; border-radius: 9px; padding: 6px 8px; font-size: 12px; font-weight: 550; border: 1px solid #ffffff24; background: #0b0914b3; color: #e4def5; }
+.cv-preview { width: 26px; height: 26px; border-radius: 999px; border: 1px solid #ffffff24; background: #0b0914b3; color: #f1edff; font-size: 10px; cursor: pointer; }
+.cv-preview:hover { border-color: #d45bb6; }
+
+/* Humour is a slider; the current word pops in beside it. */
+.cv-humour-slider { display: grid !important; grid-template-columns: 44px minmax(0, 1fr) 68px !important; align-items: center; gap: 8px; font-size: 12px; color: #b9b2cf; }
+.cv-humour-slider input { width: 100%; accent-color: #d45bb6; }
+.cv-humour-word { font: 650 12px/1 ui-sans-serif, system-ui; color: #f7c6e6; text-align: right; animation: cv-word 0.35s cubic-bezier(0.2, 0.9, 0.2, 1.2) both; }
+@keyframes cv-word { from { opacity: 0; transform: translateY(4px) scale(0.9); } }
+
+/* This conversation: your words and Jarvis's replies sit in a clear glass
+   panel instead of floating faintly over the clouds. */
+.cv-recent { padding: 10px 12px !important; gap: 6px !important; border-radius: 12px; background: rgba(8, 7, 14, 0.72); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); text-shadow: none; font-size: 12.5px !important; line-height: 1.35; max-height: 118px; overflow: hidden; }
+.cv-recent li { white-space: normal !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: #efeaf8; }
+.cv-recent li[data-role="user"] { color: #a9dcff; font-weight: 550; }
+.cv-recent li:nth-last-child(n + 3) { display: none !important; }
+.cv-side { max-width: 460px !important; }
+@media (prefers-reduced-motion: reduce) { .cv-humour-word { animation: none; } }
+
+/* The status and buttons always keep their room; the conversation panel
+   takes what is left, and drops under them on narrower screens. */
+.cv { grid-template-columns: auto minmax(300px, 1fr) minmax(0, 380px) 220px !important; }
+.cv-now { min-width: 300px; }
+.cv > .cv-orb { grid-column: 1; grid-row: 1; }
+.cv > .cv-now { grid-column: 2; grid-row: 1; }
+.cv > .cv-side { grid-column: 3; grid-row: 1; }
+.cv > .cv-settings { grid-column: 4; grid-row: 1; }
+@media (max-width: 1560px) {
+  .cv { grid-template-columns: auto minmax(0, 1fr) 220px !important; }
+  .cv > .cv-orb { grid-row: 1 / span 2; }
+  .cv > .cv-side { grid-column: 2 !important; grid-row: 2; max-width: none !important; }
+  .cv > .cv-settings { grid-column: 3; grid-row: 1 / span 2; }
+}
+.cv .cv-orb { margin: -12px 0 -12px 6px !important; }
+/* The strip sits above the chat under it, so its floating card (email, agenda, "Start this task?") is never covered. */
+.cv { z-index: 20; }
+.cv-card .lcard { box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55); }

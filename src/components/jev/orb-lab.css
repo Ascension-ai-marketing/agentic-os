@@ -1,0 +1,51 @@
+.orb-lab { display: flex; flex-direction: column; gap: 16px; max-width: 1100px; margin: 0 auto; }
+.orb-lab-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.orb-lab-head h1 { margin: 0; font-size: 30px; font-weight: 650; letter-spacing: -0.02em; }
+.orb-lab-head p { margin: 6px 0 0; color: var(--op-muted); font-size: 14px; max-width: 60ch; }
+.orb-lab-moods { display: flex; flex-wrap: wrap; gap: 6px; }
+.orb-lab-moods button { font-size: 12.5px; padding: 7px 11px; border-radius: 999px; border: 1px solid var(--op-border); background: var(--op-panel); color: var(--op-muted); cursor: pointer; }
+.orb-lab-moods button[aria-pressed="true"] { color: var(--op-ink); border-color: #d45bb6; background: color-mix(in srgb, #d45bb6 14%, var(--op-panel)); }
+.orb-lab-now { margin: 0; font-size: 13px; color: var(--op-muted); }
+.orb-lab-now b { color: var(--op-ink); }
+.orb-lab-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 24px; }
+@media (max-width: 980px) { .orb-lab-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.orb-lab-card { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.orb-lab-dock { width: 208px; min-height: 230px; justify-content: flex-start; padding-top: 22px; }
+.orb-lab-dock .vd-text { margin-top: 6px; }
+.jev-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; display: block; }
+.orb-lab-card figcaption { display: flex; gap: 10px; align-items: flex-start; max-width: 260px; }
+.orb-lab-n { display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 8px; background: linear-gradient(135deg, #d45bb6, #f386a1); color: #2a0624; font-weight: 700; font-size: 12.5px; }
+.orb-lab-card b { display: block; font-size: 14px; }
+.orb-lab-card small { display: block; font-size: 12px; line-height: 1.45; color: var(--op-muted); margin-top: 2px; }
+.orb-lab-tabs { display: inline-flex; padding: 3px; gap: 2px; border-radius: 12px; border: 1px solid var(--op-border); background: var(--op-panel); }
+.orb-lab-tabs button { font-size: 13.5px; font-weight: 600; padding: 8px 14px; border-radius: 9px; border: 0; background: none; color: var(--op-muted); cursor: pointer; }
+.orb-lab-tabs button[aria-selected="true"] { background: linear-gradient(135deg, #d45bb6, #f386a1); color: #2a0624; }
+.orb-lab-moods { align-items: center; }
+.orb-lab-moods .orb-lab-now { margin-left: 8px; }
+.lab-world { position: absolute; inset: 0; z-index: -1; display: block; }
+.lab-world > * { position: absolute !important; inset: 0; width: 100% !important; height: 100% !important; }
+.lab-status { min-height: 18px; }
+.lab-orb-slot { display: grid; place-items: center; width: 128px; height: 128px; }
+.lab-shell {
+  position: relative;
+  display: block;
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  box-shadow: 0 0 26px -2px var(--shell), 0 0 70px -16px var(--shell);
+  transition: box-shadow 0.6s;
+}
+.lab-shell-fill { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; display: block; }
+.lab-shell-fill > * { position: absolute !important; inset: -20%; width: 140% !important; height: 140% !important; }
+.lab-shell-glass {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 30% at 32% 24%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(90% 90% at 50% 50%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), inset 0 -8px 18px rgba(0, 0, 0, 0.35);
+}
+.lab-ring { position: relative; display: block; width: 150px; height: 150px; }
+.lab-ring > * { position: absolute !important; inset: 0; }

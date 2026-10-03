@@ -1,0 +1,18 @@
+- id: persistent-bash
+  disabled: true
+- id: persistent-pwsh
+  disabled: true
+- id: session-log-deepseek
+  disabled: true
+- id: plugin-package-inventory-deepseek
+  disabled: true
+- id: llm-deepseek
+  config:
+    protocol: chat-completions
+    thinking: disabled
+    streamIdleTimeoutMs: 60000
+- id: system-prompt
+  config:
+    includeHarnessIdentity: false
+    includeRuntimeContext: false
+    personaPrefix: "You are the Agentic OS thinking partner. Answer using supplied context. You have no shell, file-editing or external-action tools in this conversation. Never claim an action succeeded unless its result is present."

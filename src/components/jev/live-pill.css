@@ -1,0 +1,29 @@
+.live-pill {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 9999;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(640px, calc(100vw - 32px));
+  padding: 6px 6px 6px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(243, 134, 161, 0.35);
+  background: rgba(18, 14, 20, 0.92);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 16px 40px -16px rgba(212, 91, 182, 0.6);
+  color: #f2eef6;
+  font-size: 12.5px;
+}
+.live-pill-main { display: flex; align-items: center; gap: 9px; min-width: 0; color: inherit; text-decoration: none; }
+.live-pill-orb { display: grid; border-radius: 7px; }
+.live-pill[data-phase="speaking"] .live-pill-orb { animation: live-pill-pulse 0.9s ease-in-out infinite; }
+.live-pill[data-phase="listening"] .live-pill-orb { box-shadow: 0 0 0 3px rgba(94, 200, 255, 0.35); }
+@keyframes live-pill-pulse { 50% { box-shadow: 0 0 18px 2px rgba(243, 134, 161, 0.8); } }
+.live-pill b { white-space: nowrap; font-weight: 650; }
+.live-pill-caption { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #b7b0c2; max-width: 380px; }
+.live-pill button { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border: 0; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: inherit; font: inherit; cursor: pointer; }
+.live-pill button:hover { background: rgba(255, 255, 255, 0.15); }
+.live-pill-card { position: fixed; right: 22px; bottom: 80px; z-index: 9999; }

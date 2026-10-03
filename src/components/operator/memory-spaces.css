@@ -1,0 +1,243 @@
+.memory-spaces-v5 {
+  margin: 32px 0 26px;
+}
+.ms5-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+}
+.ms5-heading-actions .op-button {
+  padding: 8px 11px;
+  font-size: 11px;
+}
+.ms5-heading-actions .op-text-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+}
+.ms5-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.ms5-space {
+  border: 1px solid var(--op-border);
+  border-radius: 12px;
+  min-width: 0;
+  background: var(--op-panel);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.ms5-space:hover {
+  border-color: color-mix(in srgb, var(--space-color) 40%, var(--op-border));
+}
+.ms5-space.is-selected {
+  border-color: var(--space-color);
+  background: color-mix(in srgb, var(--space-color) 5%, var(--op-panel));
+}
+.ms5-main {
+  display: grid;
+  grid-template-columns: 38px 1fr 14px;
+  column-gap: 12px;
+  align-items: center;
+  padding: 18px;
+  width: 100%;
+  text-align: left;
+  min-width: 0;
+}
+.ms5-icon {
+  height: 38px;
+  width: 38px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--space-color) 11%, transparent);
+  color: var(--space-color);
+  display: grid;
+  place-items: center;
+}
+.ms5-title {
+  min-width: 0;
+}
+.ms5-title strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.25px;
+}
+.ms5-title small {
+  display: block;
+  font-size: 10px;
+  color: var(--op-muted);
+  margin-top: 5px;
+}
+.ms5-main > svg {
+  color: var(--op-muted);
+  opacity: 0.65;
+}
+.ms5-main > p {
+  grid-column: 1/-1;
+  font-size: 11px;
+  color: var(--op-muted);
+  line-height: 1.7;
+  margin: 16px 0 14px;
+  min-height: 38px;
+}
+.ms5-brands {
+  grid-column: 1/-1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 25px;
+}
+.ms5-brands > span {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--op-border);
+  border-radius: 7px;
+  background: var(--op-inset);
+}
+.ms5-brands small {
+  font-size: 10px;
+  color: var(--op-muted);
+  margin-left: 3px;
+}
+.ms5-add {
+  border-top: 1px solid var(--op-border);
+  width: 100%;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  padding: 10px 18px;
+  font-size: 10px;
+  color: var(--op-muted);
+}
+.ms5-add:hover {
+  color: var(--space-color);
+  background: color-mix(in srgb, var(--space-color) 5%, transparent);
+}
+.ms5-create {
+  padding: 20px;
+  border: 1px solid var(--op-border);
+  border-radius: 12px;
+  background: var(--op-panel);
+  max-width: 620px;
+  margin-top: 15px;
+}
+.ms5-create > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.ms5-create label {
+  font-size: 13px;
+}
+.ms5-create input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--op-border);
+  border-radius: 8px;
+  background: var(--op-inset);
+  font-size: 13px;
+  color: var(--op-ink);
+}
+.ms5-create-bottom {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 16px;
+}
+.ms5-create-bottom > div {
+  display: flex;
+  gap: 5px;
+}
+.ms5-create-bottom > div:first-child button {
+  padding: 7px;
+  color: var(--op-muted);
+  border-radius: 5px;
+}
+.ms5-create-bottom > div:first-child button[aria-pressed="true"] {
+  background: var(--op-inset);
+  color: var(--op-ink);
+}
+.ms5-create-bottom > div:nth-child(2) button {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #292332;
+}
+.ms5-create-bottom > .op-button {
+  margin-left: auto;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.ms5-create > p {
+  font-size: 12px;
+  color: #d98888;
+  margin-top: 12px;
+}
+@media (max-width: 1200px) {
+  .ms5-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ms5-main > p {
+    min-height: 0;
+  }
+}
+@media (max-width: 650px) {
+  .memory-spaces-v5 .cortex-section-heading {
+    align-items: flex-start;
+  }
+  .ms5-heading-actions .op-text-link {
+    display: none;
+  }
+  .ms5-main {
+    padding: 13px;
+    grid-template-columns: 31px 1fr;
+    gap: 9px;
+  }
+  .ms5-main > svg {
+    display: none;
+  }
+  .ms5-icon {
+    height: 31px;
+    width: 31px;
+    border-radius: 8px;
+  }
+  .ms5-title strong {
+    font-size: 12px;
+  }
+  .ms5-main > p {
+    font-size: 10px;
+    min-height: 34px;
+    margin: 11px 0;
+  }
+  .ms5-brands {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .ms5-brands small {
+    font-size: 9px;
+  }
+  .ms5-add {
+    padding: 10px 13px;
+  }
+  .ms5-create-bottom {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .ms5-create-bottom > .op-button {
+    margin-left: 0;
+  }
+  .ms5-heading-actions .op-button {
+    white-space: nowrap;
+    font-size: 10px;
+  }
+}

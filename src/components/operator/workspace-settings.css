@@ -1,0 +1,228 @@
+.op-nav-link.ws-nav-design > svg {
+  color: #c5a3eb;
+}
+.op-nav-link.ws-nav-websites > svg {
+  color: #d4bf7b;
+}
+.op-nav-link.ws-nav-hermes > img {
+  box-shadow: 0 0 0 3px #77b8a51b;
+}
+.op-nav-link.ws-nav-design:hover {
+  background: #be92e91a;
+}
+.op-nav-link.ws-nav-websites:hover {
+  background: #dfc66e12;
+}
+.op-nav-link.ws-nav-hermes:hover {
+  background: #7cb9a815;
+}
+.op-nav-link.ws-nav-motion > svg {
+  color: #e8906f;
+}
+.op-nav-link.ws-nav-motion:hover {
+  background: #e8906f14;
+}
+.ws-settings {
+  max-width: 1100px;
+  margin: 20px auto 60px;
+}
+.ws-settings-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.ws-settings-heading h1 {
+  font-size: 40px;
+  font-weight: 500;
+  letter-spacing: -1.7px;
+  line-height: 1.1;
+  margin: 0 0 12px;
+}
+.ws-settings-heading h1 > span {
+  color: #c4a8ec;
+}
+.ws-settings-heading p {
+  color: #a5a0ae;
+  font-size: 13px;
+}
+.ws-settings-setup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 1px solid #b49bda35;
+  border-radius: 10px;
+  background: #b49bda0b;
+  color: #d3bdea;
+  font-size: 12px;
+}
+.ws-settings-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid #ffffff15;
+  margin-bottom: 27px;
+}
+.ws-settings-tabs > button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 18px;
+  font-size: 12px;
+  color: #a9a0b7;
+  border-bottom: 2px solid transparent;
+}
+.ws-settings-tabs > button[aria-current="page"] {
+  border-color: #c5a4ec;
+  color: #ead9fe;
+}
+.ws-settings-panel {
+  border: 1px solid #ffffff15;
+  background: #17171c;
+  border-radius: 17px;
+  padding: 30px;
+  max-width: 950px;
+}
+.ws-settings-panel > header {
+  margin-bottom: 25px;
+}
+.ws-settings-panel > header h2 {
+  font-size: 25px;
+  letter-spacing: -0.7px;
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+.ws-settings-panel > header p {
+  font-size: 12px;
+  color: #aaa2b8;
+  line-height: 1.7;
+  max-width: 610px;
+  margin: 0;
+}
+.ws-settings-panel .ws-profile-fields {
+  max-width: 760px;
+}
+.ws-settings-save {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 24px;
+  border-top: 1px solid #ffffff14;
+  padding-top: 22px;
+}
+.ws-settings-save > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: #b3a3c4;
+}
+.ws-settings-memory-link {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 25px;
+  padding: 19px;
+  border: 1px solid #b49bda26;
+  border-radius: 12px;
+  background: #b49bda09;
+}
+.ws-settings-memory-link > svg {
+  color: #bd9ee8;
+  flex-shrink: 0;
+}
+.ws-settings-memory-link > div {
+  flex: 1;
+}
+.ws-settings-memory-link strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.ws-settings-memory-link p {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #a9a1b5;
+  margin-top: 3px;
+}
+.ws-settings-memory-link a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #d1b6f4;
+}
+.ws-settings-panel .op-settings-grid {
+  grid-template-columns: 1fr;
+}
+.ws-settings-panel .op-page {
+  margin-bottom: 0 !important;
+}
+.ws-settings-panel .ws-tools {
+  grid-template-columns: repeat(3, 1fr);
+}
+:root:not(.dark) .ws-settings-panel {
+  background: #fbfaff;
+  border-color: #22142e20;
+}
+:root:not(.dark) .ws-settings-panel input,
+:root:not(.dark) .ws-settings-panel textarea,
+:root:not(.dark) .ws-settings-panel select,
+:root:not(.dark) .ws-settings-panel .ws-tool {
+  background: #fff;
+  color: #302439;
+  border-color: #22142e25;
+}
+:root:not(.dark) .ws-settings-panel .ws-field-grid > label > span {
+  color: #493e54;
+}
+:root:not(.dark) .ws-settings-tabs > button[aria-current="page"] {
+  color: #694389;
+}
+@media (max-width: 850px) {
+  .ws-settings-panel .ws-tools {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ws-settings-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .ws-settings-tabs > button {
+    padding: 11px;
+    font-size: 11px;
+    gap: 7px;
+  }
+}
+@media (max-width: 480px) {
+  .ws-settings {
+    margin-top: 5px;
+  }
+  .ws-settings-heading h1 {
+    font-size: 32px;
+  }
+  .ws-settings-tabs {
+    overflow: auto;
+    white-space: nowrap;
+  }
+  .ws-settings-tabs > button {
+    flex-direction: column;
+    flex-shrink: 0;
+    padding: 10px 11px;
+  }
+  .ws-settings-panel {
+    padding: 20px 15px;
+  }
+  .ws-settings-panel .ws-tools {
+    grid-template-columns: 1fr;
+  }
+  .ws-settings-memory-link {
+    flex-wrap: wrap;
+  }
+  .ws-settings-memory-link a {
+    margin-left: 34px;
+  }
+  .ws-settings-heading p {
+    font-size: 12px;
+  }
+}

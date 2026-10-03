@@ -1,0 +1,179 @@
+.bcc {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--op-ink, #f0edf5);
+}
+.bcc-loading {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--op-muted, #96919f);
+}
+.bcc-done {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bcc-done > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  border: 1px solid var(--op-border, #2a282f);
+  font-size: 12px;
+  font-weight: 560;
+}
+.bcc-done small { font-weight: 450; color: var(--op-muted, #96919f); }
+.bcc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--op-border, #2a282f);
+  background: color-mix(in srgb, var(--op-panel, #18181c) 88%, #d45bb6 3%);
+}
+.bcc-card[data-state="ready"] { border-color: color-mix(in srgb, #d45bb6 45%, var(--op-border, #2a282f)); }
+.bcc-card header { display: flex; align-items: center; gap: 11px; }
+.bcc-card header > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bcc-card strong { font-size: 14px; font-weight: 650; }
+.bcc-state {
+  font: 600 10px ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f386a1;
+}
+.bcc-card[data-state="needs"] .bcc-state { color: var(--op-muted, #96919f); }
+.bcc-card p { margin: 0; font-size: 13px; line-height: 1.5; color: color-mix(in srgb, var(--op-ink, #f0edf5) 82%, transparent); }
+.bcc-card ol { margin: 0; padding-left: 19px; list-style: decimal; display: grid; gap: 4px; font-size: 13px; line-height: 1.45; }
+.bcc-action {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #d45bb6, #f386a1);
+  color: #1a0f17;
+  font: 650 13px ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+.bcc-action:disabled { opacity: 0.6; cursor: progress; }
+.bcc-action:focus-visible { outline: 2px solid #f386a1; outline-offset: 2px; }
+.bcc-note { font-size: 12.5px !important; color: #f386a1 !important; }
+.bcc-prompt {
+  border-radius: 10px;
+  border: 1px solid var(--op-border, #2a282f);
+  background: #0c0b10;
+  overflow: hidden;
+}
+.bcc-prompt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px 6px 11px;
+  border-bottom: 1px solid var(--op-border, #2a282f);
+  font: 600 10px ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--op-muted, #96919f);
+}
+.bcc-prompt-head button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--op-border, #2a282f);
+  background: none;
+  color: var(--op-ink, #f0edf5);
+  font: 550 11.5px ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: pointer;
+}
+.bcc-prompt pre {
+  margin: 0;
+  padding: 10px 11px;
+  white-space: pre-wrap;
+  font: 12px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+  color: color-mix(in srgb, var(--op-ink, #f0edf5) 88%, transparent);
+}
+.ws-connect-memory-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; text-align: left; }
+.ws-connect-memory-cards h3 { margin: 0; font-size: 15px; font-weight: 650; }
+/* In onboarding the cards take the setup screen's own colours. */
+.ws-connect-memory-cards {
+  --op-ink: var(--ws-text);
+  --op-muted: var(--ws-muted);
+  --op-border: var(--ws-line);
+  --op-panel: var(--ws-input);
+}
+.ws-connect-memory-cards .bcc-prompt { background: color-mix(in srgb, var(--ws-text) 6%, var(--ws-input)); }
+.bcc-card ol a { display: inline-flex; align-items: center; gap: 2px; color: #f386a1; text-decoration: none; white-space: nowrap; }
+.bcc-card ol a:hover { text-decoration: underline; }
+.bcc-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.bcc-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border-radius: 10px;
+  border: 1px solid var(--op-border, #2a282f);
+  background: none;
+  color: var(--op-ink, #f0edf5);
+  font: 600 13px ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+.bcc-secondary:hover { border-color: #f386a1; }
+
+/* The automatic import list: calm, no spinners, a thin bar per source. */
+.bip { display: flex; flex-direction: column; gap: 6px; }
+.bip h4 {
+  margin: 0;
+  font: 600 10px ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--op-muted, #96919f);
+}
+.bip ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.bip li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px 8px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--op-panel, #18181c) 70%, transparent);
+  border: 1px solid var(--op-border, #2a282f);
+  overflow: hidden;
+}
+.bip li > span { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.bip b { font-size: 12px; font-weight: 600; }
+.bip small { font-size: 11px; color: var(--op-muted, #96919f); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bip li[data-state="done"] small { color: color-mix(in srgb, #8affd0 70%, var(--op-muted, #96919f)); }
+.bip li[data-state="error"] small { color: #f5a3a3; white-space: normal; }
+.bip-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: color-mix(in srgb, #d45bb6 18%, transparent);
+}
+.bip-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--p, 35%);
+  background: linear-gradient(90deg, #d45bb6, #f386a1);
+  transition: width 0.8s ease;
+}
+.bip[data-compact] { margin-top: 8px; }
+.bip[data-compact] li { padding: 4px 7px 6px; }
+
+/* First import waits for a click */
+.bip-ask { margin: 4px 0 10px; font-size: 13px; line-height: 1.45; opacity: 0.8; }
+.bip-start { font: inherit; font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 999px; border: 0; cursor: pointer; color: #fff; background: linear-gradient(135deg, #d45bb6, #f386a1); }
+.bip-start:disabled { opacity: 0.6; cursor: default; }

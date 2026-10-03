@@ -1,0 +1,436 @@
+.memory-capture-v5 {
+  border: 1px solid var(--op-border);
+  border-radius: 16px;
+  background: var(--op-panel);
+  padding: 24px;
+  margin: 0 0 24px;
+}
+.mc5-composer {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--op-ink) 20%, var(--op-panel));
+  border-radius: 14px;
+  background: var(--op-inset);
+  transition: border-color 0.2s;
+}
+.mc5-composer:focus-within,
+.memory-capture-simple.is-dragging .mc5-composer {
+  border-color: var(--op-accent);
+}
+.memory-capture-simple.is-dragging .mc5-composer {
+  background: var(--op-accent-soft);
+}
+.mc5-input textarea {
+  display: block;
+  resize: vertical;
+  min-height: 145px;
+  width: 100%;
+  padding: 20px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--op-ink);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.mc5-input textarea::placeholder {
+  color: color-mix(in srgb, var(--op-ink) 70%, var(--op-panel));
+  opacity: 1;
+}
+.mc5-toolbar,
+.mc5-toolbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.mc5-toolbar {
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px 12px;
+}
+.mc5-attachment-button,
+.mc5-options-button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 36px;
+  border: 0;
+  border-radius: 7px;
+  color: var(--op-ink);
+}
+.mc5-attachment-button:hover,
+.mc5-options-button:hover {
+  background: var(--op-accent-soft);
+}
+.mc5-folder {
+  min-width: 0;
+  max-width: 145px;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--op-ink);
+  font-size: 12px;
+  text-overflow: ellipsis;
+}
+.mc5-folder option {
+  color: var(--op-ink);
+  background: var(--op-panel);
+}
+.mc5-save-button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 15px;
+  border-radius: 9px;
+  background: #e0c7f8;
+  color: #25182f;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.mc5-save-button:hover:not(:disabled) {
+  background: #ead7fc;
+}
+.mc5-save-button:disabled {
+  background: color-mix(in srgb, #e0c7f8 72%, var(--op-panel));
+  color: #25182f;
+  cursor: not-allowed;
+}
+.memory-capture-simple button:focus-visible,
+.memory-capture-simple select:focus-visible {
+  outline: 2px solid var(--op-accent);
+  outline-offset: 2px;
+}
+.mc5-options-menu {
+  min-width: 185px;
+  padding: 5px;
+  border-color: var(--op-border);
+  border-radius: 10px;
+  background: var(--op-panel);
+  color: var(--op-ink);
+}
+.mc5-options-menu [role="menuitem"] {
+  padding: 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+.mc5-options-menu [role="menuitem"][data-highlighted] {
+  background: var(--op-accent-soft);
+  color: var(--op-ink);
+}
+.mc5-files {
+  list-style: none;
+  padding: 0;
+  margin: 0 16px 8px;
+  display: grid;
+  gap: 6px;
+}
+.mc5-files li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  border-top: 1px solid var(--op-border);
+  padding: 10px 0;
+}
+.mc5-files li > svg {
+  flex: none;
+  color: var(--op-ink);
+}
+.mc5-files li.added > svg,
+.mc5-feedback > svg {
+  color: var(--op-mint);
+}
+.mc5-files li > span {
+  flex: 1;
+  min-width: 0;
+}
+.mc5-files strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--op-ink);
+}
+.mc5-files small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--op-muted);
+}
+.mc5-files li.error small,
+.mc5-feedback.error {
+  color: #c85858;
+}
+.dark .mc5-files li.error small,
+.dark .mc5-feedback.error {
+  color: #f4b0b0;
+}
+.mc5-files button {
+  padding: 5px;
+  color: var(--op-ink);
+  flex: none;
+}
+.mc5-feedback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--op-ink);
+}
+.mc5-feedback > svg {
+  flex: none;
+}
+@media (max-width: 600px) {
+  .memory-capture-v5 {
+    padding: 16px;
+  }
+  .mc5-input textarea {
+    min-height: 130px;
+    padding: 16px;
+    font-size: 14px;
+  }
+  .mc5-toolbar {
+    gap: 6px;
+    padding: 8px;
+  }
+  .mc5-toolbar-tools {
+    gap: 2px;
+  }
+  .mc5-folder {
+    max-width: 86px;
+    padding-inline: 2px;
+    font-size: 11px;
+  }
+  .mc5-attachment-button,
+  .mc5-options-button {
+    width: 28px;
+  }
+  .mc5-save-button {
+    gap: 5px;
+    padding: 10px 11px;
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc5-composer {
+    transition: none;
+  }
+}
+
+/* Restrained glass and a moving highlight, inspired by 21st.dev's glow button. */
+.mc5-composer {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--op-panel) 94%, #c8a6ea),
+    var(--op-inset) 62%
+  );
+  box-shadow:
+    inset 0 1px 0 #ffffff0b,
+    0 8px 30px #0000000a;
+  transition:
+    border-color 0.25s,
+    box-shadow 0.25s;
+}
+.mc5-composer:focus-within {
+  box-shadow:
+    0 0 0 3px #c9a6ed12,
+    inset 0 1px 0 #e8d5ff1a,
+    0 12px 36px #00000012;
+}
+.mc5-save-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid #ead9fc;
+  background: linear-gradient(145deg, #f0e2ff 0%, #dfc3f4 48%, #c6a5e4 100%);
+  box-shadow:
+    inset 0 1px 0 #ffffffd9,
+    inset 0 -1px 0 #a179bd55,
+    0 3px 8px #9b6bc629,
+    0 0 20px #ceace917;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.mc5-save-button::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: -60% auto -60% -90%;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, #fff9, transparent);
+  transform: skewX(-24deg);
+  transition: left 0.7s;
+}
+.mc5-save-button:hover:not(:disabled) {
+  background: linear-gradient(145deg, #f4eaff, #e5cff7 48%, #ceafea);
+  box-shadow:
+    inset 0 1px #fff,
+    0 4px 16px #a879cd40;
+  transform: translateY(-1px);
+}
+.mc5-save-button:hover:not(:disabled)::after {
+  left: 145%;
+}
+.mc5-save-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.mc5-save-button:disabled {
+  background: linear-gradient(145deg, #dbcee7, #baa3cd);
+  border-color: #cfb8e4;
+  box-shadow: inset 0 1px #ffffff45;
+  color: #38283f;
+}
+.mc5-save-button > svg {
+  position: relative;
+  z-index: 1;
+}
+.mc5-storage {
+  margin: 12px 2px 0;
+  color: var(--op-muted);
+  font-size: 11px;
+}
+.mc5-storage summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+  width: fit-content;
+  max-width: 100%;
+  line-height: 1.6;
+}
+.mc5-storage summary::-webkit-details-marker {
+  display: none;
+}
+.mc5-storage summary > svg:last-child {
+  margin-left: 3px;
+  transition: transform 0.2s;
+}
+.mc5-storage[open] summary > svg:last-child {
+  transform: rotate(180deg);
+}
+.mc5-storage > div {
+  display: grid;
+  gap: 5px;
+  padding: 12px 0 0;
+  line-height: 1.65;
+}
+.mc5-storage p {
+  margin: 0 0 5px;
+}
+.mc5-storage code {
+  font:
+    10px/1.6 ui-monospace,
+    monospace;
+  word-break: break-all;
+  color: var(--op-ink);
+}
+.mc5-destination {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.mc5-destination > span {
+  color: var(--op-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.mc5-feedback {
+  flex-wrap: wrap;
+}
+.mc5-feedback a {
+  color: var(--op-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.mc5-feedback a:focus-visible {
+  outline: 2px solid var(--op-accent);
+  outline-offset: 3px;
+}
+.mc5-storage > div > span {
+  font-size: 10px;
+  margin-top: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc5-save-button,
+  .mc5-save-button::after,
+  .mc5-composer,
+  .mc5-storage summary > svg:last-child {
+    transition: none;
+  }
+  .mc5-save-button::after {
+    display: none;
+  }
+}
+
+/* A continuous spectrum around a quiet writing surface. */
+.memory-capture-simple .mc5-composer {
+  border: 1.5px solid transparent;
+  border-radius: 17px;
+  background:
+    linear-gradient(var(--op-inset), var(--op-inset)) padding-box,
+    conic-gradient(
+        from 215deg,
+        #63d9cf,
+        #78aaf7 22%,
+        #b59bef 42%,
+        #ed9bbd 63%,
+        #e6bd83 79%,
+        #63d9cf
+      )
+      border-box;
+  box-shadow: 0 5px 25px #0000000d;
+}
+.memory-capture-simple .mc5-composer:focus-within,
+.memory-capture-simple.is-dragging .mc5-composer {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--op-inset), var(--op-inset)) padding-box,
+    conic-gradient(
+        from 215deg,
+        #80f5dd,
+        #84b9ff 22%,
+        #c3a6ff 42%,
+        #ffafd4 63%,
+        #ffdaa3 79%,
+        #80f5dd
+      )
+      border-box;
+  box-shadow:
+    0 0 0 4px #83bec40d,
+    0 10px 35px #00000013;
+}
+.memory-capture-simple .mc5-save-button:not(:disabled) {
+  background: linear-gradient(125deg, #a3ecdc, #bfd8f7 40%, #e0c5ed 75%, #f3cbb6);
+  border-color: #ffffff50;
+  color: #1d2b32;
+  box-shadow:
+    inset 0 1px #ffffff8c,
+    0 3px 10px #00000010;
+}
+.memory-capture-simple .mc5-save-button:disabled {
+  background: var(--op-panel);
+  color: var(--op-muted);
+  border-color: var(--op-border);
+  box-shadow: none;
+}
+
+.mc5-storage-trigger { display: inline-flex; align-items: center; gap: 7px; margin: 14px 0 0; padding: 3px 0; background: transparent; color: var(--op-muted); font-size: 11px; }
+.mc5-storage-panel { z-index: 150; width: min(420px, calc(100vw - 32px)); max-height: 55dvh; overflow-y: auto; padding: 20px; display: grid; gap: 9px; background: var(--op-panel); color: var(--op-ink); border: 1px solid var(--op-border); border-radius: 14px; box-shadow: 0 18px 65px #0003; }
+.mc5-storage-panel p { margin: 0; font-size: 12px; color: var(--op-muted); }
+.mc5-storage-panel > span { font-size: 10px; color: var(--op-muted); margin-top: 6px; }
+.mc5-storage-panel code { padding: 10px 12px; border-radius: 8px; background: var(--op-inset); overflow-wrap: anywhere; font: 10px/1.6 ui-monospace, monospace; }

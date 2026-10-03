@@ -1,0 +1,18 @@
+.fish-signup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(94, 200, 255, 0.35);
+  background: linear-gradient(135deg, rgba(56, 132, 255, 0.16), rgba(94, 200, 255, 0.08));
+  color: var(--op-ink, #f0edf5);
+  font-size: 12.5px;
+  text-decoration: none;
+  max-width: 420px;
+}
+.fish-signup:hover { border-color: rgba(94, 200, 255, 0.7); }
+.fish-signup b { display: block; font-weight: 650; }
+.fish-signup small { display: block; margin-top: 2px; color: var(--op-muted, #948ea0); font-size: 11px; line-height: 1.4; }
+.fish-signup-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: #5ec8ff; box-shadow: 0 0 0 4px rgba(94, 200, 255, 0.18); }
+.fish-signup.is-compact { padding: 5px 10px; font-size: 12px; }

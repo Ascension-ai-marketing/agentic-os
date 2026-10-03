@@ -1,0 +1,382 @@
+.ar-daily-brief {
+  margin: 0 0 20px;
+  border: 1px solid var(--op-border);
+  border-radius: 14px;
+  background: var(--op-panel);
+  overflow: hidden;
+}
+.ar-brief-heading {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 18px;
+}
+.ar-brief-toggle,
+.ar-brief-ask {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 0;
+  color: var(--op-ink);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+.ar-brief-label {
+  font-size: 12px;
+  font-weight: 550;
+}
+.ar-brief-date {
+  font-size: 10px;
+  color: var(--op-muted);
+}
+.ar-brief-toggle > svg {
+  transition: transform 180ms ease;
+  color: var(--op-muted);
+}
+.ar-brief-toggle > svg.is-open {
+  transform: rotate(180deg);
+}
+.ar-brief-overview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  color: var(--op-muted);
+}
+.ar-brief-overview i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--op-muted);
+}
+.ar-brief-ask {
+  margin-left: auto;
+  font-size: 10px;
+  gap: 7px;
+}
+.ar-brief-ask:hover {
+  color: var(--op-accent);
+}
+.ar-brief-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--op-border);
+}
+.ar-brief-column {
+  padding: 16px 18px;
+  min-width: 0;
+}
+.ar-brief-column + .ar-brief-column {
+  border-left: 1px solid var(--op-border);
+}
+.ar-brief-column-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--op-ink);
+  margin: 0 0 9px;
+}
+.ar-brief-column-title span,
+.ar-brief-column-title a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--op-muted);
+}
+.ar-brief-items button,
+.ar-brief-events a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  color: var(--op-ink);
+  border: 0;
+  font-size: 11px;
+  padding: 5px 0;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.ar-brief-items button:hover span,
+.ar-brief-events a:hover span {
+  color: var(--op-accent);
+}
+.ar-brief-items button span,
+.ar-brief-events a span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.ar-brief-items button small {
+  color: var(--op-muted);
+  font-size: 10px;
+  margin-left: auto;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 35%;
+}
+.ar-brief-items button svg {
+  color: var(--op-muted);
+  flex-shrink: 0;
+}
+.ar-brief-events a svg,
+.ar-brief-events a time {
+  color: var(--op-muted);
+  flex-shrink: 0;
+}
+.ar-brief-events > small {
+  font-size: 10px;
+  color: var(--op-muted);
+}
+.ar-brief-freshness {
+  font-size: 9px;
+  line-height: 1.5;
+  color: var(--op-muted);
+  margin: 10px 0 0;
+}
+.ar-brief-empty {
+  color: var(--op-muted);
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 0;
+}
+@media (max-width: 1100px) {
+  .ar-brief-overview {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .ar-brief-heading {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 13px;
+  }
+  .ar-brief-date {
+    display: none;
+  }
+  .ar-brief-content {
+    grid-template-columns: 1fr;
+  }
+  .ar-brief-column {
+    padding: 13px;
+  }
+  .ar-brief-column + .ar-brief-column {
+    border-left: 0;
+    border-top: 1px solid var(--op-border);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ar-brief-toggle > svg {
+    transition: none;
+  }
+}
+.ar-mail-view {
+  position: relative;
+  flex-shrink: 0;
+}
+.ar-mail-view > summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  list-style: none;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--op-muted);
+  padding: 7px;
+  border-radius: 6px;
+}
+.ar-mail-view > summary::-webkit-details-marker {
+  display: none;
+}
+.ar-mail-view[open] > summary,
+.ar-mail-view > summary:hover {
+  background: var(--op-inset);
+  color: var(--op-ink);
+}
+.ar-mail-view-panel {
+  position: absolute;
+  z-index: 12;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 270px;
+  max-width: calc(100vw - 60px);
+  border: 1px solid var(--op-border);
+  border-radius: 12px;
+  background: var(--op-panel);
+  padding: 17px;
+  box-shadow: 0 14px 36px #0003;
+}
+.ar-mail-view-panel h3 {
+  font-size: 11px;
+  font-weight: 500;
+  margin: 0 0 10px;
+}
+.ar-mail-search .ar-mail-view-panel label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  font-size: 11px;
+  color: var(--op-ink);
+  cursor: pointer;
+}
+.ar-mail-view-panel label span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.ar-mail-view-panel .ar-provider-logo {
+  height: 16px;
+  width: 16px;
+}
+.ar-mail-search .ar-mail-view-panel input[type="checkbox"] {
+  appearance: auto;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  accent-color: var(--op-accent);
+  cursor: pointer;
+}
+.ar-mail-view-panel hr {
+  border: 0;
+  border-top: 1px solid var(--op-border);
+  margin: 8px 0;
+}
+.ar-mail-view-panel p {
+  font-size: 10px;
+  line-height: 1.65;
+  color: var(--op-muted);
+  padding-top: 10px;
+}
+.ar-mail-row .ar-unread-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin: 0 7px 2px 0;
+  border-radius: 50%;
+  background: var(--op-accent);
+}
+.ar-mail-row.is-read .ar-unread-dot {
+  background: transparent;
+}
+.ar-mail-row.is-unread .ar-mail-row-copy strong,
+.ar-mail-row.is-unread .ar-mail-row-sender {
+  font-weight: 650;
+}
+.ar-mail-row.is-read .ar-mail-row-sender {
+  color: var(--op-muted);
+  font-weight: 400;
+}
+.ar-mail-hidden-count {
+  padding: 13px 20px;
+  font-size: 10px;
+  color: var(--op-muted);
+}
+.ar-email-chat {
+  padding: 0 17px 17px;
+}
+.ar-email-chat .op-ask-bar {
+  width: auto;
+  margin: 8px 0 0;
+  border-radius: 10px;
+  background: var(--op-bg);
+  border: 1px solid var(--op-border);
+}
+.ar-email-context > summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--op-muted);
+  font-size: 10px;
+  padding: 4px 3px;
+}
+.ar-email-context > summary::-webkit-details-marker {
+  display: none;
+}
+.ar-email-context-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--op-mint);
+}
+.ar-email-context.is-disabled .ar-email-context-dot {
+  background: var(--op-muted);
+}
+.ar-email-context > div {
+  font-size: 11px;
+  line-height: 1.7;
+  padding: 10px 12px;
+  border: 1px solid var(--op-border);
+  border-radius: 8px;
+  margin: 7px 0;
+  color: var(--op-muted);
+}
+.ar-email-context p + p {
+  margin-top: 5px;
+}
+.ar-email-context a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--op-ink);
+  margin-top: 9px;
+}
+.ar-email-chat button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+@media (max-width: 850px) {
+  .ar-mail-page .ar-mail-folders {
+    flex-wrap: wrap;
+  }
+  .ar-mail-page .ar-mail-accounts {
+    display: flex;
+    gap: 17px;
+    flex: 1 0 100%;
+    padding: 12px 3px 0;
+  }
+  .ar-mail-page .ar-mail-accounts > small {
+    display: none;
+  }
+  .ar-mail-page .ar-mail-accounts > div {
+    margin-top: 0;
+    min-width: 0;
+    flex: 1;
+  }
+}
+@media (max-width: 600px) {
+  .ar-mail-search {
+    gap: 7px;
+  }
+  .ar-mail-search > small {
+    display: none;
+  }
+  .ar-mail-view-panel {
+    right: -3px;
+  }
+  .ar-mail-reader .ar-reader-tools {
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+  .ar-mail-reader .ar-reader-tools .op-button {
+    font-size: 10px;
+    padding: 8px;
+  }
+}
+
+/* Jev stays inside the existing mailbox list and reader. */
+.wi-jev-sort{padding:12px 18px;border-bottom:1px solid var(--inbox-border,#8882)}
+.wi-jev-sort>div{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.wi-jev-sort>div>span,.wi-jev-sort>small{font-size:10px;opacity:.65}.wi-jev-sort>small{display:block;margin-top:7px;line-height:1.5}.wi-jev-sort p{font-size:11px;color:#df785f;margin-top:8px}
+.wi-jev-label{display:inline-block!important;font-size:9px!important;border:1px solid #7d8faa55;color:#91a8c5;border-radius:4px;padding:1px 5px;margin-left:7px;white-space:nowrap}.wi-jev-proof{margin:12px 0;font-size:11px;border:1px solid #8883;border-radius:7px;padding:10px}.wi-jev-proof summary{cursor:pointer}.wi-jev-proof>div{margin-top:10px}

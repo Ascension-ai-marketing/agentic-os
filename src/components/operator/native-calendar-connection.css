@@ -1,0 +1,60 @@
+.ar-native-calendar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 17px 18px;
+  margin: 16px 0;
+  border: 1px solid var(--op-border);
+  border-radius: 16px;
+  background: var(--op-panel);
+  min-width: 0;
+}
+.ar-native-calendar > img {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+}
+.ar-native-calendar-copy {
+  flex: 1;
+  min-width: 0;
+}
+.ar-native-calendar-copy strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.ar-native-calendar-copy p {
+  margin: 4px 0;
+  color: var(--op-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.ar-native-calendar-copy small {
+  color: var(--op-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.ar-native-calendar-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.ar-native-calendar .ar-native-calendar-error {
+  color: #c44351;
+}
+.dark .ar-native-calendar .ar-native-calendar-error {
+  color: #ff93a0;
+}
+@media (max-width: 700px) {
+  .ar-native-calendar {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding: 14px;
+  }
+  .ar-native-calendar-actions {
+    flex-basis: 100%;
+    justify-content: flex-start;
+    padding-left: 44px;
+  }
+}

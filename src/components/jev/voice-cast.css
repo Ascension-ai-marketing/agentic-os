@@ -1,0 +1,92 @@
+.vcast {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid #ffffff14;
+  background: radial-gradient(120% 60% at 50% 0%, #1a1030, #0b0a10 70%);
+  color: #f1edff;
+  min-width: 0;
+}
+.vcast-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.vcast-eyebrow { font: 600 11px/1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.12em; text-transform: uppercase; color: #b9b2cf; }
+.vcast-now { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #c9b8ff; }
+.vcast-now i { width: 7px; height: 7px; border-radius: 50%; background: #8f7cff; box-shadow: 0 0 10px #8f7cff; animation: vcast-pulse 1s ease-in-out infinite; }
+@keyframes vcast-pulse { 50% { opacity: 0.35; } }
+.vcast-auto {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #ffffff1a;
+  background: #ffffff08;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.vcast-auto[aria-pressed="true"] { border-color: #d45bb688; background: linear-gradient(135deg, #d45bb61f, #f386a10f); box-shadow: 0 10px 30px -18px #d45bb6; }
+.vcast-auto-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: #fff; background: linear-gradient(135deg, #d45bb6, #f386a1); }
+.vcast-auto-text b { display: block; font-size: 14px; }
+.vcast-auto-text small { display: block; margin-top: 2px; font-size: 12px; line-height: 1.4; color: #b9b2cf; }
+.vcast-switch { position: relative; width: 34px; height: 20px; border-radius: 999px; background: #ffffff1f; transition: background 0.2s; }
+.vcast-switch i { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+.vcast-auto[aria-pressed="true"] .vcast-switch { background: #d45bb6; }
+.vcast-auto[aria-pressed="true"] .vcast-switch i { transform: translateX(14px); }
+.vcast-last { margin: -4px 0 0; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #b9b2cf; }
+.vcast-last b { color: #f386a1; }
+.vcast-empty { margin: 0; font-size: 12.5px; color: #b9b2cf; }
+.vcast-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 360px; overflow-y: auto; }
+.vcast-list li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  transition: background 0.2s, border-color 0.2s;
+}
+.vcast-list li:hover { background: #ffffff08; }
+.vcast-list li[data-chosen] { border-color: #8f7cff88; background: #8f7cff14; }
+.vcast-play {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid #ffffff22;
+  background: #ffffff0d;
+  color: #f1edff;
+  cursor: pointer;
+}
+.vcast-play:hover { border-color: #d45bb6; color: #fff; }
+.vcast-list li[data-self] .vcast-play { background: linear-gradient(135deg, #d45bb6, #f386a1); border-color: transparent; color: #2a0624; }
+.vcast-pick { min-width: 0; text-align: left; background: none; border: 0; padding: 0; color: inherit; cursor: pointer; }
+.vcast-pick b { display: block; font-size: 13.5px; font-weight: 600; }
+.vcast-pick small { display: block; font-size: 11.5px; color: #9a93b3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vcast-speed { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; font-size: 12px; color: #b9b2cf; }
+.vcast-speed input { accent-color: #d45bb6; }
+.vcast-speed b { font: 600 12px/1 ui-monospace, "SF Mono", Menlo, monospace; color: #f1edff; }
+@media (prefers-reduced-motion: reduce) { .vcast-now i { animation: none; } }
+
+/* Jev lane card: the value Jev adds to voice. */
+.vlane { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 14px; border: 1px solid #d45bb655; background: linear-gradient(160deg, #d45bb61f, #0b091400 70%), #120d1c; }
+.vlane-head { display: flex; align-items: center; gap: 10px; }
+.vlane-head > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.vlane-head b { font-size: 14px; color: #f7f2ff; }
+.vlane-head small { font-size: 11.5px; color: #b9b2cf; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vlane-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, #d45bb6, #f386a1); color: #2a0624; flex: none; }
+.vlane-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.vlane-bars li { display: grid; grid-template-columns: 92px minmax(0, 1fr) 38px; align-items: center; gap: 8px; font-size: 12px; color: #b9b2cf; }
+.vlane-bars i { height: 6px; border-radius: 99px; background: #ffffff12; position: relative; overflow: hidden; }
+.vlane-bars i::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--w); border-radius: inherit; background: #ffffff38; animation: vlane-grow 0.9s cubic-bezier(0.2, 0.9, 0.2, 1) both; }
+.vlane-bars li[data-picked] { color: #fff; font-weight: 650; }
+.vlane-bars li[data-picked] i::after { background: linear-gradient(90deg, #d45bb6, #f386a1); box-shadow: 0 0 12px #d45bb6; }
+.vlane-bars b { font: 600 11.5px/1 ui-monospace, "SF Mono", Menlo, monospace; text-align: right; }
+@keyframes vlane-grow { from { width: 0; } }
+.vlane-foot { margin: 0; font: 500 11.5px/1.3 ui-monospace, "SF Mono", Menlo, monospace; color: #f386a1; }
+.vlane-note { margin: 0; font-size: 11.5px; line-height: 1.45; color: #9e97b6; }
+@media (prefers-reduced-motion: reduce) { .vlane-bars i::after { animation: none; } }

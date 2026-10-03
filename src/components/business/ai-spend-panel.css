@@ -1,0 +1,137 @@
+.biz-finance-ai {
+  color: var(--op-ink);
+  padding: 4px 5px;
+}
+.biz-finance-ai-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.biz-finance-ai-heading h2 {
+  font-size: 25px;
+  font-weight: 450;
+  letter-spacing: -0.035em;
+  margin: 10px 0 8px;
+}
+.biz-finance-ai-heading p {
+  font-size: 11px;
+  color: var(--op-muted);
+  line-height: 1.7;
+}
+.biz-finance-ai-total {
+  flex-shrink: 0;
+  text-align: right;
+}
+.biz-finance-ai-total strong {
+  font-size: 41px;
+  letter-spacing: -0.045em;
+  font-weight: 450;
+}
+.biz-finance-ai-total span {
+  font-size: 11px;
+  color: var(--op-muted);
+  margin-left: 7px;
+}
+.biz-finance-ai-total small {
+  display: block;
+  font-size: 9px;
+  color: var(--op-muted);
+  margin-top: 5px;
+}
+.biz-finance-ai-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 30px;
+  margin-top: 22px;
+}
+.biz-finance-token-card {
+  border: 1px solid var(--op-border);
+  border-radius: 15px;
+  padding: 23px;
+  background: linear-gradient(
+    130deg,
+    color-mix(in srgb, var(--op-accent) 8%, transparent),
+    transparent
+  );
+}
+.biz-finance-token-card > span {
+  font-size: 11px;
+}
+.biz-finance-token-card > strong {
+  display: block;
+  font-size: 35px;
+  letter-spacing: -0.04em;
+  font-weight: 450;
+  margin: 15px 0 4px;
+}
+.biz-finance-token-card > small {
+  font-size: 10px;
+  color: var(--op-muted);
+}
+.biz-finance-token-card > p {
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--op-muted);
+  margin-top: 15px;
+}
+.biz-finance-ai .biz-plan-list {
+  margin: 0;
+}
+.biz-finance-ai .biz-cost-note {
+  max-width: none;
+  margin-top: 22px;
+}
+@media (max-width: 700px) {
+  .biz-finance-ai-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .biz-finance-ai-total {
+    text-align: left;
+  }
+  .biz-finance-ai-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .biz-finance-ai-heading h2 {
+    font-size: 22px;
+  }
+}
+
+.biz-finance-ai .biz-plan-logo {
+  display: grid;
+  place-items: center;
+  width: 37px;
+  height: 37px;
+  border: 1px solid var(--op-border);
+  border-radius: 11px;
+  background: #f6f3f9;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.biz-finance-ai .biz-plan-logo img {
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
+}
+.biz-finance-ai .biz-plan-logo.is-claude {
+  background: #d97c57;
+  border-color: #d97c57;
+}
+.biz-finance-ai .biz-plan-logo.is-claude img {
+  width: 37px;
+  height: 37px;
+  border-radius: 10px;
+}
+.biz-finance-ai .biz-plan-logo.is-openclaw {
+  background: var(--op-inset);
+}
+.biz-finance-ai .biz-plan-list > div {
+  padding: 16px 0;
+  font-size: 14px;
+}
+.biz-finance-ai .biz-plan-list > div > span {
+  gap: 13px;
+}

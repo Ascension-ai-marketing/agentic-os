@@ -1,0 +1,1573 @@
+/*
+ * The daily brief: a soft lavender canvas holding a few large, quiet cards.
+ * No borders, very soft shadows, big figures, one pill action per card.
+ * Illustrations are accents: a horizon band behind the header, a framed
+ * observatory beside the focus, a watercolour tile on each priority.
+ * Light first; the dark theme uses deep muted versions of the same tints.
+ */
+.morning-layout {
+  --mb-canvas: #ecebf8;
+  --mb-card: #ffffff;
+  --mb-soft: #f3f2f9;
+  --mb-ink: #1e1c2a;
+  --mb-muted: #6f6b7d;
+  --mb-line: #1e1c2a12;
+  --mb-sky: #dbe8fb;
+  --mb-mint: #dbf1e3;
+  --mb-peach: #fbe2d3;
+  --mb-cream: #f8efd8;
+  --mb-pill: #17161d;
+  --mb-pill-ink: #ffffff;
+  --mb-glass: #ffffffb8;
+  --mb-shadow: 0 12px 34px #4a3f7a14, 0 1px 2px #4a3f7a0a;
+  --mb-card-shadow: 0 6px 22px #3b2f6a0c;
+  --mb-art-shadow: 0 8px 20px #3b2f6a24;
+  --mb-sun: #d8a350;
+  --mb-sun-bed: #f8efd8;
+  --mb-cloud: #5f88b8;
+  --mb-cloud-bed: #dbe8fb;
+  --mb-night: #7a76c9;
+  --mb-night-bed: #e6e3f7;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  gap: 22px;
+  width: 100%;
+  margin: 24px auto 0;
+  align-items: stretch;
+  color: var(--mb-ink);
+}
+.dark .morning-layout {
+  --mb-canvas: #1b1a24;
+  --mb-card: #24232f;
+  --mb-soft: #2b2a37;
+  --mb-ink: #efedf6;
+  --mb-muted: #a29eb2;
+  --mb-line: #ffffff14;
+  --mb-sky: #263349;
+  --mb-mint: #233631;
+  --mb-peach: #3c2d2a;
+  --mb-cream: #38332a;
+  --mb-pill: #f2f0f8;
+  --mb-pill-ink: #17161d;
+  --mb-glass: #ffffff14;
+  --mb-shadow: 0 12px 34px #00000033;
+  --mb-card-shadow: 0 6px 22px #00000022;
+  --mb-art-shadow: 0 8px 20px #00000055;
+  --mb-sun: #e8b866;
+  --mb-sun-bed: #3d3423;
+  --mb-cloud: #9dbde0;
+  --mb-cloud-bed: #2a3a52;
+  --mb-night: #b3aff0;
+  --mb-night-bed: #33304d;
+}
+.biz-overview-finance-style {
+  container-type: inline-size;
+}
+
+/* Canvas */
+.morning-brief {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100%;
+  width: 100%;
+  container-type: inline-size;
+  container-name: brief;
+  padding: 24px;
+  border-radius: 28px;
+  background: var(--mb-canvas);
+  color: var(--mb-ink);
+  box-shadow: var(--mb-shadow);
+}
+/* Everything sits above the horizon band; the header also above the cards so its menu can open over them. */
+.morning-brief > :not(.morning-sky) {
+  position: relative;
+  z-index: 1;
+}
+.morning-brief > .morning-head {
+  z-index: 3;
+}
+.morning-card {
+  border-radius: 26px;
+  background: var(--mb-card);
+  padding: 22px 24px;
+  box-shadow: var(--mb-card-shadow);
+  min-width: 0;
+}
+.morning-card.tint-sky {
+  background: var(--mb-sky);
+}
+.morning-card.tint-mint {
+  background: var(--mb-mint);
+}
+.morning-card.tint-peach {
+  background: var(--mb-peach);
+}
+.morning-card.tint-cream {
+  background: var(--mb-cream);
+}
+
+/* Horizon band: the morning-horizon scene rises behind the header and fades
+   into the canvas before the number cards. Text stays on plain canvas; only the
+   glass pills sit over the picture. */
+.morning-sky {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 268px;
+  border-radius: 28px 28px 0 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.morning-sky .morning-sky-media,
+.morning-sky .biz-ambient-video {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  -webkit-mask-image:
+    linear-gradient(to bottom, #000 0%, #000 34%, transparent 100%),
+    linear-gradient(to right, transparent 0%, transparent 34%, #000 70%);
+  mask-image:
+    linear-gradient(to bottom, #000 0%, #000 34%, transparent 100%),
+    linear-gradient(to right, transparent 0%, transparent 34%, #000 70%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  filter: saturate(0.92);
+}
+.morning-sky .biz-ambient-video > img,
+.morning-sky .biz-ambient-video > video {
+  object-position: 72% 50%;
+}
+.dark .morning-sky .biz-ambient-video {
+  opacity: 0.72;
+  filter: saturate(0.8) brightness(0.92);
+}
+
+/* Header */
+.morning-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 6px 4px;
+  min-height: 84px;
+}
+.morning-head-copy {
+  min-width: 0;
+}
+.morning-date {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mb-muted);
+}
+.morning-head h2 {
+  margin: 8px 0 0;
+  font-size: clamp(30px, 3vw, 44px);
+  font-weight: 300;
+  letter-spacing: -1.5px;
+  line-height: 1.05;
+  color: var(--mb-ink);
+}
+.morning-head-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
+  max-width: 55%;
+}
+.morning-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mb-glass);
+  color: var(--mb-muted);
+  font-size: 11.5px;
+  line-height: 1;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.morning-chip img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+.dark .morning-chip img.is-codex,
+.dark .morning-chip img.is-claude {
+  filter: brightness(0) invert(1);
+  opacity: 0.85;
+}
+.morning-chip strong {
+  font-weight: 600;
+  color: var(--mb-ink);
+}
+.morning-generator-logo.is-hermes {
+  border-radius: 50%;
+  background: #fff;
+  object-fit: cover;
+}
+.morning-demo-badge {
+  font-style: normal;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 7px 9px;
+  border-radius: 999px;
+  background: var(--mb-pill);
+  color: var(--mb-pill-ink);
+  line-height: 1;
+}
+
+/* Generator chip and its menu */
+.morning-generator {
+  position: relative;
+}
+.morning-generator-button {
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+.morning-generator-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  color: var(--mb-ink);
+}
+.morning-generator-button:disabled {
+  cursor: progress;
+  opacity: 0.8;
+}
+.morning-generator-caret {
+  opacity: 0.6;
+  transition: transform 0.18s ease;
+}
+.morning-generator.is-open .morning-generator-caret {
+  transform: rotate(180deg);
+}
+.morning-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  width: min(320px, 82cqw);
+  max-height: min(440px, 70vh);
+  overflow: auto;
+  padding: 8px;
+  border-radius: 20px;
+  background: var(--mb-card);
+  color: var(--mb-ink);
+  box-shadow:
+    0 18px 48px #2a224a2e,
+    0 1px 2px #2a224a14;
+  text-align: left;
+  white-space: normal;
+}
+.dark .morning-menu {
+  box-shadow: 0 18px 48px #00000066;
+}
+.morning-menu-lead {
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px 10px;
+}
+.morning-menu-lead strong {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.morning-menu-lead span {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--mb-muted);
+}
+.morning-menu-group {
+  padding: 6px 0 4px;
+  border-top: 1px solid var(--mb-line);
+}
+.morning-menu-group > header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mb-muted);
+}
+.morning-menu-group > header img,
+.morning-menu-group > header svg {
+  width: 13px;
+  height: 13px;
+  object-fit: contain;
+}
+.dark .morning-menu-group > header img.is-codex,
+.dark .morning-menu-group > header img.is-claude {
+  filter: brightness(0) invert(1);
+  opacity: 0.85;
+}
+.morning-menu-group > header em {
+  margin-left: auto;
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 10.5px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: var(--mb-peach);
+  color: var(--mb-ink);
+}
+.morning-menu-item,
+.morning-menu-connect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--mb-ink);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.morning-menu-item > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.morning-menu-item:hover:not(:disabled),
+.morning-menu-connect:hover {
+  background: var(--mb-soft);
+}
+.morning-menu-item.is-selected {
+  font-weight: 600;
+}
+.morning-menu-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.morning-menu-connect {
+  color: var(--mb-muted);
+  justify-content: flex-start;
+  gap: 4px;
+}
+.morning-menu-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 8px 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--mb-soft);
+  color: var(--mb-muted);
+}
+.morning-menu-filter input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--mb-ink);
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+.morning-menu-note {
+  margin: 0;
+  padding: 6px 10px 8px;
+  font-size: 11px;
+  color: var(--mb-muted);
+}
+.morning-menu-note button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--mb-ink);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* Weather pill (component in brief-today.tsx): the condition icon sits in a small tinted disc. */
+.morning-layout .brief-weather-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 5px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mb-glass);
+  color: var(--mb-muted);
+  font-size: 11.5px;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.morning-layout .brief-weather-pill strong {
+  font-weight: 600;
+  color: var(--mb-ink);
+}
+.morning-layout .brief-weather-pill > svg:first-child {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 5px;
+  border-radius: 50%;
+  background: var(--mb-sun-bed);
+  color: var(--mb-sun);
+}
+.morning-layout .brief-weather-pill.is-cloud > svg:first-child,
+.morning-layout .brief-weather-pill.is-fog > svg:first-child,
+.morning-layout .brief-weather-pill.is-rain > svg:first-child,
+.morning-layout .brief-weather-pill.is-snow > svg:first-child {
+  background: var(--mb-cloud-bed);
+  color: var(--mb-cloud);
+}
+.morning-layout .brief-weather-pill.is-night > svg:first-child {
+  background: var(--mb-night-bed);
+  color: var(--mb-night);
+}
+.morning-layout .brief-weather-pill.is-unavailable > svg:first-child,
+.morning-layout .brief-weather-pill.is-unknown > svg:first-child {
+  background: var(--mb-soft);
+  color: var(--mb-muted);
+}
+.morning-layout .brief-weather-edit {
+  opacity: 0.55;
+}
+.morning-layout .brief-weather-pill:hover .brief-weather-edit {
+  opacity: 1;
+}
+.morning-layout .brief-city-editor {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 12px;
+  border-radius: 999px;
+  background: var(--mb-card);
+  color: var(--mb-muted);
+  box-shadow: var(--mb-card-shadow);
+  position: relative;
+}
+.morning-layout .brief-city-editor input {
+  width: 12ch;
+  border: 0;
+  background: transparent;
+  color: var(--mb-ink);
+  font-size: 12px;
+  outline: none;
+}
+.morning-layout .brief-city-editor button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--mb-soft);
+  color: var(--mb-ink);
+}
+.morning-layout .brief-city-editor button[type="submit"] {
+  background: var(--mb-pill);
+  color: var(--mb-pill-ink);
+}
+.morning-layout .brief-city-editor em {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  font-style: normal;
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--mb-ink);
+}
+
+/* Number cards */
+.morning-numbers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.morning-number {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 176px;
+  container-type: inline-size;
+}
+/* A quiet glass disc with a line icon in the corner. */
+.morning-number-art {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--mb-glass);
+  color: var(--mb-ink);
+  opacity: 0.8;
+}
+.morning-card:not([class*="tint-"]) .morning-number-art,
+.morning-card.tint-plain .morning-number-art {
+  background: var(--mb-soft);
+}
+.morning-number-value {
+  padding-right: 44px;
+  /* Sized by the card, not the viewport, so a seven-figure amount stays on one line in a narrow column. */
+  font-size: clamp(26px, 15cqw, 58px);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.morning-number-label {
+  margin-top: 10px;
+  font-size: 13.5px;
+  color: var(--mb-muted);
+}
+.morning-number-caption {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--mb-muted);
+  opacity: 0.85;
+  overflow-wrap: anywhere;
+}
+.morning-number-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+/* Pills and round buttons */
+.morning-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mb-glass);
+  color: var(--mb-ink);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.morning-card:not([class*="tint-"]) .morning-pill:not(.is-dark),
+.morning-card.tint-plain .morning-pill:not(.is-dark) {
+  background: var(--mb-soft);
+}
+.morning-pill.is-dark {
+  background: var(--mb-pill);
+  color: var(--mb-pill-ink);
+}
+.morning-pill:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.morning-round {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--mb-pill);
+  color: var(--mb-pill-ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+.morning-round.is-quiet {
+  background: var(--mb-glass);
+  color: var(--mb-ink);
+}
+.morning-card:not([class*="tint-"]) .morning-round.is-quiet,
+.morning-card.tint-plain .morning-round.is-quiet {
+  background: var(--mb-soft);
+}
+.morning-round.is-open > svg {
+  transform: rotate(180deg);
+}
+.morning-round:hover,
+.morning-pill:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.morning-text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border: 0;
+  background: none;
+  color: var(--mb-muted);
+  font-size: 12px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.morning-text-button:hover:not(:disabled) {
+  color: var(--mb-ink);
+}
+.morning-text-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Focus card: copy on the left, the observatory framed on the right */
+.morning-focus {
+  padding: 26px 28px;
+}
+.morning-focus.has-art {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 24px;
+  align-items: stretch;
+  padding: 18px 18px 18px 28px;
+}
+.morning-focus-copy {
+  min-width: 0;
+  padding: 8px 0;
+}
+.morning-focus-art {
+  position: relative;
+  min-height: 128px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #221d33;
+  box-shadow: var(--mb-art-shadow);
+}
+.morning-focus-art > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 70% 50%;
+}
+.morning-focus-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px #ffffff1f;
+}
+.morning-kicker {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mb-muted);
+}
+.morning-focus h3 {
+  margin: 12px 0 0;
+  font-size: clamp(22px, 2.2vw, 30px);
+  font-weight: 350;
+  letter-spacing: -0.7px;
+  line-height: 1.3;
+  max-width: 34ch;
+  overflow-wrap: anywhere;
+}
+.morning-focus h3 b {
+  font-weight: 650;
+}
+.morning-focus-copy > p {
+  margin: 10px 0 0;
+  max-width: 64ch;
+  color: var(--mb-muted);
+  font-size: 14px;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.morning-brief.is-preparing .morning-priorities {
+  opacity: 0.7;
+}
+
+/* Preparing: a soft bar inside the focus card */
+.morning-progress {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+}
+.morning-progress-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+.morning-progress-copy strong {
+  font-weight: 500;
+  font-size: 13px;
+}
+.morning-progress-copy span {
+  font-size: 12px;
+  color: var(--mb-muted);
+}
+.morning-progress-copy time {
+  font-variant-numeric: tabular-nums;
+  color: var(--mb-ink);
+}
+.morning-progress-track {
+  height: 6px;
+  border-radius: 6px;
+  background: var(--mb-line);
+  overflow: hidden;
+}
+.morning-progress-track > span {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: var(--mb-pill);
+  transition: width 1s linear;
+}
+.morning-progress > p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--mb-muted);
+}
+
+/* Priorities */
+.morning-priorities {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.morning-priority {
+  display: flex;
+  flex-direction: column;
+  min-height: 224px;
+  padding: 20px 22px 18px;
+}
+.morning-priority-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.morning-priority-index {
+  font-size: 44px;
+  font-weight: 300;
+  letter-spacing: -2.2px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.morning-priority-marks {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+/* A small watercolour scene for the evidence category. */
+.morning-priority-tile {
+  display: block;
+  width: 54px;
+  height: 54px;
+  border-radius: 17px;
+  object-fit: cover;
+  object-position: 50% 45%;
+  box-shadow:
+    var(--mb-art-shadow),
+    inset 0 0 0 1px #ffffff66;
+  transition: transform 0.25s ease;
+}
+.morning-priority:hover .morning-priority-tile {
+  transform: translateY(-2px) rotate(-1.5deg);
+}
+.morning-priority.is-complete .morning-priority-tile {
+  filter: saturate(0.4);
+  opacity: 0.7;
+}
+.morning-priority-title {
+  margin: 16px 0 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.morning-priority.is-complete .morning-priority-title {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+.morning-priority-source {
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--mb-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.morning-priority-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+.morning-priority-state {
+  font-size: 11.5px;
+  color: var(--mb-muted);
+}
+.morning-priority-detail {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--mb-line);
+}
+.morning-priority-detail > p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.morning-check {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+.morning-check input {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.morning-check input:disabled {
+  cursor: wait;
+}
+.morning-check > span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid #1e1c2a3a;
+  background: var(--mb-glass);
+  color: var(--mb-ink);
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+.dark .morning-check > span {
+  border-color: #ffffff4d;
+}
+.morning-check input:hover + span {
+  border-color: var(--mb-ink);
+}
+.morning-check input:checked + span {
+  background: var(--mb-pill);
+  border-color: var(--mb-pill);
+  color: var(--mb-pill-ink);
+}
+.morning-check input:focus-visible + span {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 3px;
+}
+.morning-check.is-static > span {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+/* Sources (inside a revealed priority and the full-context list) */
+.morning-sources {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.morning-sources li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+.morning-sources a {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--mb-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--mb-line);
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.morning-sources a:hover {
+  text-decoration-color: var(--mb-ink);
+}
+.morning-sources span {
+  color: var(--mb-muted);
+  overflow-wrap: anywhere;
+}
+.morning-sources time {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--mb-muted);
+  font-variant-numeric: tabular-nums;
+}
+.morning-source-empty {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--mb-muted);
+}
+
+/* Notes and statuses */
+.morning-note {
+  margin: 0;
+  padding: 12px 18px;
+  border-radius: 18px;
+  background: var(--mb-peach);
+  color: var(--mb-ink);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.morning-note button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--mb-ink);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.morning-action-status {
+  margin: 0;
+  padding: 0 6px;
+  font-size: 12px;
+  color: var(--mb-muted);
+}
+.morning-action-status:empty {
+  display: none;
+}
+.morning-quiet {
+  margin: 0;
+  font-size: 13px;
+  color: var(--mb-muted);
+}
+
+/* Footer */
+.morning-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 2px 6px 0;
+}
+.morning-foot-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+.morning-history {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.morning-history button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--mb-glass);
+  color: var(--mb-ink);
+  cursor: pointer;
+}
+.morning-history button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.morning-history select {
+  max-width: 130px;
+  border: 0;
+  background: transparent;
+  color: var(--mb-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* Built from: the logos of every source that fed this brief, then who wrote it */
+.morning-built {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: -4px;
+  padding: 0 6px;
+}
+.morning-built-label {
+  font-size: 11px;
+  color: var(--mb-muted);
+}
+.morning-built-list {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 4px;
+}
+.morning-built-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 0 2px var(--mb-canvas),
+    0 2px 6px #3b2f6a1f;
+  transition: transform 0.18s ease;
+  cursor: default;
+}
+.morning-built-list .morning-built-mark:first-child {
+  margin-left: 0;
+}
+.morning-built-mark:hover {
+  z-index: 2;
+  transform: translateY(-2px);
+}
+.morning-built-mark > img,
+.morning-built-mark > .mc-source-brand,
+.morning-built-mark > .mc-brand {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  border-radius: 3px;
+}
+.morning-built-mark > img.is-tile {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.morning-built-mark .mc-source-brand[data-brand="business"] .mc-info-orb {
+  transform: scale(0.72);
+}
+.morning-built-writer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.morning-built-mark.is-writer {
+  margin-left: 0;
+}
+.morning-built-mark.is-writer > img,
+.morning-built-mark.is-writer > svg {
+  width: 14px;
+  height: 14px;
+}
+.morning-built-mark.is-writer > img.is-hermes {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Full context, collapsed by default */
+.morning-more {
+  padding: 0 6px;
+}
+.morning-more > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 6px 0;
+  list-style: none;
+  cursor: pointer;
+  color: var(--mb-muted);
+  font-size: 12px;
+}
+.morning-more > summary::-webkit-details-marker {
+  display: none;
+}
+.morning-more[open] > summary > svg {
+  transform: rotate(180deg);
+}
+.morning-more-body {
+  margin-top: 10px;
+  padding: 6px 22px 18px;
+  border-radius: 22px;
+  background: var(--mb-card);
+  box-shadow: var(--mb-card-shadow);
+}
+.morning-recommendation {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--mb-line);
+}
+.morning-recommendation-category {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mb-muted);
+}
+.morning-recommendation h4 {
+  margin: 6px 0 6px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.morning-recommendation p {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--mb-muted);
+  overflow-wrap: anywhere;
+}
+.morning-more-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  padding-top: 16px;
+}
+.morning-more-foot > span {
+  max-width: 60ch;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--mb-muted);
+}
+.morning-more-foot a {
+  color: var(--mb-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Empty state */
+.morning-empty {
+  flex: 1;
+}
+.morning-empty.has-art {
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) 190px;
+}
+.morning-empty .morning-focus-art {
+  min-height: 200px;
+}
+.morning-empty .morning-focus-copy > p {
+  display: block;
+  -webkit-line-clamp: unset;
+}
+.morning-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 20px;
+}
+
+/* News rail: same card language, white on the page. It matches the brief's
+   height; the body scrolls when the day has more than fits. */
+.morning-layout > .brief-news {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 24px;
+  border: 0;
+  border-radius: 28px;
+  background: var(--mb-card);
+  color: var(--mb-ink);
+  box-shadow: var(--mb-shadow);
+}
+.morning-layout > .brief-news > header {
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.morning-layout > .brief-news h3 {
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.6px;
+}
+.morning-layout > .brief-news > header > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: var(--mb-soft);
+  color: var(--mb-ink);
+  font-size: 11px;
+}
+.morning-layout .brief-news-body {
+  flex: 1 1 0;
+  height: 0;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 0 -8px;
+  padding: 0 8px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mb-line) transparent;
+}
+.morning-layout .brief-news-grid {
+  flex: none;
+  align-content: start;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+.morning-layout .brief-news-item {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 4px 14px;
+  align-content: start;
+  color: var(--mb-ink);
+}
+.morning-layout .brief-news-item + .brief-news-item {
+  padding-top: 16px;
+  border-top: 1px solid var(--mb-line);
+}
+.morning-layout .brief-news-visual {
+  grid-row: 1 / 4;
+  width: 80px;
+  height: 80px;
+  aspect-ratio: 1;
+  margin: 0;
+  border: 0;
+  border-radius: 18px;
+  background: var(--mb-soft);
+}
+.morning-layout .brief-news-item h4 {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+.morning-layout .brief-news-item p {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--mb-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.morning-layout .brief-news-item time {
+  margin: 0;
+  font-size: 10.5px;
+  color: var(--mb-muted);
+}
+.morning-layout .brief-news-item:hover h4 {
+  color: var(--mb-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.morning-layout .brief-news-unavailable {
+  color: var(--mb-muted);
+}
+
+/* Rail blocks: today's calendar and, when there is room, recent memory */
+.morning-layout .brief-rail-block {
+  flex: none;
+  padding: 16px 16px 14px;
+  border-radius: 20px;
+  background: var(--mb-soft);
+}
+.morning-layout .brief-rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.morning-layout .brief-rail-head h4 {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mb-muted);
+}
+.morning-layout .brief-rail-head a {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--mb-muted);
+  text-decoration: none;
+}
+.morning-layout .brief-rail-head a:hover {
+  color: var(--mb-ink);
+}
+.morning-layout .brief-rail-events,
+.morning-layout .brief-rail-memory {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.morning-layout .brief-rail-events li {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+  font-size: 12.5px;
+}
+.morning-layout .brief-rail-events time {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--mb-muted);
+  white-space: nowrap;
+}
+.morning-layout .brief-rail-events li > span,
+.morning-layout .brief-rail-memory li > span {
+  display: grid;
+  min-width: 0;
+}
+.morning-layout .brief-rail-events strong,
+.morning-layout .brief-rail-memory strong {
+  font-weight: 500;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.morning-layout .brief-rail-events small,
+.morning-layout .brief-rail-memory small {
+  font-size: 10.5px;
+  color: var(--mb-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.morning-layout .brief-rail-memory li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  font-size: 12.5px;
+}
+.morning-layout .brief-rail-memory .mc-source-brand {
+  border-radius: 5px;
+}
+.morning-layout .brief-rail-empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--mb-muted);
+}
+
+/* Used by the Business route header and the finance empty state. */
+.biz-demo-toggle {
+  padding: 8px 12px;
+  border: 1px solid var(--op-border);
+  border-radius: 20px;
+  color: var(--op-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.biz-demo-toggle[aria-pressed="true"] {
+  color: var(--op-ink);
+  background: var(--op-inset);
+}
+
+/* Keyboard focus */
+.morning-layout :is(button, select, a, summary):focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+.morning-layout .morning-menu-item:focus-visible,
+.morning-layout .morning-menu-connect:focus-visible {
+  outline-offset: -2px;
+  border-radius: 12px;
+}
+
+/* Layout */
+@media (max-width: 850px) {
+  .morning-layout {
+    grid-template-columns: 1fr;
+  }
+  .morning-layout .brief-news-body {
+    flex: none;
+    height: auto;
+    max-height: 560px;
+  }
+}
+@container (max-width: 850px) {
+  .morning-layout {
+    grid-template-columns: 1fr;
+  }
+  .morning-layout .brief-news-body {
+    flex: none;
+    height: auto;
+    max-height: 560px;
+  }
+}
+/* The brief's own width decides when cards stack: it usually sits in a two-thirds column. */
+@container brief (max-width: 720px) {
+  .morning-priorities {
+    grid-template-columns: 1fr;
+  }
+  .morning-priority {
+    min-height: 0;
+  }
+  .morning-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .morning-head-tools {
+    justify-content: flex-start;
+    max-width: 100%;
+  }
+  .morning-menu {
+    right: auto;
+    left: 0;
+  }
+  .morning-sky {
+    height: 220px;
+  }
+  .morning-sky .biz-ambient-video {
+    -webkit-mask-image:
+      linear-gradient(to bottom, #000 0%, #000 20%, transparent 100%),
+      linear-gradient(to right, transparent 0%, transparent 20%, #000 60%);
+    mask-image:
+      linear-gradient(to bottom, #000 0%, #000 20%, transparent 100%),
+      linear-gradient(to right, transparent 0%, transparent 20%, #000 60%);
+  }
+}
+@container brief (max-width: 640px) {
+  .morning-numbers {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  }
+  .morning-number-value {
+    font-size: 38px;
+  }
+  .morning-focus.has-art,
+  .morning-empty.has-art {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 26px 28px;
+  }
+  .morning-focus-art {
+    display: none;
+  }
+  .morning-focus-copy {
+    padding: 0;
+  }
+}
+@media (max-width: 720px) {
+  .morning-priorities {
+    grid-template-columns: 1fr;
+  }
+  .morning-priority {
+    min-height: 0;
+  }
+  .morning-numbers {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  }
+  .morning-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .morning-head-tools {
+    justify-content: flex-start;
+    max-width: 100%;
+  }
+  .morning-menu {
+    right: auto;
+    left: 0;
+  }
+}
+@media (max-width: 540px) {
+  .morning-brief {
+    padding: 18px;
+    border-radius: 24px;
+    gap: 12px;
+  }
+  .morning-sky {
+    border-radius: 24px 24px 0 0;
+  }
+  .morning-card {
+    border-radius: 22px;
+    padding: 18px 20px;
+  }
+  .morning-head h2 {
+    font-size: 30px;
+  }
+  .morning-numbers {
+    grid-template-columns: 1fr;
+  }
+  .morning-number {
+    min-height: 0;
+  }
+  .morning-number-value {
+    font-size: 40px;
+  }
+  .morning-focus,
+  .morning-focus.has-art {
+    padding: 20px;
+  }
+  .morning-priority-tile {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+  .morning-layout > .brief-news {
+    padding: 20px;
+    border-radius: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morning-layout * {
+    transition: none !important;
+  }
+  .morning-round:hover,
+  .morning-pill:hover:not(:disabled),
+  .morning-generator-button:hover:not(:disabled),
+  .morning-built-mark:hover,
+  .morning-priority:hover .morning-priority-tile {
+    transform: none;
+  }
+  .morning-layout .animate-spin {
+    animation: none;
+  }
+}
+
+/* Category marks replace the photo tiles: a small glass disc with a line icon. */
+.morning-priority-tile { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: var(--mb-glass); color: var(--mb-ink); opacity: 0.85; }
+.morning-focus-art { display: none; }

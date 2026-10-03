@@ -1,0 +1,21 @@
+/* Jev in Chat: the runtime tile mark and the "Jev routed this chat" strip. */
+.jev-runtime-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, #d45bb6, #f386a1);
+  box-shadow: 0 8px 20px -10px #d45bb6;
+}
+.jev-runtime-mark.is-small { width: 26px; height: 26px; border-radius: 8px; }
+.jev-chat-pick {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 0 4px 8px;
+  font-size: 12px;
+  color: var(--op-muted);
+}

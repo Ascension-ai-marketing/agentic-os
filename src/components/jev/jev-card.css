@@ -1,0 +1,245 @@
+/* Jev card. Uses the OS tokens (--op-*) so it follows light and dark.
+   Jev's own colour is a hot magenta, used only for Jev's pick. */
+:root {
+  /* TypeSafe's Jev colours: magenta #D45BB6 and pink #F386A1. */
+  --jev: #b8409c;
+  --jev-2: #e0708e;
+  --jev-soft: #d45bb61f;
+  --jev-glow: #d45bb640;
+}
+.dark {
+  --jev: #d45bb6;
+  --jev-2: #f386a1;
+  --jev-soft: #d45bb626;
+  --jev-glow: #d45bb655;
+}
+
+.jev-card {
+  --jev-ink: var(--op-ink, #f0edf5);
+  --jev-muted: var(--op-muted, #96919f);
+  --jev-line: var(--op-border, #2a282f);
+  --jev-panel: var(--op-panel, #18181c);
+  --jev-inset: var(--op-inset, #121215);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 18px 16px;
+  border: 1px solid var(--jev-line);
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 90% at 100% 0%, var(--jev-soft), transparent 55%),
+    var(--jev-panel);
+  color: var(--jev-ink);
+  font-variant-numeric: tabular-nums;
+  max-width: 560px;
+}
+
+.jev-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.jev-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 650;
+  font-size: 13px;
+  color: var(--jev);
+}
+.jev-mark { flex: none; }
+.jev-surface {
+  color: var(--jev-muted);
+  font-weight: 500;
+  padding-left: 8px;
+  border-left: 1px solid var(--jev-line);
+}
+.jev-tag {
+  font: 600 10px/1 ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--jev-muted);
+  border: 1px solid var(--jev-line);
+  border-radius: 999px;
+  padding: 3px 7px;
+  margin-left: 4px;
+}
+.jev-speed {
+  display: inline-flex;
+  flex: none;
+  white-space: nowrap;
+  align-items: baseline;
+  gap: 8px;
+  font: 500 12px/1 ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--jev-muted);
+}
+.jev-speed b { color: var(--jev-ink); font-size: 14px; font-weight: 650; }
+
+.jev-q {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.jev-in {
+  margin: -6px 0 0;
+  font: 400 13px/1.45 ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--jev-muted);
+  overflow-wrap: anywhere;
+}
+
+.jev-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.jev-rows li {
+  display: grid;
+  grid-template-columns: minmax(96px, 42%) 1fr 44px;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--jev-muted);
+}
+.jev-row-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jev-row-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--jev-inset);
+  box-shadow: inset 0 0 0 1px var(--jev-line);
+  overflow: hidden;
+}
+.jev-row-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--jev-muted);
+  opacity: 0.45;
+  transition: width 700ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  transition-delay: calc(var(--i, 0) * 90ms);
+}
+.jev-row-p { text-align: right; font: 600 13px/1 ui-monospace, "SF Mono", Menlo, monospace; }
+.jev-rows li.is-win { color: var(--jev-ink); font-weight: 600; }
+.jev-rows li.is-win .jev-row-fill {
+  background: linear-gradient(90deg, var(--jev), var(--jev-2));
+  opacity: 1;
+  box-shadow: 0 0 14px var(--jev-glow);
+}
+.jev-rows li.is-win .jev-row-p { color: var(--jev-2); }
+
+.jev-rows .jev-rows-more {
+  display: block;
+  font-size: 12.5px;
+  color: var(--jev-muted);
+  padding-left: 2px;
+}
+
+.jev-extra { display: flex; flex-wrap: wrap; gap: 8px; }
+.jev-extra-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--jev-muted);
+  background: var(--jev-inset);
+  border: 1px solid var(--jev-line);
+  border-radius: 8px;
+  padding: 6px 9px;
+}
+.jev-extra-item b { color: var(--jev-ink); font-weight: 600; }
+
+.jev-escalated, .jev-error {
+  margin: 0;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--jev-inset);
+  border: 1px solid var(--jev-line);
+}
+.jev-error { color: #e36a6a; }
+
+.jev-vs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--jev-inset);
+  border: 1px dashed var(--jev-line);
+}
+.jev-vs-label {
+  font: 600 10.5px/1 ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--jev-muted);
+}
+.jev-vs-quote {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--jev-ink);
+  opacity: 0.85;
+}
+.jev-vs-meta { font: 500 12px/1 ui-monospace, "SF Mono", Menlo, monospace; color: var(--jev-muted); }
+
+.jev-win {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--jev-line);
+  font-size: 14px;
+  color: var(--jev-muted);
+}
+.jev-win b { font-size: 22px; font-weight: 700; color: var(--jev-ink); letter-spacing: -0.02em; margin-right: 3px; }
+.jev-win span:first-child b { color: var(--jev); }
+.jev-win-note {
+  margin-left: auto;
+  font: 500 11px/1 ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Compact pill for list rows. */
+.jev-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  font-size: 12px;
+  line-height: 1;
+  padding: 5px 9px 5px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--op-border, #2a282f);
+  background: var(--jev-soft);
+  color: var(--op-ink, #f0edf5);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.jev-pill .jev-mark { color: var(--jev); }
+.jev-pill-sure { color: var(--jev); font-weight: 650; }
+.jev-pill-meta { color: var(--op-muted, #96919f); font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+.jev-pill-flag { color: var(--op-muted, #96919f); border-left: 1px solid var(--op-border, #2a282f); padding-left: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .jev-row-fill { transition: none; }
+}
+
+/* The Jev app tile (picker, decision rows). */
+.jev-logo {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  background:
+    radial-gradient(90% 90% at 70% 15%, rgba(243, 134, 161, 0.22), transparent 65%),
+    linear-gradient(160deg, #221821, #120d13);
+  box-shadow:
+    0 0 0 1px rgba(243, 134, 161, 0.32) inset,
+    0 6px 16px -8px rgba(212, 91, 182, 0.7);
+}

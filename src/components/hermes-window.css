@@ -1,0 +1,24 @@
+.hw { margin: 2px 0 12px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); background: linear-gradient(180deg, rgba(38, 30, 22, 0.55), rgba(18, 16, 20, 0.85)); overflow: hidden; max-width: 640px; }
+.hw[data-working] { border-color: rgba(233, 178, 92, 0.35); box-shadow: 0 0 0 1px rgba(233, 178, 92, 0.08), 0 14px 40px -24px rgba(233, 178, 92, 0.6); }
+.hw-head { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px 10px 10px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.hw-head:disabled { cursor: default; }
+.hw-face { position: relative; width: 40px; height: 40px; flex: none; border-radius: 11px; overflow: visible; }
+.hw-face img { width: 40px; height: 40px; border-radius: 11px; object-fit: cover; display: block; background: #1a1612; border: 1px solid rgba(255, 255, 255, 0.12); }
+.hw-ring { position: absolute; inset: -4px; border-radius: 14px; border: 2px solid rgba(233, 178, 92, 0.75); animation: hw-ring 1.8s ease-in-out infinite; }
+@keyframes hw-ring { 0%, 100% { opacity: 0.25; transform: scale(0.97); } 50% { opacity: 1; transform: scale(1.03); } }
+.hw-title { display: flex; flex-direction: column; line-height: 1.2; }
+.hw-title b { font-size: 14px; font-weight: 650; color: #f6efe4; }
+.hw-title small { font-size: 11.5px; color: #c9b89e; }
+.hw-status { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; font: 500 12px/1 ui-monospace, "SF Mono", Menlo, monospace; color: #e6d6bd; white-space: nowrap; }
+.hw-pulse { width: 7px; height: 7px; border-radius: 50%; background: #e9b25c; animation: hw-pulse 1.1s ease-in-out infinite; }
+@keyframes hw-pulse { 50% { opacity: 0.3; } }
+.hw-chevron { color: #c9b89e; transition: transform 0.2s; }
+.hw[data-open] .hw-chevron { transform: rotate(180deg); }
+.hw-actions { list-style: none; margin: 0; padding: 4px 10px 10px; max-height: 240px; overflow: auto; display: grid; gap: 3px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
+.hw-actions li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 9px; font: 450 12.5px/1.35 ui-monospace, "SF Mono", Menlo, monospace; color: #e9e2d6; background: rgba(255, 255, 255, 0.025); animation: hw-in 0.3s cubic-bezier(0.2, 0.9, 0.2, 1) both; }
+.hw-actions li[data-latest] { background: rgba(233, 178, 92, 0.1); color: #fff6e8; }
+@keyframes hw-in { from { opacity: 0; transform: translateY(4px); } }
+.hw-icon { text-align: center; font-size: 14px; }
+.hw-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hw-time { color: #a8997f; font-size: 11px; }
+@media (prefers-reduced-motion: reduce) { .hw-ring, .hw-pulse, .hw-actions li { animation: none; } }

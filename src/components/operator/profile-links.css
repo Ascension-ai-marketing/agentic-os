@@ -1,0 +1,110 @@
+.ws-public-profiles > p {
+  margin: 14px 0;
+}
+.ws-profile-link-list {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+}
+.ws-profile-link-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #ffffff0d;
+}
+.ws-profile-link-list li > div {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 4px;
+}
+.ws-profile-link-list li > div > span,
+.ws-profile-link-list small,
+.ws-profile-link-suggestion small {
+  color: #a8a1b4;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+.ws-profile-link-list a,
+.ws-profile-link-suggestion a {
+  color: #d5bde9;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.ws-profile-link-list button {
+  padding: 6px;
+  color: #a8a1b4;
+}
+.ws-public-profile-entry {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.65fr) minmax(0, 1.35fr);
+  gap: 12px;
+}
+.ws-public-profile-entry > button {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+.ws-public-profiles label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  color: #d1c8dc;
+  font-size: 11px;
+}
+.ws-public-profiles :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #ffffff1a;
+  border-radius: 9px;
+  background: #141219;
+  padding: 10px 11px;
+  color: #eee8f7;
+  font-size: 12px;
+}
+.ws-public-profiles :is(input, select, button, summary, a):focus-visible {
+  outline: 2px solid #c9acec;
+  outline-offset: 3px;
+}
+.ws-public-profiles button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.ws-profile-link-finder {
+  margin-top: 16px;
+}
+.ws-profile-link-finder > summary {
+  color: #bcb0c9;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 8px 0;
+}
+.ws-profile-link-finder > :is(p, label, button) {
+  margin-top: 12px;
+}
+.ws-profile-link-suggestions {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #ffffff12;
+}
+.ws-profile-link-suggestions > strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+.ws-profile-link-suggestions > p {
+  margin: 8px 0;
+}
+.ws-profile-link-suggestion {
+  display: grid;
+  justify-items: start;
+  gap: 5px;
+  margin: 14px 0;
+}
+@media (max-width: 450px) {
+  .ws-public-profile-entry {
+    grid-template-columns: 1fr;
+  }
+  .ws-public-profiles :is(input, select) {
+    font-size: 16px;
+  }
+}

@@ -12,7 +12,8 @@ export function providerKey(root: string, name: string, options: {
   const home = options.home ?? homedir();
   for (const file of [join(root, ".env.local"), join(home, ".config/agentic-os.env"), join(home, ".hermes/.env")]) {
     try {
-      const match = readFileSync(file, "utf8").match(new RegExp(`^\\s*(?:export\\s+)?${name}\\s*=\\s*(.+)$`, "m"));
+      // Spaces and tabs only around "=": a line left empty must not read the next line as its value.
+      const match = readFileSync(file, "utf8").match(new RegExp(`^[ \\t]*(?:export[ \\t]+)?${name}[ \\t]*=[ \\t]*(.+)$`, "m"));
       if (!match) continue;
       let value = match[1].trim();
       if (/^(["']).*\1$/.test(value)) value = value.slice(1, -1);

@@ -40,6 +40,7 @@
     "uninstall:voice-sync": "bun run scripts/install-voice-sync.ts --uninstall"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
     "@cloudflare/vite-plugin": "^1.25.5",
     "@elevenlabs/client": "^1.25.0",
     "@elevenlabs/elevenlabs-js": "^2.70.0",

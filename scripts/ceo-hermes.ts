@@ -59,6 +59,14 @@ function cardStatus(card: { status?: unknown; last_failure_error?: unknown }): C
   return status === "running" || status === "review" ? "running" : "queued";
 }
 
+/** Why the worker blocked its card. Hermes records it as an object, or as that object written out as text. */
+function blockReason(payload: unknown): string {
+  let data = payload;
+  if (typeof data === "string") { try { data = JSON.parse(data); } catch { return ""; } }
+  const reason = (data as { reason?: unknown } | null)?.reason;
+  return typeof reason === "string" ? reason : "";
+}
+
 export function hermesBoard(options: { root: string; home?: string; run?: Run }) {
   const home = options.home ?? homedir();
   const run = options.run ?? command(findExecutable("hermes", { home }));
@@ -119,8 +127,15 @@ export function hermesBoard(options: { root: string; home?: string; run?: Run })
       if (!/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$/.test(id)) throw new Error("That is not a Hermes card.");
       const shown = await json(["kanban", "show", id], { signal });
       const comments = Array.isArray(shown?.comments) ? shown.comments : [];
+      const made = card(shown?.task);
+      // An error from an earlier attempt stays on the card after a retry, so the last stop decides: the worker blocking it, or Hermes giving up.
+      const stop = [...(Array.isArray(shown?.events) ? shown.events : [])].reverse().find((event) => event?.kind === "blocked" || event?.kind === "gave_up");
+      if (made.status === "failed" && stop?.kind === "blocked") {
+        const note = safe(blockReason(stop.payload) || shown?.latest_summary || comments.at(-1)?.body, 2000);
+        return { id: made.id, title: made.title, status: "blocked", ...(note ? { note } : {}) };
+      }
       const note = safe(shown?.latest_summary || shown?.task?.result || shown?.task?.last_failure_error || comments.at(-1)?.body, 2000);
-      return { ...card(shown?.task), ...(note ? { note } : {}) };
+      return { ...made, ...(note ? { note } : {}) };
     },
   };
 }

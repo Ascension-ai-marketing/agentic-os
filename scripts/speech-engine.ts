@@ -171,9 +171,10 @@ export function ceoReply(options: {
     // For checking a live call: the answer only counts when this record carries the action as it was read aloud.
     if (verdict) log(`the reply on record before the person's answer ends: "${(transcript.at(-2)?.content ?? "").slice(-90)}"`);
     mine.note = decided(verdict);
-    // Work still being handed out when the person spoke again should show in this reply's records; a slow agent is not waited for.
+    // Work still being handed out when the person spoke again should show in this reply's records. The wait is short:
+    // ElevenLabs asks again when a reply has not started within four seconds, and handing the same work out twice is harmless.
     let pause: ReturnType<typeof setTimeout> | undefined;
-    await Promise.race([settled(conversationId), new Promise((done) => { pause = setTimeout(done, 3000); })]);
+    await Promise.race([settled(conversationId), new Promise((done) => { pause = setTimeout(done, 1000); })]);
     clearTimeout(pause);
     void sync.refresh().catch(() => undefined);
     yield* answer(transcript, signal, conversationId);

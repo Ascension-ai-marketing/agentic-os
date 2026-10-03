@@ -98,6 +98,21 @@ test("one card is shown with what the worker last said, and saved keys never com
   const failed = JSON.stringify({ task: { id: "t_sample2", title: "Crashed", status: "blocked", last_failure_error: "timed out after 30m" }, comments: [] });
   expect(await fixture(NARROW, () => ({ stdout: failed })).board.show("t_sample2")).toEqual({ id: "t_sample2", title: "Crashed", status: "failed", note: "timed out after 30m" });
 
+  // An error from an earlier attempt stays on the card: what stopped it last decides between blocked and failed.
+  const retried = (events: object[], extra: object = {}) => JSON.stringify({
+    task: { id: "t_sample3", title: "Retried", status: "blocked", last_failure_error: "timed out after 30m" }, comments: [{ body: "Needs a decision." }], events, ...extra,
+  });
+  const failedOnce = { kind: "failed", payload: { error: "timed out after 30m" } };
+  const blockedLater = fixture(NARROW, () => ({ stdout: retried([failedOnce, { kind: "blocked", payload: { reason: "Needs approval: email Dana Lee the invoice." } }, { kind: "commented" }]) }));
+  expect(await blockedLater.board.show("t_sample3")).toEqual({ id: "t_sample3", title: "Retried", status: "blocked", note: "Needs approval: email Dana Lee the invoice." });
+  const asText = fixture(NARROW, () => ({ stdout: retried([failedOnce, { kind: "blocked", payload: JSON.stringify({ reason: "Needs the login. Key: fixtureonlysecretvalue" }) }]) }));
+  expect((await asText.board.show("t_sample3")).note).toBe("Needs the login. Key: ••••");
+  // No reason given: what the worker last said, never the old error.
+  const noReason = fixture(NARROW, () => ({ stdout: retried([failedOnce, { kind: "blocked", payload: "not json" }]) }));
+  expect(await noReason.board.show("t_sample3")).toEqual({ id: "t_sample3", title: "Retried", status: "blocked", note: "Needs a decision." });
+  const gaveUp = fixture(NARROW, () => ({ stdout: retried([{ kind: "blocked", payload: { reason: "Needs a decision." } }, { kind: "gave_up", payload: { error: "timed out after 30m" } }]) }));
+  expect(await gaveUp.board.show("t_sample3")).toEqual({ id: "t_sample3", title: "Retried", status: "failed", note: "timed out after 30m" });
+
   const { board, calls } = fixture(NARROW);
   await expect(board.show("--assignee")).rejects.toThrow("not a Hermes card");
   await expect(board.show("t_1; rm -rf")).rejects.toThrow("not a Hermes card");

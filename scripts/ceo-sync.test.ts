@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { HermesCard } from "./ceo-hermes";
 import { ceoRoutes } from "./ceo-routes";
-import { ceoStore } from "./ceo-store";
+import { ceoStore, type CeoStore } from "./ceo-store";
 import { ceoSync, jobState, type OsJob } from "./ceo-sync";
 
 const roots: string[] = [];
@@ -83,6 +83,64 @@ test("a card that left the list is read on its own; one that is gone is told as 
   expect(status(gone.id)).toBe("failed: Its card is no longer on the Hermes board.");
   // Still on the list but its details did not come: left for the next refresh.
   expect(status(unreadable.id)).toBe("queued");
+});
+
+test("a card whose details did not come for any other reason is left as it was", async () => {
+  const { store, world, jobs, hand, status } = fixture();
+  const task = hand("hermes", "t_old");
+  const board = { cards: async () => world.cards, show: async (): Promise<HermesCard> => { throw new Error("Hermes did not answer."); } };
+  await ceoSync({ store, board, jobs }).refresh();
+  expect(status(task.id)).toBe("queued");
+});
+
+test("a caller that gives up stops waiting, and the refresh still finishes for the others", async () => {
+  const { store, world, jobs, hand, status } = fixture();
+  const task = hand("hermes", "t_1");
+  let answer = (_cards: HermesCard[]) => {};
+  const board = { cards: () => new Promise<HermesCard[]>((done) => { answer = done; }), show: async (): Promise<HermesCard> => { throw new Error("unused"); } };
+  const sync = ceoSync({ store, board, jobs });
+  const first = new AbortController();
+  const gaveUp = sync.refresh(first.signal, true), other = sync.refresh();
+  first.abort();
+  await gaveUp;
+  expect(status(task.id)).toBe("queued");
+  answer([{ id: "t_1", title: "Sample", status: "running" }]);
+  await other;
+  expect(status(task.id)).toBe("running");
+  expect(world.listed).toBe(0);
+});
+
+test("records that cannot be read are told to a caller who could have given up, and no error is left loose", async () => {
+  const { board, jobs } = fixture();
+  const store = { tasks: () => { throw new Error("The CEO records could not be read. They were left untouched."); } } as unknown as CeoStore;
+  const loose: unknown[] = [];
+  const seen = (reason: unknown) => { loose.push(reason); };
+  process.on("unhandledRejection", seen);
+  try {
+    await expect(ceoSync({ store, board, jobs }).refresh(new AbortController().signal, true)).rejects.toThrow("could not be read");
+    await new Promise((done) => setTimeout(done, 0));
+    expect(loose).toEqual([]);
+  } finally { process.off("unhandledRejection", seen); }
+});
+
+test("an agent that did not answer is asked again sooner", async () => {
+  const { store, world, board, jobs, hand } = fixture();
+  hand("hermes", "t_1");
+  world.cards = [{ id: "t_1", title: "Sample", status: "queued" }];
+  world.boardDown = true;
+  let clock = 0;
+  const sync = ceoSync({ store, board, jobs, minGapMs: 20_000, now: () => clock });
+  await sync.refresh();
+  clock += 4_000;
+  await sync.refresh();
+  expect(world.listed).toBe(1);
+  clock += 2_000;
+  world.boardDown = false;
+  await sync.refresh();
+  expect(world.listed).toBe(2);
+  clock += 6_000;
+  await sync.refresh();
+  expect(world.listed).toBe(2);
 });
 
 test("OS agent tasks follow their job, each by its own agent's run", async () => {

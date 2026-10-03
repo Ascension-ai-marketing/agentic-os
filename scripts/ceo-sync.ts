@@ -4,7 +4,7 @@
  * Brings the CEO's record of handed-out work up to date with the agents' own
  * records: Hermes cards and the OS's agent jobs. The voice brain and the
  * dashboard both use it. An agent that cannot be reached leaves its tasks as
- * they were.
+ * they were, and is asked again sooner than one that answered.
  */
 import type { HermesBoard, HermesCard } from "./ceo-hermes";
 import type { CeoStore, CeoTask, CeoTaskStatus } from "./ceo-store";
@@ -15,7 +15,10 @@ export type CeoSync = ReturnType<typeof ceoSync>;
 type State = { status: CeoTaskStatus; note?: string };
 
 const OPEN: CeoTaskStatus[] = ["queued", "running", "blocked"];
+const RETRY_MS = 5_000;
 const tail = (text: unknown, max: number) => (typeof text === "string" ? text.trim().slice(-max) : "");
+/** Hermes' own words for a card it does not have, as opposed to Hermes not answering. */
+const gone = (error: unknown) => /no such task/i.test(error instanceof Error ? error.message : "");
 
 /** One agent's run of an OS job, as the states the voice talks about. */
 export function jobState(job: OsJob | undefined, agent: "claude" | "codex"): State {
@@ -36,46 +39,66 @@ export function ceoSync(options: {
   minGapMs?: number; now?: () => number;
 }) {
   const { store, board } = options, now = options.now ?? Date.now, gap = options.minGapMs ?? 20_000;
-  let last = -Infinity, running: Promise<void> | undefined;
+  let next = -Infinity, running: Promise<void> | undefined;
 
   function apply(task: CeoTask, state: State) {
     const note = state.note ?? "";
     if (state.status !== task.status || note !== (task.note ?? "")) store.updateTask(task.id, { status: state.status, note });
   }
-  async function hermes(tasks: CeoTask[], signal?: AbortSignal) {
-    const cards = new Map((await board.cards(signal)).map((card) => [card.id, card]));
+  /** Each side answers whether everything it asked for came back. */
+  async function hermes(tasks: CeoTask[]) {
+    const cards = new Map((await board.cards()).map((card) => [card.id, card]));
+    let reached = true;
     for (const task of tasks) {
       let card: HermesCard | undefined = cards.get(task.ref!);
       if (card?.status === task.status) continue;
       // A card that stopped or finished carries what the worker said; one off the list was archived or removed.
       if (!card || (card.status !== "queued" && card.status !== "running")) {
-        try { card = await board.show(task.ref!, signal); }
-        catch { if (card) continue; }
+        try { card = await board.show(task.ref!); }
+        // Only Hermes saying the card does not exist ends the task; details that did not come are left for the next refresh.
+        catch (error) {
+          if (card || !gone(error)) { reached = false; continue; }
+        }
       }
       apply(task, card?.id ? card : { status: "failed", note: "Its card is no longer on the Hermes board." });
     }
+    return reached;
   }
-  async function os(tasks: CeoTask[], signal?: AbortSignal) {
-    const jobs = new Map((await options.jobs(signal)).map((job) => [job.id, job]));
+  async function os(tasks: CeoTask[]) {
+    const jobs = new Map((await options.jobs()).map((job) => [job.id, job]));
     for (const task of tasks) apply(task, jobState(jobs.get(task.ref!), task.agent === "codex" ? "codex" : "claude"));
+    return true;
   }
-  async function run(signal?: AbortSignal) {
+  async function run() {
     const open = store.tasks().filter((task) => OPEN.includes(task.status) && task.ref);
     const cards = open.filter((task) => task.agent === "hermes"), jobs = open.filter((task) => task.agent !== "hermes");
-    await Promise.all([
-      cards.length ? hermes(cards, signal).catch(() => undefined) : undefined,
-      jobs.length ? os(jobs, signal).catch(() => undefined) : undefined,
+    const reached = await Promise.all([
+      cards.length ? hermes(cards).catch(() => false) : true,
+      jobs.length ? os(jobs).catch(() => false) : true,
     ]);
+    if (reached.includes(false)) next = Math.min(next, now() + Math.min(gap, RETRY_MS));
+  }
+  /** A caller that gives up stops its own wait; the refresh carries on for the others. */
+  function until(work: Promise<void>, signal?: AbortSignal): Promise<void> {
+    if (!signal) return work;
+    if (signal.aborted) return Promise.resolve();
+    return new Promise((done, fail) => {
+      const stop = () => done();
+      signal.addEventListener("abort", stop, { once: true });
+      // A refresh that failed is told to the caller, like one asked for without a way to give up.
+      void work.then(done, fail).finally(() => signal.removeEventListener("abort", stop));
+    });
   }
 
   return {
     /** Brings unfinished work up to date. Calls close together share one refresh; "force" skips the pause between refreshes. */
     refresh(signal?: AbortSignal, force = false): Promise<void> {
-      if (running) return running;
-      if (!force && now() - last < gap) return Promise.resolve();
-      last = now();
-      running = run(signal).finally(() => { running = undefined; });
-      return running;
+      if (!running) {
+        if (!force && now() < next) return Promise.resolve();
+        next = now() + gap;
+        running = run().finally(() => { running = undefined; });
+      }
+      return until(running, signal);
     },
   };
 }

@@ -4,6 +4,7 @@ import hermesLogo from "@/assets/hermes-face.png";
 const defaultAvatar = "/operator-avatar.svg";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
+  AudioLines,
   BrainCircuit,
   Globe2,
   Landmark,
@@ -40,6 +41,7 @@ const tools = [
   { to: "/websites", label: "Website", icon: Globe2 },
 
   { to: "/agents/hermes", label: "Hermes", icon: Bot },
+  { to: "/agents/jarvis", label: "Jarvis", icon: AudioLines },
 ];
 function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
   const { profile } = useWorkspaceProfile();

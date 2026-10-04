@@ -1,0 +1,22 @@
+/* Jarvis page: what waits for a yes, and the work handed out. Built from the OS's panels and the chat task card. */
+.ceo-inbox { display: grid; gap: 18px; padding-bottom: 32px; }
+.ceo-list { display: flex; flex-direction: column; gap: 16px; padding: 0 24px 24px; }
+.ceo-item { display: flex; flex-direction: column; gap: 9px; padding-top: 16px; border-top: 1px solid var(--op-border); min-width: 0; }
+.ceo-item:first-child { padding-top: 0; border-top: 0; }
+.ceo-item-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--op-ink); }
+.ceo-item-head b { font-weight: 550; }
+.ceo-item-head small { font-size: 11px; color: var(--op-muted); }
+.ceo-item-head .ctask-status { margin-left: auto; }
+.ceo-say { margin: 0; font-size: 14px; line-height: 1.55; color: var(--op-ink); overflow-wrap: anywhere; }
+.ceo-note { margin: 0; font-size: 11.5px; line-height: 1.65; color: var(--op-muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+.ceo-result { max-height: 9.9em; overflow-y: auto; }
+.ceo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ceo-error { margin: 0; font-size: 11.5px; color: #cd6e7c; }
+.ceo-quiet { margin: 0; padding: 0 24px 24px; font-size: 11.5px; line-height: 1.7; color: var(--op-muted); }
+.ceo-decided { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 14px 24px 22px; border-top: 1px solid var(--op-border); list-style: none; font-size: 11.5px; color: var(--op-muted); }
+.ceo-decided b { font-weight: 500; color: var(--op-ink); }
+/* The task card is dark glass in both themes, so it keeps the dark theme's colours here. */
+.ceo-inbox .ctask { max-width: none; margin: 0; color: var(--op-ink); --op-panel: #18181c; --op-inset: #121215; --op-border: #2a282f; --op-ink: #f0edf5; --op-muted: #96919f; }
+@media (max-width: 640px) {
+  .ceo-item-head .ctask-status { margin-left: 0; }
+}

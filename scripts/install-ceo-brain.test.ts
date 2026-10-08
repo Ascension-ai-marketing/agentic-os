@@ -36,6 +36,7 @@ test("no job carries a key or token: only PATH and HOME are set", () => {
     const env = /<key>EnvironmentVariables<\/key>\s*<dict>([\s\S]*?)<\/dict>/.exec(job.plist)![1];
     expect([...env.matchAll(/<key>(.*?)<\/key>/g)].map((match) => match[1])).toEqual(["PATH", "HOME"]);
     expect(job.plist).not.toMatch(/authtoken|api[_-]?key|secret/i);
+    expect(/<key>PATH<\/key><string>(.*?)<\/string>/.exec(env)![1].split(":")).toContain("/tmp/home/.local/bin");
   }
 });
 

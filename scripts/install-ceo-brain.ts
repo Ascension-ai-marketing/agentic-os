@@ -76,9 +76,10 @@ export function ceoJobs(options: { repo: string; home: string; bun: string; node
   const logs = join(repo, ".operator-data", "ceo", "logs");
   const jobs: Job[] = [];
   const missing: Missing[] = [];
+  // launchd gives a job none of the shell's PATH. ~/.local/bin is where Hermes, Claude Code and Codex are installed.
   const add = (name: JobName, does: string, args: string[], path: string[], throttle: number) => {
     const log = join(logs, `${name}.log`);
-    jobs.push({ name, label: LABELS[name], does, log, plist: plist({ label: LABELS[name], args, repo, home, path, log, throttle }) });
+    jobs.push({ name, label: LABELS[name], does, log, plist: plist({ label: LABELS[name], args, repo, home, path: [...path, join(home, ".local", "bin")], log, throttle }) });
   };
 
   // A brain that cannot start (bad key, port taken) checks its key on each try, so it waits a minute between tries.

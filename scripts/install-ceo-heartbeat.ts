@@ -78,11 +78,14 @@ if (import.meta.main) {
   else if (process.argv.includes("--status")) {
     const found = hermesCheckIns().jobs();
     for (const name of Object.keys(CHECK_INS)) {
-      const job = found.find((item) => item.name === name);
-      if (!job) { console.log(`${name.padEnd(22)} not created`); continue; }
-      console.log(`${name.padEnd(22)} ${job.enabled ? "on " : "off"}  ${job.schedule}${job.lastRun ? `  last ran ${job.lastRun}` : "  has not run"}`);
-      console.log(`  ${job.enabled ? "turn off" : "turn on "}: hermes -p ${WORKER} cron ${job.enabled ? "pause" : "resume"} ${job.id}`);
-      console.log(`  run once now: hermes -p ${WORKER} cron run ${job.id}\n  remove      : hermes -p ${WORKER} cron remove ${job.id}`);
+      const copies = found.filter((item) => item.name === name);
+      if (!copies.length) console.log(`${name.padEnd(22)} not created`);
+      if (copies.length > 1) console.log(`${name} was created ${copies.length} times. Keep one and remove the rest.`);
+      for (const job of copies) {
+        console.log(`${name.padEnd(22)} ${job.enabled ? "on " : "off"}  ${job.schedule}${job.lastRun ? `  last ran ${job.lastRun}` : "  has not run"}`);
+        console.log(`  ${job.enabled ? "turn off" : "turn on "}: hermes -p ${WORKER} cron ${job.enabled ? "pause" : "resume"} ${job.id}`);
+        console.log(`  run once now: hermes -p ${WORKER} cron run ${job.id}\n  remove      : hermes -p ${WORKER} cron remove ${job.id}`);
+      }
     }
   } else {
     const problem = hermesBoard({ root: REPO }).workerProblem();

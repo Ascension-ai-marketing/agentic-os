@@ -84,7 +84,11 @@ if (import.meta.main) {
       for (const job of copies) {
         console.log(`${name.padEnd(22)} ${job.enabled ? "on " : "off"}  ${job.schedule}${job.lastRun ? `  last ran ${job.lastRun}` : "  has not run"}`);
         console.log(`  ${job.enabled ? "turn off" : "turn on "}: hermes -p ${WORKER} cron ${job.enabled ? "pause" : "resume"} ${job.id}`);
-        console.log(`  run once now: hermes -p ${WORKER} cron run ${job.id}\n  remove      : hermes -p ${WORKER} cron remove ${job.id}`);
+        // Hermes refuses to run a paused job, so a single test run is: on with a run now, then off again once it has run.
+        console.log(job.enabled
+          ? `  run once now: hermes -p ${WORKER} cron run ${job.id}`
+          : `  test one run: hermes -p ${WORKER} cron resume ${job.id} --run-now   then, once it has run: hermes -p ${WORKER} cron pause ${job.id}`);
+        console.log(`  remove      : hermes -p ${WORKER} cron remove ${job.id}`);
       }
     }
   } else {

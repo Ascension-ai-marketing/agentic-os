@@ -153,7 +153,7 @@ export function VoiceDock() {
         <button type="button" onClick={() => (jarvisOn ? stopCeoVoice() : liveActive ? stopLive() : stopAll())} disabled={!jarvisOn && !liveActive && (v.mood === "idle" || v.mood === "error")} aria-label="Stop" title="Stop listening or speaking">
           <Square size={11} />
         </button>
-        <button type="button" onClick={() => setWakeEnabled(!wake.enabled)} aria-pressed={wake.enabled} aria-label={wake.enabled ? "Stop listening for the word Jarvis" : "Listen for the word Jarvis"} title={wake.enabled ? "Listening for “Jarvis” on this computer. Click to switch off." : "Wake Jarvis by saying “Jarvis”. Heard on this computer only."}>
+        <button type="button" onClick={() => setWakeEnabled(!wake.enabled)} aria-pressed={wake.enabled} aria-label={wake.enabled ? "Stop listening for the word Jarvis" : "Listen for the word Jarvis"} title={wake.error ? `${wake.error}. Add PICOVOICE_ACCESS_KEY to ~/.config/agentic-os.env (free at console.picovoice.ai), then switch this on again.` : wake.enabled ? "Listening for “Jarvis” on this computer. Click to switch off." : "Wake Jarvis by saying “Jarvis”. Heard on this computer only."}>
           {wake.enabled ? <Ear size={13} /> : <EarOff size={13} />}
         </button>
       </div>

@@ -5,8 +5,8 @@
  */
 export type WakeStatus = "off" | "waiting" | "starting" | "listening" | "paused" | "error";
 
-export const WAKE_KEY_HELP = "Needs PICOVOICE_ACCESS_KEY in ~/.config/agentic-os.env";
-export const WAKE_MODEL_HELP = "The wake word model has not been added yet";
+export const WAKE_KEY_HELP = "Needs a Picovoice key";
+export const WAKE_MODEL_HELP = "Wake word model not added yet";
 
 /**
  * Listening only happens when it is switched on, the page has been clicked once

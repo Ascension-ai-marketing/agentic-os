@@ -105,6 +105,8 @@ export async function startCeoVoice() {
     finish();
     const denied = /permission|notallowed|denied/i.test(`${(e as Error)?.name} ${(e as Error)?.message}`);
     set({ error: denied ? "The browser has not allowed the microphone for this page." : (e as Error)?.message || "Jarvis could not start." });
+    // The line clears by itself, so the dock goes back to showing what it is listening for.
+    window.setTimeout(() => mine + 1 === attempt && set({ error: undefined }), 15_000);
   }
 }
 

@@ -7,6 +7,7 @@
  */
 import { hermesBoard } from "./ceo-hermes";
 import { hermesCheckIns } from "./ceo-reports";
+import { redactSecrets } from "./hermes-progress";
 import { ago, ceoStore, type CeoStore } from "./ceo-store";
 import { ceoSync, type CeoSync, type OsJob } from "./ceo-sync";
 
@@ -15,7 +16,7 @@ export const VOICE_PAGE = "http://127.0.0.1:3002";
 
 type Goals = { longTerm?: string; quarter?: string; month?: string; week?: string };
 
-/** Goals and the state of the work, as plain lines. No file contents, addresses or keys. */
+/** Goals, each handed-out task with the start of what its agent last said, and the actions waiting for a yes, as plain lines. */
 export function briefing(goals: Goals | null | undefined, store: Pick<CeoStore, "tasks" | "approvals">, now = new Date()) {
   const line = (label: string, value: unknown) => (typeof value === "string" && value.trim() ? [`- ${label}: ${value.trim().slice(0, 600)}`] : []);
   const set = goals ? [...line("Long term", goals.longTerm), ...line("This quarter", goals.quarter), ...line("This month", goals.month), ...line("This week", goals.week)] : [];
@@ -29,7 +30,7 @@ export function briefing(goals: Goals | null | undefined, store: Pick<CeoStore, 
     "",
     "Work Jarvis has handed to agents, newest first:",
     ...(tasks.length
-      ? tasks.map((task) => `- ${task.agent} "${task.title}": ${task.status}, updated ${ago(task.updatedAt, now.getTime())}${task.note ? `. It said: ${task.note.replace(/\s+/g, " ").slice(0, 400)}` : ""}`)
+      ? tasks.map((task) => `- ${task.agent} "${task.title}": ${task.status}, updated ${ago(task.updatedAt, now.getTime())}${task.note ? `. It said: ${redactSecrets(task.note).replace(/\s+/g, " ").slice(0, 400)}` : ""}`)
       : ["- Nothing."]),
     "",
     "Waiting for the person's yes:",

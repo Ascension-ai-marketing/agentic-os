@@ -98,7 +98,8 @@ if (import.meta.main) {
     console.log(`# 4. Optional: add this to ${join(HOME, ".hermes", "SOUL.md")}\n`);
     console.log(SOUL_SECTION);
     console.log(`Both check-ins start paused and cost nothing until you turn them on. Each run uses your Hermes model (the ChatGPT login), not Anthropic.`);
-    console.log(`Each run sends your goals and the titles of handed-out work to that model.`);
+    console.log(`Each run sends that model your goals, the handed-out tasks with the start of what each agent last said, and the actions waiting for your yes.`);
+    console.log(`To read exactly what a run is given: curl -s http://127.0.0.1:${DASHBOARD_PORT}/__operator/ceo/briefing`);
     console.log(`To see them and the commands that turn each on or off: bun run install:heartbeat --status`);
   }
 }

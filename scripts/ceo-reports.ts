@@ -78,9 +78,11 @@ export function hermesCheckIns(options: { home?: string } = {}) {
           if (known.has(key) || empty.has(key)) continue;
           const info = safeFile(join(directory, name));
           if (!info) continue;
-          const text = runAnswer(readFileSync(join(directory, name), "utf8"));
+          const document = readFileSync(join(directory, name), "utf8"), text = runAnswer(document);
           if (!text) { empty.add(key); continue; }
-          store.addReport({ key, ...CHECK_INS[job.name], text, at: info.mtime.toISOString() });
+          // A run Hermes stopped or refused has no answer, only its own account of why.
+          const { kind, title } = CHECK_INS[job.name];
+          store.addReport({ key, kind, title: document.includes("## Response") ? title : `${title}: did not run`, text, at: info.mtime.toISOString() });
           known.add(key);
           added++;
         }

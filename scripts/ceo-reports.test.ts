@@ -57,10 +57,12 @@ test("each run is recorded once, and other jobs' output is left alone", () => {
   run("def456", "2026-10-03_12-00-00.md", saved("Review.", "The sample research finished."), "2026-10-03T12:00:04.000Z");
   run("zzz999", "2026-10-03_08-00-00.md", saved("Something else.", "Not for Jarvis."));
   run("abc123", "notes.txt", "Not a run.");
-  expect(checkIns.importInto(store)).toBe(2);
+  run("abc123", "2026-10-03_08-30-00.md", "# Cron Job: jarvis-morning-plan\n\n**Status:** BLOCKED\n\nThe agent was NOT run.\n", "2026-10-03T08:30:00.000Z");
+  expect(checkIns.importInto(store)).toBe(3);
   expect(checkIns.importInto(store)).toBe(0);
   expect(store.reports().map(({ kind, title, text, at }) => ({ kind, title, text, at }))).toEqual([
     { kind: "plan", title: "Morning plan", text: "Finish the sample proposal.", at: "2026-10-03T08:00:05.000Z" },
+    { kind: "plan", title: "Morning plan: did not run", text: "# Cron Job: jarvis-morning-plan\n\n**Status:** BLOCKED\n\nThe agent was NOT run.", at: "2026-10-03T08:30:00.000Z" },
     { kind: "review", title: "Work review", text: "The sample research finished.", at: "2026-10-03T12:00:04.000Z" },
   ]);
 });

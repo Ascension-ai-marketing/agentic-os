@@ -153,7 +153,9 @@ if (import.meta.main) {
       mkdirSync(AGENTS, { recursive: true });
       mkdirSync(join(REPO, ".operator-data", "ceo", "logs"), { recursive: true, mode: 0o700 });
       for (const job of jobs) {
+        // A job that is already running takes a moment to stop, and launchd refuses to start it again until it has.
         launchctl(["bootout", `${domain}/${job.label}`]);
+        for (let tries = 0; tries < 40 && launchctl(["print", `${domain}/${job.label}`]).status === 0; tries++) await Bun.sleep(250);
         writeFileSync(path(job.name), job.plist);
         const load = launchctl(["bootstrap", domain, path(job.name)]);
         if (load.status !== 0) stop(`launchctl could not start ${job.label}: ${(load.stderr || load.stdout || "").trim()}`);

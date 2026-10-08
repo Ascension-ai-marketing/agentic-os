@@ -7,7 +7,7 @@ import { ceoRoutes } from "./ceo-routes";
 const roots: string[] = [];
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
 
-function routes(options: { fetcher?: typeof fetch; wakeKey?: () => string } = {}) {
+function routes(options: { fetcher?: typeof fetch } = {}) {
   const root = mkdtempSync(join(tmpdir(), "ceo-routes-"));
   roots.push(root);
   return ceoRoutes({ root, jobs: () => [], ...options });
@@ -29,10 +29,6 @@ test("a brain that is down or refuses says so in plain words", async () => {
   await expect(routes({ fetcher: answers({}) }).handle("/ceo/voice-token", "POST", {})).rejects.toThrow("did not issue a call token");
 });
 
-test("the token and the wake key answer only to POST, which the page's own token guards", async () => {
-  const all = routes({ fetcher: answers({ token: "made-up-token" }), wakeKey: () => "made-up-key" });
-  await expect(all.handle("/ceo/voice-token", "GET", undefined)).rejects.toThrow("Unknown CEO request");
-  await expect(all.handle("/ceo/wake-key", "GET", undefined)).rejects.toThrow("Unknown CEO request");
-  expect(await all.handle("/ceo/wake-key", "POST", {})).toEqual({ key: "made-up-key" });
-  expect(await routes({ wakeKey: () => "" }).handle("/ceo/wake-key", "POST", {})).toEqual({ missing: true });
+test("the token answers only to POST, which the page's own token guards", async () => {
+  await expect(routes({ fetcher: answers({ token: "made-up-token" }) }).handle("/ceo/voice-token", "GET", undefined)).rejects.toThrow("Unknown CEO request");
 });

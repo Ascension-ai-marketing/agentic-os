@@ -8,14 +8,13 @@
 import { hermesBoard } from "./ceo-hermes";
 import { ceoStore, type CeoStore } from "./ceo-store";
 import { ceoSync, type CeoSync, type OsJob } from "./ceo-sync";
-import { providerKey } from "./provider-config";
 
 /** Where the voice brain hands out a short-lived call token and the greeting (scripts/speech-engine.ts serve). */
 export const VOICE_PAGE = "http://127.0.0.1:3002";
 
 export function ceoRoutes(options: {
   root: string; jobs: () => OsJob[]; store?: CeoStore; sync?: CeoSync;
-  voicePage?: string; fetcher?: typeof fetch; wakeKey?: () => string;
+  voicePage?: string; fetcher?: typeof fetch;
 }) {
   const store = options.store ?? ceoStore(options.root);
   let sync = options.sync;
@@ -35,7 +34,7 @@ export function ceoRoutes(options: {
         if (body.decision !== "approved" && body.decision !== "declined") throw new Error("Choose approve or decline.");
         return { approval: store.resolve(body.id, body.decision, "button") };
       }
-      // Both are POST, so the page's own token is checked before either answers.
+      // POST, so the page's own token is checked before it answers.
       if (path === "/ceo/voice-token" && method === "POST") {
         // The brain already issues the token and reads the greeting; the ElevenLabs key stays with it.
         const down = "Jarvis's voice is not running. Check it with: bun run install:ceo --status";
@@ -44,11 +43,6 @@ export function ceoRoutes(options: {
         if (!response.ok) throw new Error(typeof reply?.error === "string" && reply.error ? reply.error : down);
         if (typeof reply?.token !== "string" || !reply.token) throw new Error("Jarvis's voice did not issue a call token.");
         return { token: reply.token, ...(typeof reply.firstMessage === "string" && reply.firstMessage.trim() ? { firstMessage: reply.firstMessage } : {}) };
-      }
-      if (path === "/ceo/wake-key" && method === "POST") {
-        // Picovoice checks the key from the page itself, so the page needs it. It is handed to this computer only and never saved there.
-        const key = (options.wakeKey ?? (() => providerKey(options.root, "PICOVOICE_ACCESS_KEY")))();
-        return key ? { key } : { missing: true };
       }
       throw new Error("Unknown CEO request.");
     },

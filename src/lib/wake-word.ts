@@ -1,12 +1,9 @@
 /**
- * The rules behind "say Jarvis": when the page listens for the word, and when a
+ * The rules behind "Hey Jarvis": when the page listens for the word, and when a
  * conversation that has gone quiet is closed. Kept free of the browser so they
  * are tested directly.
  */
 export type WakeStatus = "off" | "waiting" | "starting" | "listening" | "paused" | "error";
-
-export const WAKE_KEY_HELP = "Needs a Picovoice key";
-export const WAKE_MODEL_HELP = "Wake word model not added yet";
 
 /**
  * Listening only happens when it is switched on, the page has been clicked once
@@ -22,9 +19,9 @@ export function wakeStatus(wake: { enabled: boolean; clicked: boolean; holds: nu
 
 export const WAKE_LABEL: Record<WakeStatus, string> = {
   off: "",
-  waiting: "Click anywhere, then say “Jarvis”",
+  waiting: "Click anywhere, then say “Hey Jarvis”",
   starting: "Getting ready to listen…",
-  listening: "Say “Jarvis”",
+  listening: "Say “Hey Jarvis”",
   paused: "",
   error: "",
 };

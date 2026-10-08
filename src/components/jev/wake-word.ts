@@ -1,13 +1,13 @@
-// "Say Jarvis": a small detector (Picovoice Porcupine) that runs in the page and
-// hears one word. Nothing it hears leaves this computer. It is off until you
+// "Hey Jarvis": a small detector (openWakeWord) that runs in the page and hears
+// one phrase. It needs no account or key, and nothing it hears leaves this computer. It is off until you
 // switch it on, and it lets go of the microphone whenever a conversation, live
 // voice or push-to-talk needs it, which is also what stops Jarvis waking itself.
 import { useSyncExternalStore } from "react";
-import { operatorRequest } from "@/lib/operator";
-import { WAKE_KEY_HELP, WAKE_MODEL_HELP, wakeStatus, type WakeStatus } from "@/lib/wake-word";
+import { wakeStatus, type WakeStatus } from "@/lib/wake-word";
 
 const SAVED = "agentic-os.wake-word.v1";
-const MODEL = "/porcupine/porcupine_params.pv";
+// Served from the installed packages by scripts/wake-assets.ts.
+const ASSETS = "/__wake";
 
 export type WakeState = { enabled: boolean; status: WakeStatus; error?: string };
 
@@ -25,7 +25,7 @@ let detector: Detector | null = null;
 let subscribed = false;
 // One change at a time: the microphone is taken and given back in order.
 let queue: Promise<void> = Promise.resolve();
-let make: () => Promise<Detector> = porcupine;
+let make: () => Promise<Detector> = openWakeWord;
 
 function publish() {
   const status = wakeStatus({ enabled, clicked, holds: holds.size, ready, error });
@@ -34,21 +34,13 @@ function publish() {
   listeners.forEach((l) => l());
 }
 
-async function porcupine(): Promise<Detector> {
-  const reply = await operatorRequest<{ key?: string; missing?: boolean }>("/ceo/wake-key", {});
-  if (!reply.key) throw new Error(WAKE_KEY_HELP);
-  const model = await fetch(MODEL, { method: "HEAD" }).catch(() => null);
-  if (!model?.ok || model.headers.get("content-type")?.includes("text/html")) throw new Error(WAKE_MODEL_HELP);
-  const [{ PorcupineWorker, BuiltInKeyword }, { WebVoiceProcessor }] = await Promise.all([import("@picovoice/porcupine-web"), import("@picovoice/web-voice-processor")]);
-  const worker = await PorcupineWorker.create(reply.key, [BuiltInKeyword.Jarvis], () => heard(), { publicPath: MODEL });
-  return {
-    subscribe: () => WebVoiceProcessor.subscribe(worker),
-    unsubscribe: () => WebVoiceProcessor.unsubscribe(worker),
-    release: async () => {
-      await worker.release();
-      worker.terminate();
-    },
-  };
+async function openWakeWord(): Promise<Detector> {
+  const { WakeWordEngine } = await import("openwakeword-wasm-browser");
+  const engine = new WakeWordEngine({ keywords: ["hey_jarvis"], baseAssetUrl: `${ASSETS}/models`, ortWasmPath: `${ASSETS}/ort/`, detectionThreshold: 0.5, cooldownMs: 2500 });
+  await engine.load();
+  engine.on("detect", () => heard());
+  // start() opens the microphone and stop() closes it, so a pause really lets go of it.
+  return { subscribe: () => engine.start(), unsubscribe: () => engine.stop(), release: () => engine.stop() };
 }
 
 function heard() {
@@ -169,7 +161,7 @@ if (import.meta.hot) {
   });
 }
 
-// Dev only: checks drive the detector without a key or a voice. `fake()` swaps in a detector that never touches the microphone; `fire()` is the word being heard.
+// Dev only: checks drive the detector without a microphone or a voice. `fake()` swaps in a detector that never touches the microphone; `fire()` is the word being heard.
 if (import.meta.env.DEV && typeof window !== "undefined")
   (window as unknown as { __wake: unknown }).__wake = {
     get: () => ({ ...state, holds: [...holds], subscribed }),

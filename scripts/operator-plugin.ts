@@ -13,6 +13,7 @@ import { connectedNotionPages } from "./notion-connected";
 import { granolaApi } from "./granola-api";
 import { agentJobs } from "./agent-jobs";
 import { ceoRoutes } from "./ceo-routes";
+import { wakeAssets } from "./wake-assets";
 import { voiceLocalImages } from "./voice-local-images";
 import { voiceImages } from "./voice-images";
 import { voiceRecentCreations } from "./voice-recent-creations";
@@ -844,6 +845,8 @@ export function operatorPlugin({
       apps.startTimer();
       getMailSync();
       server.httpServer?.once("close", () => { apps.stop(); vault.stop(); photoIndex.close(); mailSync?.close(); existingConnections.close(); nativeTasks?.close(); });
+      // The "Hey Jarvis" listener's model and runtime files, from the installed packages.
+      server.middlewares.use("/__wake", wakeAssets(root));
       server.middlewares.use("/__operator", async (req, res, next) => {
         const send = (value: unknown, status = 200) => {
           res.statusCode = status;

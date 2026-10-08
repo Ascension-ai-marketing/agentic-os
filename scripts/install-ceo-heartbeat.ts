@@ -67,6 +67,12 @@ One rule covers all of that work. Act freely on this computer: read, research, d
 When work needs an outside action, stop and say exactly what should be sent or done, and to whom, so the person can approve it.
 `;
 
+/**
+ * One test run of a check-in that is off. Hermes refuses to run a paused job, and its "resume --run-now" only
+ * works for one-off jobs, so it is: on, run, off again. "cron run" waits for the run to finish.
+ */
+export const testRun = (id: string) => ["resume", "run", "pause"].map((step) => `hermes -p ${WORKER} cron ${step} ${id}`);
+
 if (import.meta.main) {
   const HOME = homedir(), REPO = resolve(import.meta.dir, "..");
   const folder = join(HOME, ".hermes", "profiles", WORKER, "scripts");
@@ -84,10 +90,8 @@ if (import.meta.main) {
       for (const job of copies) {
         console.log(`${name.padEnd(22)} ${job.enabled ? "on " : "off"}  ${job.schedule}${job.lastRun ? `  last ran ${job.lastRun}` : "  has not run"}`);
         console.log(`  ${job.enabled ? "turn off" : "turn on "}: hermes -p ${WORKER} cron ${job.enabled ? "pause" : "resume"} ${job.id}`);
-        // Hermes refuses to run a paused job, so a single test run is: on with a run now, then off again once it has run.
-        console.log(job.enabled
-          ? `  run once now: hermes -p ${WORKER} cron run ${job.id}`
-          : `  test one run: hermes -p ${WORKER} cron resume ${job.id} --run-now   then, once it has run: hermes -p ${WORKER} cron pause ${job.id}`);
+        if (job.enabled) console.log(`  run once now: hermes -p ${WORKER} cron run ${job.id}`);
+        else { console.log("  test one run: these three, in order"); for (const line of testRun(job.id)) console.log(`    ${line}`); }
         console.log(`  remove      : hermes -p ${WORKER} cron remove ${job.id}`);
       }
     }

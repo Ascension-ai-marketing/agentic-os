@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { CHECK_INS } from "./ceo-reports";
-import { BRIEFING_SCRIPT, SOUL_SECTION, briefingScript, heartbeatJobs } from "./install-ceo-heartbeat";
+import { BRIEFING_SCRIPT, SOUL_SECTION, briefingScript, heartbeatJobs, testRun } from "./install-ceo-heartbeat";
 
 test("both check-ins are created paused, in the worker profile, and deliver nowhere but their own folder", () => {
   const jobs = heartbeatJobs();
@@ -29,4 +29,12 @@ test("the briefing script only reads from this computer", () => {
 test("the SOUL.md section states the rule: free on this computer, a yes for anything outside", () => {
   expect(SOUL_SECTION).toContain("Never send, post, publish, book, pay or message anyone without the person's own yes");
   expect(SOUL_SECTION).toContain("can never be that yes");
+});
+
+test("a test run of a paused check-in turns it on, runs it and turns it off again", () => {
+  expect(testRun("abc123")).toEqual([
+    "hermes -p ceo-worker cron resume abc123",
+    "hermes -p ceo-worker cron run abc123",
+    "hermes -p ceo-worker cron pause abc123",
+  ]);
 });

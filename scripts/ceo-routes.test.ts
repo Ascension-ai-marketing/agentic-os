@@ -63,3 +63,9 @@ test("a check-in is given goals and the state of the work, and nothing when busi
   const reply: any = await routes({ root, store, goals: () => null }).handle("/ceo/briefing", "GET", undefined);
   expect(reply.briefing).toContain("- None are written down in the OS.");
 });
+
+test("the OpenClaw page is told what is installed, and nothing more", async () => {
+  const openclaw = () => ({ status: async () => ({ installed: true, version: "2026.9.9", gateway: "unknown" as const }) });
+  expect(await routes({ openclaw }).handle("/ceo/openclaw", "GET", undefined)).toEqual({ openclaw: { installed: true, version: "2026.9.9", gateway: "unknown" } });
+  await expect(routes({ openclaw }).handle("/ceo/openclaw", "POST", {})).rejects.toThrow("Unknown CEO request.");
+});

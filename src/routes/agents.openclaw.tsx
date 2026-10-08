@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import openclawLogo from "@/assets/openclaw.png";
+import { OpenClawLive } from "@/components/jev/openclaw-live";
 
 export const Route = createFileRoute("/agents/openclaw")({
   head: () => ({
@@ -119,6 +120,8 @@ function OpenClawPage() {
           </button>
         </div>
       </section>
+
+      <OpenClawLive />
 
       {/* STAT GRID */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

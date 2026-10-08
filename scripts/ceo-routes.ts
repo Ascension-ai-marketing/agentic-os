@@ -6,6 +6,7 @@
  * token-checked route; the voice brain itself never calls the resolve route.
  */
 import { hermesBoard } from "./ceo-hermes";
+import { openclaw, type Openclaw } from "./ceo-openclaw";
 import { hermesCheckIns } from "./ceo-reports";
 import { redactSecrets } from "./hermes-progress";
 import { ago, ceoStore, type CeoStore } from "./ceo-store";
@@ -44,6 +45,7 @@ export function ceoRoutes(options: {
   /** The person's current goals, or nothing when they keep business out of what assistants read. */
   goals?: () => Goals | null | undefined;
   checkIns?: Pick<ReturnType<typeof hermesCheckIns>, "importInto">;
+  openclaw?: () => Pick<Openclaw, "status">;
 }) {
   const store = options.store ?? ceoStore(options.root), checkIns = options.checkIns ?? hermesCheckIns();
   let sync = options.sync;
@@ -65,6 +67,8 @@ export function ceoRoutes(options: {
         await refresh().catch(() => undefined);
         return { briefing: briefing(options.goals?.(), store) };
       }
+      // Looked up afresh each time, so an install or a stopped gateway shows without a restart. It only reads.
+      if (path === "/ceo/openclaw" && method === "GET") return { openclaw: await (options.openclaw ?? openclaw)().status(AbortSignal.timeout(12_000)) };
       if (path === "/ceo/approvals/resolve" && method === "POST") {
         if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).some((key) => key !== "id" && key !== "decision"))
           throw new Error("Choose an approval and a decision.");

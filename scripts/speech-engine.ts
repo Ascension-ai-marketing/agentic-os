@@ -254,14 +254,31 @@ $("start").onclick = async () => {
 $("stop").onclick = () => conversation?.endSession();
 </script>`;
 
-/** Localhost-only test page and token route. The API key never reaches the browser. */
-export function startPage(options: { engineId: string; apiKey: string; port: number; firstMessage?: string }) {
+/**
+ * The first message currently set on an ElevenLabs agent, so the greeting written there is the one spoken here.
+ * Nothing comes back when the agent cannot be read or has none; the caller then keeps the greeting it already has.
+ */
+export async function agentGreeting(options: { apiKey: string; agentId: string; fetcher?: Fetch }): Promise<string | undefined> {
+  try {
+    const response = await (options.fetcher ?? fetch)(`https://api.elevenlabs.io/v1/convai/agents/${encodeURIComponent(options.agentId)}`,
+      { headers: { "xi-api-key": options.apiKey }, signal: AbortSignal.timeout(4000) });
+    if (!response.ok) return undefined;
+    const message = (await response.json())?.conversation_config?.agent?.first_message;
+    return typeof message === "string" && message.trim() ? message : undefined;
+  } catch { return undefined; }
+}
+
+/** Localhost-only test page and token route. The API key never reaches the browser. `greeting` is asked on every call; `firstMessage` is used when it has no answer. */
+export function startPage(options: { engineId: string; apiKey: string; port: number; firstMessage?: string; greeting?: () => Promise<string | undefined> }) {
   const elevenlabs = new ElevenLabsClient({ apiKey: options.apiKey });
   const server = createServer(async (req, res) => {
     if (req.url === "/token") {
       try {
-        const { token } = await elevenlabs.conversationalAi.conversations.getWebrtcToken({ agentId: options.engineId });
-        res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ token, firstMessage: options.firstMessage }));
+        const [{ token }, current] = await Promise.all([
+          elevenlabs.conversationalAi.conversations.getWebrtcToken({ agentId: options.engineId }),
+          options.greeting?.().catch(() => undefined),
+        ]);
+        res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ token, firstMessage: current || options.firstMessage }));
       } catch {
         res.writeHead(502, { "content-type": "application/json" }).end(JSON.stringify({ error: "ElevenLabs did not issue a token. Check the key and Speech Engine ID." }));
       }
@@ -299,7 +316,13 @@ if (import.meta.main) {
   } else if (command === "serve") {
     const saved = existsSync(configPath) ? JSON.parse(readFileSync(configPath, "utf8")) : {};
     const engineId = String(saved.engineId || "");
-    const firstMessage = typeof saved.firstMessage === "string" && saved.firstMessage.trim() ? (saved.firstMessage as string) : undefined;
+    const savedMessage = typeof saved.firstMessage === "string" && saved.firstMessage.trim() ? (saved.firstMessage as string) : undefined;
+    // The greeting is whatever the Voice companion agent says first in ElevenLabs right now; the saved copy covers an outage.
+    const companionPath = join(ROOT, ".operator-data", "voice-companion.json");
+    const agentId = String((existsSync(companionPath) ? JSON.parse(readFileSync(companionPath, "utf8")) : {}).agentId || "");
+    const greeting = agentId ? () => agentGreeting({ apiKey, agentId }) : undefined;
+    const fetched = await greeting?.();
+    const firstMessage = fetched || savedMessage;
     if (!engineId) stop("Create the Speech Engine first: bun run speech:create wss://<public-host>/ws");
     const log = (line: string) => console.log(`[speech ${new Date().toISOString().slice(11, 19)}] ${line}`);
     const claude = { apiKey: providerKey(ROOT, "ANTHROPIC_API_KEY"), workspaceId: providerKey(ROOT, "ANTHROPIC_WORKSPACE_ID") || undefined };
@@ -315,7 +338,8 @@ if (import.meta.main) {
       ? ceoReply({ root: ROOT, ...claude, model, log, greeting: firstMessage, effort: providerKey(ROOT, "SPEECH_ENGINE_EFFORT"), betweenTools: providerKey(ROOT, "SPEECH_ENGINE_THINKING") === "between_tools" })
       : openAiReply({ apiKey: openAiKey || stop("Add OPENAI_API_KEY to ~/.config/agentic-os.env for the model that answers."), model, system: `${firstMessage ? `${GREETED}\n\n` : ""}${PERSONA}\n\n${profileContext(ROOT)}` });
     await startBrain({ engineId, apiKey, reply, port: 3001, debug: process.argv.includes("--debug"), log });
-    await startPage({ engineId, apiKey, port: 3002, firstMessage });
+    await startPage({ engineId, apiKey, port: 3002, firstMessage, greeting });
+    log(fetched ? "greeting: read from the ElevenLabs agent, and again at each call" : agentId ? "greeting: the agent could not be read, using the saved copy" : "greeting: no Voice companion agent is connected, using the saved copy");
     console.log(`\nSpeech Engine ${engineId} · model ${model}\n  Brain  ws://127.0.0.1:3001/ws  (your tunnel must point here)\n  Talk   http://127.0.0.1:3002\nControl+C stops it.\n`);
   } else stop("Use: bun run speech:create wss://<public-host>/ws   or   bun run speech:serve");
 }

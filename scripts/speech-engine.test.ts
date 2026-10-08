@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { openAiReply, profileContext, startBrain, type Reply } from "./speech-engine";
+import { agentGreeting, openAiReply, profileContext, startBrain, type Reply } from "./speech-engine";
 
 let root: string;
 const apiKey = "sk_unit_test_only_no_real_credentials";
@@ -87,4 +87,19 @@ test("the brain answers /health and says nothing else about itself", async () =>
   } finally {
     await brain.close();
   }
+});
+
+test("the greeting is the agent's current first message, and nothing when it cannot be read", async () => {
+  const seen: { url: string; key: unknown }[] = [];
+  const answer = (status: number, body: unknown) => async (url: string, init?: RequestInit) => {
+    seen.push({ url, key: (init?.headers as Record<string, string>)["xi-api-key"] });
+    return new Response(JSON.stringify(body), { status });
+  };
+  const agent = (first_message: unknown) => ({ conversation_config: { agent: { first_message } } });
+  expect(await agentGreeting({ apiKey, agentId: "agent fixture/1", fetcher: answer(200, agent("[calm] Good morning.")) })).toBe("[calm] Good morning.");
+  expect(seen).toEqual([{ url: "https://api.elevenlabs.io/v1/convai/agents/agent%20fixture%2F1", key: apiKey }]);
+  expect(await agentGreeting({ apiKey, agentId: "a", fetcher: answer(200, agent("   ")) })).toBeUndefined();
+  expect(await agentGreeting({ apiKey, agentId: "a", fetcher: answer(200, {}) })).toBeUndefined();
+  expect(await agentGreeting({ apiKey, agentId: "a", fetcher: answer(401, agent("not this")) })).toBeUndefined();
+  expect(await agentGreeting({ apiKey, agentId: "a", fetcher: async () => { throw new Error("offline"); } })).toBeUndefined();
 });

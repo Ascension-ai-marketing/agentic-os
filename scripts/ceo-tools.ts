@@ -12,6 +12,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { confirmQuestion, type ApprovalGate } from "./ceo-approval-gate";
 import type { RunTool, SpokenTurn } from "./ceo-brain";
 import type { HermesBoard } from "./ceo-hermes";
+import { openclaw, type Openclaw } from "./ceo-openclaw";
 import { ago, ceoKey, type CeoAgent, type CeoStore, type CeoTask } from "./ceo-store";
 import { jobState, type CeoSync, type OsJob } from "./ceo-sync";
 
@@ -23,6 +24,8 @@ export type CeoDeps = {
   gate: (conversationId: string) => ApprovalGate;
   /** The model a Claude Code task runs on. */
   workModel?: string;
+  /** OpenClaw as it is on this computer; looked up when asked if not given. */
+  openclaw?: Pick<Openclaw, "workerProblem">;
 };
 
 const LOOKUPS = ["calendar", "meetings", "inbox", "search_email", "usage", "business", "skills", "reels", "web_search"];
@@ -125,7 +128,7 @@ export function brainTools(deps: { baseUrl?: string; request?: Fetch; ceo?: CeoD
         "dispatch_agent",
         "Hand a piece of work to a background agent. It returns at once; the agent works on its own and task_status reports on it later. " +
           "hermes: research, reading, summarising and drafting, with files and the web. claude_code: building or changing code and files on this computer; name the folder or project in the task when the work belongs in one. " +
-          "codex: the same kind of work as claude_code, done by Codex. openclaw: not installed yet. " +
+          "codex: the same kind of work as claude_code, done by Codex. openclaw: takes no work yet; asking for it says why. " +
           "An agent cannot send, post, book or pay: it drafts, and anything that leaves this computer goes through propose_external_action. " +
           "The agent has none of this conversation, so write the task to stand on its own.",
         {
@@ -162,7 +165,8 @@ export function brainTools(deps: { baseUrl?: string; request?: Fetch; ceo?: CeoD
   async function dispatch(ceo: CeoDeps, args: Record<string, unknown>, turn: SpokenTurn) {
     const agent = String(args.agent ?? "");
     if (!AGENTS.includes(agent)) throw new Error(`agent must be one of: ${AGENTS.join(", ")}.`);
-    if (agent === "openclaw") throw new Error("OpenClaw is not installed on this computer yet, so nothing can be handed to it. Hermes, Claude Code and Codex can take work.");
+    // Installed or not, OpenClaw takes nothing until its limits are set and agreed.
+    if (agent === "openclaw") throw new Error((ceo.openclaw ?? openclaw()).workerProblem());
     const task = clean(args.task, 8000);
     if (task.length < 12) throw new Error("dispatch_agent needs a task that says what to do.");
     const title = clean(args.title, 80) || task.split(/\s+/).slice(0, 8).join(" ").slice(0, 80);

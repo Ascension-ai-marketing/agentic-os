@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { approvalGate, confirmQuestion, type ApprovalGate } from "./ceo-approval-gate";
 import type { HermesCard } from "./ceo-hermes";
+import { NOT_CLEARED, NOT_INSTALLED } from "./ceo-openclaw";
 import { ceoKey, ceoStore } from "./ceo-store";
 import { brainTools } from "./ceo-tools";
 
@@ -23,6 +24,7 @@ function fixture() {
   const gate = (id: string) => gates.get(id) ?? gates.set(id, approvalGate()).get(id)!;
   const world = {
     dashboardDown: false,
+    openclawInstalled: false,
     hermes: async (input: { title: string }): Promise<HermesCard> => ({ id: `t_${world.cards.length}`, title: input.title, status: "queued" }),
     os: (_path: string, _body?: any): Response => Response.json({ result: { jobs: [] } }),
     cards: [] as { title: string; task: string; key: string }[],
@@ -37,7 +39,7 @@ function fixture() {
     world.seen.push({ path, method: init?.method ?? "GET", body, headers: (init?.headers ?? {}) as Record<string, string> });
     return path === "/__token" ? Response.json({ token: "fixture-token-0123456789" }) : world.os(path, body);
   };
-  const made = brainTools({ baseUrl: BASE, request, ceo: { store, board, sync, gate } });
+  const made = brainTools({ baseUrl: BASE, request, ceo: { store, board, sync, gate, openclaw: { workerProblem: () => (world.openclawInstalled ? NOT_CLEARED : NOT_INSTALLED) } } });
   const call = (name: string, input: unknown, conversationId = "conv-1") =>
     made.runTool(name, input, new AbortController().signal, { conversationId, transcript: [{ role: "user", content: "Sample request." }] });
   return { ...made, store, gate, world, call };
@@ -95,6 +97,8 @@ test("work for Claude Code and Codex becomes an OS agent job that keeps its own 
 test("work that cannot be handed out says why and records nothing", async () => {
   const { call, store, world } = fixture();
   await expect(call("dispatch_agent", { agent: "openclaw", task: TASK })).rejects.toThrow("OpenClaw is not installed on this computer yet");
+  world.openclawInstalled = true;
+  await expect(call("dispatch_agent", { agent: "openclaw", task: TASK })).rejects.toThrow("not cleared to take work from Jarvis yet");
   await expect(call("dispatch_agent", { agent: "email", task: TASK })).rejects.toThrow("agent must be one of: hermes, claude_code, codex, openclaw.");
   await expect(call("dispatch_agent", { agent: "hermes", task: "Do it" })).rejects.toThrow("needs a task that says what to do");
   await expect(call("dispatch_agent", "not an object")).rejects.toThrow("agent must be one of");

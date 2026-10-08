@@ -21,7 +21,9 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useOperator } from "@/lib/operator";
+import { operatorRequest, useOperator } from "@/lib/operator";
+import { useQuery } from "@tanstack/react-query";
+import { inboxView } from "@/lib/ceo-inbox";
 import "./operator/brand-refinements.css";
 import "./operator/sidebar-profile.css";
 
@@ -73,6 +75,9 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
       !i.labelIds?.some((label) => ["DRAFT", "SENT", "SPAM", "TRASH"].includes(label)) &&
       (i.source !== "gmail" || !i.labelIds || i.labelIds.includes("INBOX")),
   ).length;
+  // What is waiting for a yes on the Jarvis page. Read from the saved records only, so no agent is asked anything.
+  const jarvis = useQuery({ queryKey: ["operator-ceo-count"], queryFn: () => operatorRequest("/ceo"), refetchInterval: 15000, retry: false });
+  const needsYou = inboxView(jarvis.data).needsYou;
   const nav = (item: (typeof primary)[number]) => (
     <Link
       key={item.to}
@@ -94,6 +99,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
       )}
       <span>{item.label}</span>
       {item.to === "/inbox" && pending > 0 && <b>{pending}</b>}
+      {item.to === "/agents/jarvis" && needsYou > 0 && <b aria-label={`${needsYou} waiting for you`}>{needsYou}</b>}
     </Link>
   );
   return (

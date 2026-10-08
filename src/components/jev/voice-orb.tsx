@@ -4,13 +4,16 @@
 import { activateVoice, stopLive, useLiveVoice } from "./live-voice";
 import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
-import { Maximize2, Pause, Play, Square, Volume2, VolumeX } from "lucide-react";
+import { Ear, EarOff, Maximize2, Pause, Play, Square, Volume2, VolumeX } from "lucide-react";
 import { ORB_PALETTES, VoiceOrbCanvas, type OrbMood } from "./voice-orb-canvas";
 import type { MutableRefObject } from "react";
 import type { PointerState } from "./star-field";
 import { OrbBackdrop } from "./orb-backdrop";
 import RbOrb from "./rb/Orb";
 import { setMuted, setVoiceNavigator, stopAll, tapOrb, togglePause, useVoice, voiceLevel } from "./voice-store";
+import { stopCeoVoice, useCeoVoice } from "./ceo-voice";
+import { setWakeEnabled, useWakeWord } from "./wake-word";
+import { WAKE_LABEL } from "@/lib/wake-word";
 import "./voice-dock.css";
 
 export const VOICE_STATUS: Record<OrbMood, string> = {
@@ -88,11 +91,16 @@ export function VoiceDock() {
   const live = useLiveVoice();
   const liveActive = live.phase !== "off";
   const listening = v.mood === "listening";
+  // The Jarvis conversation the word "Jarvis" opens, and whether the page is listening for that word.
+  const jarvis = useCeoVoice();
+  const jarvisOn = jarvis.phase !== "off";
+  const wake = useWakeWord();
   return (
     <div
       className="vd"
       data-mood={v.mood}
-      onClick={(e) => talkFrom(e, e.currentTarget, orbRef.current, () => activateVoice((href) => void router.navigate({ href })))}
+      data-wake={wake.status === "listening" ? "on" : undefined}
+      onClick={(e) => talkFrom(e, e.currentTarget, orbRef.current, () => (jarvisOn ? stopCeoVoice() : activateVoice((href) => void router.navigate({ href }))))}
       onPointerMove={(e) => onPointerMove(e, orbRef.current)}
       onPointerLeave={() => onPointerLeave(orbRef.current)}
     >
@@ -106,7 +114,7 @@ export function VoiceDock() {
       >
         <Maximize2 size={13} />
       </Link>
-      <button ref={orbRef} type="button" className="vd-orb" aria-label={liveActive ? "End the conversation" : listening ? "Stop listening" : "Talk to your OS"}>
+      <button ref={orbRef} type="button" className="vd-orb" aria-label={liveActive || jarvisOn ? "End the conversation" : listening ? "Stop listening" : "Talk to your OS"}>
         <span className="vd-ripples" aria-hidden="true">
           <i />
           <i />
@@ -115,7 +123,12 @@ export function VoiceDock() {
         <HybridOrb mood={v.mood} pointerRef={pointer} size={108} />
       </button>
       <div className="vd-text" aria-live="polite">
-        {liveActive ? (
+        {jarvisOn ? (
+          <>
+            <b>Jarvis{jarvis.phase === "connecting" ? " · Connecting" : jarvis.phase === "listening" ? " · Listening" : " · Speaking"}</b>
+            {jarvis.caption && <span className="vd-caption">{jarvis.caption}</span>}
+          </>
+        ) : liveActive ? (
           <>
             <b>Live{live.phase === "listening" ? " · Listening" : live.phase === "speaking" ? " · Speaking" : ""}</b>
             {live.phase === "listening" && live.heard ? <span>“{live.heard.trim()}”</span> : live.caption ? <span className="vd-caption">{live.caption}</span> : null}
@@ -126,6 +139,7 @@ export function VoiceDock() {
             {listening && v.interim && <span>“{v.interim}”</span>}
             {v.mood === "error" && <span>Tap to try again</span>}
             {v.mood === "speaking" && last?.result?.replyText && <span className="vd-caption">{last.result.replyText}</span>}
+            {v.mood === "idle" && (jarvis.error || wake.error) ? <span className="vd-wake" data-error>{jarvis.error || wake.error}</span> : v.mood === "idle" && WAKE_LABEL[wake.status] ? <span className="vd-wake">{WAKE_LABEL[wake.status]}</span> : null}
           </>
         )}
       </div>
@@ -136,8 +150,11 @@ export function VoiceDock() {
         <button type="button" onClick={togglePause} disabled={v.mood !== "speaking"} aria-pressed={v.paused} aria-label={v.paused ? "Resume reply" : "Pause reply"} title={v.paused ? "Resume" : "Pause"}>
           {v.paused ? <Play size={13} /> : <Pause size={13} />}
         </button>
-        <button type="button" onClick={() => (liveActive ? stopLive() : stopAll())} disabled={!liveActive && (v.mood === "idle" || v.mood === "error")} aria-label="Stop" title="Stop listening or speaking">
+        <button type="button" onClick={() => (jarvisOn ? stopCeoVoice() : liveActive ? stopLive() : stopAll())} disabled={!jarvisOn && !liveActive && (v.mood === "idle" || v.mood === "error")} aria-label="Stop" title="Stop listening or speaking">
           <Square size={11} />
+        </button>
+        <button type="button" onClick={() => setWakeEnabled(!wake.enabled)} aria-pressed={wake.enabled} aria-label={wake.enabled ? "Stop listening for the word Jarvis" : "Listen for the word Jarvis"} title={wake.enabled ? "Listening for “Jarvis” on this computer. Click to switch off." : "Wake Jarvis by saying “Jarvis”. Heard on this computer only."}>
+          {wake.enabled ? <Ear size={13} /> : <EarOff size={13} />}
         </button>
       </div>
     </div>

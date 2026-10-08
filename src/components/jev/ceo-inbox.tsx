@@ -8,6 +8,7 @@ import { PageHeading, Panel } from "@/components/operator/ui";
 import { operatorRequest } from "@/lib/operator";
 import { AGENT_LABEL, STATUS_LABEL, ago, inboxView, type InboxApproval, type InboxTask } from "@/lib/ceo-inbox";
 import { ChatTaskCard } from "./chat-task";
+import { startCeoVoice, stopCeoVoice, useCeoVoice } from "./ceo-voice";
 import "./ceo-inbox.css";
 
 const inboxKey = ["operator-ceo-inbox"] as const;
@@ -58,6 +59,7 @@ export function CeoInbox() {
     retry: false,
   });
   const jobs = useAgentJobs(true);
+  const voice = useCeoVoice();
   const view = inboxView(inbox.data, jobs.data?.jobs);
   // A task Jarvis has just handed to the OS: fetch its job now rather than on the next visit.
   const open = view.tasks.filter((task) => task.job && task.status !== "done" && task.status !== "failed").map((task) => task.job!.id).join(" ");
@@ -71,7 +73,12 @@ export function CeoInbox() {
         eyebrow="Voice · Background work"
         title="Jarvis"
         description={view.needsYou ? `${view.needsYou} ${view.needsYou === 1 ? "thing needs" : "things need"} you.` : "What Jarvis has handed out, and what is waiting for your yes."}
-      />
+      >
+        <button type="button" className="op-button primary" disabled={voice.phase === "connecting"} onClick={() => (voice.phase === "off" ? void startCeoVoice() : stopCeoVoice())}>
+          {voice.phase === "off" ? "Talk to Jarvis" : voice.phase === "connecting" ? "Connecting…" : "End conversation"}
+        </button>
+      </PageHeading>
+      {voice.error && <p className="ceo-error">{voice.error}</p>}
       {inbox.isError && <p className="ceo-error">{(inbox.error as Error).message}</p>}
 
       <Panel>

@@ -11,6 +11,7 @@ import {
 
 import operatorCss from "../operator.css?url";
 import { FloatingOracle } from "@/components/floating-oracle";
+import { JarvisWake } from "@/components/jev/jarvis-wake";
 import { MessageSquare, AudioLines } from "lucide-react";
 import { askOperator } from "@/lib/operator";
 import appCss from "../styles.css?url";
@@ -198,6 +199,7 @@ function RootComponent() {
                 <Outlet />
               </main>
               <FloatingOracle enabled />
+              <JarvisWake />
             </div>
           </div>
         </div>

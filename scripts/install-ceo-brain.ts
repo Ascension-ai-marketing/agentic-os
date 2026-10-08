@@ -57,7 +57,7 @@ ${options.args.map((arg) => `    <string>${escape(arg)}</string>`).join("\n")}
   <key>WorkingDirectory</key><string>${escape(options.repo)}</string>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>PATH</key><string>${escape([...new Set([...options.path, "/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"])].join(":"))}</string>
+    <key>PATH</key><string>${escape([...new Set([...options.path, "/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin"])].join(":"))}</string>
     <key>HOME</key><string>${escape(options.home)}</string>
   </dict>
   <key>RunAtLoad</key><true/>

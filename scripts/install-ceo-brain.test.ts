@@ -37,6 +37,8 @@ test("no job carries a key or token: only PATH and HOME are set", () => {
     expect([...env.matchAll(/<key>(.*?)<\/key>/g)].map((match) => match[1])).toEqual(["PATH", "HOME"]);
     expect(job.plist).not.toMatch(/authtoken|api[_-]?key|secret/i);
     expect(/<key>PATH<\/key><string>(.*?)<\/string>/.exec(env)![1].split(":")).toContain("/tmp/home/.local/bin");
+    // ngrok looks up the machine with ioreg and scutil, which live in /usr/sbin.
+    expect(/<key>PATH<\/key><string>(.*?)<\/string>/.exec(env)![1].split(":")).toContain("/usr/sbin");
   }
 });
 

@@ -70,6 +70,8 @@ When work needs an outside action, stop and say exactly what should be sent or d
 if (import.meta.main) {
   const HOME = homedir(), REPO = resolve(import.meta.dir, "..");
   const folder = join(HOME, ".hermes", "profiles", WORKER, "scripts");
+  // By its full path, so the printed commands work from any folder.
+  const self = `bun run ${quote(join(REPO, "scripts", "install-ceo-heartbeat.ts"))}`;
   const command = (args: string[]) => `hermes ${args.map((arg) => (/^[A-Za-z0-9_.:\/-]+$/.test(arg) ? arg : quote(arg))).join(" ")}`;
 
   if (process.argv.includes("--script")) process.stdout.write(briefingScript());
@@ -89,7 +91,7 @@ if (import.meta.main) {
     console.log(`Nothing is changed by this script. Review each step and run it yourself.\n`);
     console.log(`# 1. Save this as ${join(folder, BRIEFING_SCRIPT)}\n#    (Hermes only runs scripts from that folder.)\n`);
     console.log(briefingScript());
-    console.log(`#    One way to save it:\n#      mkdir -p ${quote(folder)} && bun run install:heartbeat --script > ${quote(join(folder, BRIEFING_SCRIPT))}\n`);
+    console.log(`#    One way to save it:\n#      mkdir -p ${quote(folder)} && ${self} --script > ${quote(join(folder, BRIEFING_SCRIPT))}\n`);
     for (const [index, job] of heartbeatJobs().entries()) {
       console.log(`# ${index + 2}. ${job.name}: ${job.does} (${job.schedule}). Created paused.`);
       if (existing.some((item) => item.name === job.name)) console.log(`#    Already created. Running this again would make a second one.`);
@@ -100,6 +102,6 @@ if (import.meta.main) {
     console.log(`Both check-ins start paused and cost nothing until you turn them on. Each run uses your Hermes model (the ChatGPT login), not Anthropic.`);
     console.log(`Each run sends that model your goals, the handed-out tasks with the start of what each agent last said, and the actions waiting for your yes.`);
     console.log(`To read exactly what a run is given: curl -s http://127.0.0.1:${DASHBOARD_PORT}/__operator/ceo/briefing`);
-    console.log(`To see them and the commands that turn each on or off: bun run install:heartbeat --status`);
+    console.log(`To see them and the commands that turn each on or off: ${self} --status`);
   }
 }

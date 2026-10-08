@@ -74,7 +74,7 @@ test("past decisions are kept to the latest few and long lists of work are cut",
 
 test("a reply that is not the expected record shows nothing rather than failing", () => {
   for (const reply of [undefined, null, {}, { approvals: "x", tasks: 3 }, { approvals: [null, 4, { id: "a" }], tasks: [{ title: "no id" }] }])
-    expect(inboxView(reply as never)).toEqual({ waiting: [], decided: [], tasks: [], needsYou: 0 });
+    expect(inboxView(reply as never)).toEqual({ waiting: [], decided: [], tasks: [], needsYou: 0, reports: [] });
 });
 
 test("how long ago, in plain words", () => {
@@ -84,4 +84,12 @@ test("how long ago, in plain words", () => {
   expect(ago(at(150), NOW)).toBe("2 h ago");
   expect(ago(at(60 * 24 * 3), NOW)).toBe("3 d ago");
   expect(ago("not a date", NOW)).toBe("");
+});
+
+test("what the check-ins wrote is shown newest first, and anything malformed is left out", () => {
+  const report = (id: string, minutesAgo: number, more: object = {}) => ({ id, kind: "plan", title: "Morning plan", text: `Sample plan ${id}`, at: at(minutesAgo), ...more });
+  const view = inboxView({ reports: [report("old", 900), report("new", 5, { kind: "review", title: "Work review" }), report("bad", 1, { kind: "other" }), report("undated", 1, { at: "soon" }), "text"] });
+  expect(view.reports.map((item) => item.id)).toEqual(["new", "old"]);
+  expect(inboxView({ reports: Array.from({ length: 9 }, (_, i) => report(`r${i}`, i)) }).reports).toHaveLength(6);
+  expect(inboxView(null).reports).toEqual([]);
 });

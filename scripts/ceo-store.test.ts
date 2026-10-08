@@ -111,3 +111,16 @@ test("the digest names what is waiting for a yes and what is handed out, without
   expect(store.digest(Date.now() + 25 * 3600_000)).not.toContain("Competitor pricing");
   expect(store.digest(Date.now() + 25 * 3600_000)).toContain("Fix the sample script");
 });
+
+test("a check-in's run is kept once, the oldest make way, and the voice is told only that it exists", () => {
+  const { store } = fixture();
+  const now = Date.parse("2026-10-03T12:00:00.000Z");
+  const first = store.addReport({ key: "job/1.md", kind: "plan", title: "Morning plan", text: "Finish the sample proposal.", at: "2026-10-03T08:00:00.000Z" });
+  expect(store.addReport({ key: "job/1.md", kind: "plan", title: "Morning plan", text: "Written again.", at: "2026-10-03T09:00:00.000Z" })).toEqual(first);
+  expect(store.digest(now)).toContain(`Scheduled check-ins wrote: "Morning plan" (4 h ago).`);
+  expect(store.digest(now)).not.toContain("sample proposal");
+  for (let i = 0; i < 45; i++) store.addReport({ key: `job/old-${i}.md`, kind: "review", title: "Work review", text: `Note ${i}`, at: new Date(Date.parse("2026-09-01T00:00:00.000Z") + i * 3600_000).toISOString() });
+  expect(store.reports()).toHaveLength(40);
+  expect(store.reports().at(-1)).toEqual(first);
+  expect(store.reports().some((item) => item.text === "Note 0")).toBe(false);
+});

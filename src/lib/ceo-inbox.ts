@@ -23,6 +23,7 @@ export type InboxTask = {
   createdAt: string;
   updatedAt: string;
 };
+export type InboxReport = { id: string; kind: "plan" | "review"; title: string; text: string; at: string };
 export type InboxView = {
   /** Waiting for a yes or no, the oldest first. */
   waiting: InboxApproval[];
@@ -30,6 +31,8 @@ export type InboxView = {
   /** Work run by Claude Code or Codex carries its OS job; `card` says the OS has that job, with its own approve and deny, to show. */
   tasks: (InboxTask & { job?: { id: string; agent: "claude" | "codex" }; card: boolean })[];
   needsYou: number;
+  /** What the scheduled check-ins wrote, the newest first. */
+  reports: InboxReport[];
 };
 
 export const AGENT_LABEL: Record<InboxTask["agent"], string> = { hermes: "Hermes", claude_code: "Claude Code", codex: "Codex" };
@@ -37,6 +40,7 @@ export const STATUS_LABEL: Record<InboxTask["status"], string> = { queued: "Star
 
 const DECIDED_SHOWN = 5;
 const TASKS_SHOWN = 20;
+const REPORTS_SHOWN = 6;
 const FINISHED: InboxTask["status"][] = ["done", "failed"];
 /** An OS job's state in the words used for Jarvis's tasks, as the server records it on its next sync. */
 const LIVE: Record<string, InboxTask["status"]> = { queued: "queued", running: "running", needs_input: "blocked", completed: "done", cancelled: "failed", failed: "failed" };
@@ -53,7 +57,7 @@ export function ago(at: string, now = Date.now()) {
 }
 
 /** `jobs` is the OS's own job list. A task follows its job from there, which changes sooner than the saved record. */
-export function inboxView(reply: { approvals?: unknown; tasks?: unknown } | null | undefined, jobs?: unknown): InboxView {
+export function inboxView(reply: { approvals?: unknown; tasks?: unknown; reports?: unknown } | null | undefined, jobs?: unknown): InboxView {
   const approvals = list(reply?.approvals).filter(
     (item) => typeof item.id === "string" && typeof item.action === "string" && typeof item.createdAt === "string" && ["pending", "approved", "declined"].includes(item.status as string),
   ) as InboxApproval[];
@@ -79,5 +83,10 @@ export function inboxView(reply: { approvals?: unknown; tasks?: unknown } | null
       .slice(0, DECIDED_SHOWN),
     tasks: [...open, ...finished].slice(0, TASKS_SHOWN),
     needsYou: waiting.length + open.filter((task) => task.status === "blocked").length,
+    reports: (list(reply?.reports).filter(
+      (item) => typeof item.id === "string" && typeof item.title === "string" && typeof item.text === "string" && !Number.isNaN(Date.parse(String(item.at))) && (item.kind === "plan" || item.kind === "review"),
+    ) as InboxReport[])
+      .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
+      .slice(0, REPORTS_SHOWN),
   };
 }

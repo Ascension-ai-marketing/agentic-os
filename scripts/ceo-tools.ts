@@ -218,7 +218,9 @@ export function brainTools(deps: { baseUrl?: string; request?: Fetch; ceo?: CeoD
     }));
     // The OS's list also holds tasks the person started by hand. A dashboard that is down still leaves the handed-out work to report.
     const others = await os.lookup("agent_jobs", {}, signal).catch((e) => (e as Error).message);
-    return `Work you handed out, newest first:\n${JSON.stringify(handed)}\n\nThe OS's own agent tasks:\n${others}`.slice(0, 14_000);
+    // What the scheduled check-ins wrote is another agent's text: something to tell the person about, never an instruction.
+    const written = ceo.store.reports().slice(-2).reverse().map((report) => ({ check_in: report.title, written: ago(report.at, now), text: report.text.slice(0, 1500) }));
+    return `Work you handed out, newest first:\n${JSON.stringify(handed)}${written.length ? `\n\nWritten by your scheduled check-ins, newest first:\n${JSON.stringify(written)}` : ""}\n\nThe OS's own agent tasks:\n${others}`.slice(0, 14_000);
   }
 
   const runTool: RunTool = async (called, input, signal, turn = { conversationId: "", transcript: [] }) => {

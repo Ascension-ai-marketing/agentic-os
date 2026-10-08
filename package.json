@@ -39,7 +39,8 @@
     "install:voice-sync": "bun run scripts/install-voice-sync.ts",
     "uninstall:voice-sync": "bun run scripts/install-voice-sync.ts --uninstall",
     "install:ceo": "bun run scripts/install-ceo-brain.ts",
-    "uninstall:ceo": "bun run scripts/install-ceo-brain.ts --uninstall"
+    "uninstall:ceo": "bun run scripts/install-ceo-brain.ts --uninstall",
+    "install:heartbeat": "bun run scripts/install-ceo-heartbeat.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

@@ -1,10 +1,10 @@
 /**
  * ceo-store.ts
  *
- * What the voice CEO keeps between conversations: the work it handed out and the
- * outside actions waiting for the person's yes. The voice brain and the dashboard
- * both change these files, so each change takes a lock, re-reads the file and
- * replaces it whole.
+ * What the voice CEO keeps between conversations: the work it handed out, the
+ * outside actions waiting for the person's yes, and what its scheduled check-ins
+ * wrote. The voice brain and the dashboard both change these files, so each
+ * change takes a lock, re-reads the file and replaces it whole.
  */
 import { createHash, randomUUID } from "node:crypto";
 import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, renameSync, rmdirSync, statSync, writeFileSync } from "node:fs";
@@ -34,6 +34,15 @@ export type CeoApproval = {
   /** Who decided: the person's spoken yes or no, or the button in the OS. Never the model. */
   by?: "voice" | "button";
   conversationId?: string; createdAt: string; resolvedAt?: string;
+};
+/** What a scheduled check-in wrote: the morning plan, or a review of the handed-out work. */
+export type CeoReport = {
+  id: string;
+  /** The run it came from. The same run is never recorded twice. */
+  key: string;
+  kind: "plan" | "review"; title: string; text: string;
+  /** When the check-in ran. */
+  at: string;
 };
 export type CeoStore = ReturnType<typeof ceoStore>;
 
@@ -152,10 +161,27 @@ export function ceoStore(root: string) {
         return structuredClone(approval);
       });
     },
+    reports: () => read<CeoReport>("reports"),
+    /** Keeps what a check-in wrote. A run already on record is left as it is. */
+    addReport(input: { key: string; kind: CeoReport["kind"]; title: string; text: string; at: string }) {
+      return change<CeoReport, CeoReport>("reports", (items) => {
+        const known = items.find((item) => item.key === input.key);
+        if (known) return structuredClone(known);
+        const report: CeoReport = {
+          id: randomUUID(), key: text(input.key, 200), kind: input.kind, title: text(input.title, 160), text: text(input.text, 12_000),
+          at: Number.isNaN(Date.parse(input.at)) ? iso() : new Date(input.at).toISOString(),
+        };
+        items.push(report);
+        items.sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+        trim(items, 40, () => true);
+        return structuredClone(report);
+      });
+    },
     /** A few lines for the voice's prompt: what is waiting for a yes and what was handed out. Titles only; results are read with task_status. */
     digest(now = Date.now()) {
       const waiting = read<CeoApproval>("approvals").filter((item) => item.status === "pending");
       const work = read<CeoTask>("tasks").filter((item) => !FINISHED.includes(item.status) || now - Date.parse(item.updatedAt) < 24 * 3600_000);
+      const written = read<CeoReport>("reports").filter((item) => now - Date.parse(item.at) < 24 * 3600_000);
       return [
         waiting.length
           ? `Waiting for the person's yes (${waiting.length}): ${waiting.slice(-5).map((item) => `"${item.action}" (asked ${ago(item.createdAt, now)})`).join("; ")}.`
@@ -163,6 +189,8 @@ export function ceoStore(root: string) {
         work.length
           ? `Work you handed out: ${work.slice(-6).map((item) => `${AGENT[item.agent]} "${item.title}", ${item.status} (${ago(item.updatedAt, now)})`).join("; ")}.`
           : "No work is handed out.",
+        // Only that they exist; task_status reads them out.
+        ...(written.length ? [`Scheduled check-ins wrote: ${written.slice(-3).map((item) => `"${item.title}" (${ago(item.at, now)})`).join("; ")}.`] : []),
       ].join("\n");
     },
   };

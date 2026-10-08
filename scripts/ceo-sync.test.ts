@@ -219,7 +219,7 @@ test("refreshes close together are one refresh, and nothing is asked when no wor
 test("the dashboard reads the records and the button decides; the first decision stands", async () => {
   const { root, store, hand } = fixture();
   let refreshed = 0;
-  const routes = ceoRoutes({ root, jobs: () => [], store, sync: { refresh: async () => { refreshed++; } } });
+  const routes = ceoRoutes({ root, jobs: () => [], store, sync: { refresh: async () => { refreshed++; } }, checkIns: { importInto: () => 0 } });
   hand("hermes", "t_1");
   const filed = store.propose({ action: "Email Dana Lee the March invoice" });
   expect(await routes.handle("/ceo", "GET", undefined)).toMatchObject({ approvals: [{ id: filed.id, status: "pending" }], tasks: [{ ref: "t_1", status: "queued" }] });

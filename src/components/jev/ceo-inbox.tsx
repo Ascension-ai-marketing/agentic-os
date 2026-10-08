@@ -104,6 +104,29 @@ export function CeoInbox() {
         )}
       </Panel>
 
+      {/* Only once a check-in has written something: the heartbeat is off until the person turns it on. */}
+      {view.reports.length > 0 && (
+        <Panel>
+          <div className="op-panel-title">
+            <div>
+              <h2>Check-ins</h2>
+              <small>Written by Jarvis's scheduled check-ins: the morning plan, and a note when handed-out work finishes or gets stuck.</small>
+            </div>
+          </div>
+          <div className="ceo-list">
+            {view.reports.map((report, index) => (
+              <details key={report.id} className="ceo-item ceo-report" open={index === 0}>
+                <summary className="ceo-item-head">
+                  <b>{report.title}</b>
+                  <small>{ago(report.at)}</small>
+                </summary>
+                <p className="ceo-note ceo-result">{report.text}</p>
+              </details>
+            ))}
+          </div>
+        </Panel>
+      )}
+
       <Panel>
         <div className="op-panel-title">
           <div>

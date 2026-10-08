@@ -841,7 +841,8 @@ export function operatorPlugin({
     name: "operator-workspace",
     configureServer(server) {
       nativeTasks = agentJobs(root);
-      const ceo = ceoRoutes({ root, jobs: () => nativeTasks!.list().jobs });
+      const ceo = ceoRoutes({ root, jobs: () => nativeTasks!.list().jobs,
+        goals: () => (brainEnabled(load(), "business") ? businessGoalContext(business.read()).goals : null) });
       apps.startTimer();
       getMailSync();
       server.httpServer?.once("close", () => { apps.stop(); vault.stop(); photoIndex.close(); mailSync?.close(); existingConnections.close(); nativeTasks?.close(); });

@@ -37,7 +37,9 @@
     "speech:create": "bun run scripts/speech-engine.ts create",
     "speech:serve": "bun run scripts/speech-engine.ts serve",
     "install:voice-sync": "bun run scripts/install-voice-sync.ts",
-    "uninstall:voice-sync": "bun run scripts/install-voice-sync.ts --uninstall"
+    "uninstall:voice-sync": "bun run scripts/install-voice-sync.ts --uninstall",
+    "install:ceo": "bun run scripts/install-ceo-brain.ts",
+    "uninstall:ceo": "bun run scripts/install-ceo-brain.ts --uninstall"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

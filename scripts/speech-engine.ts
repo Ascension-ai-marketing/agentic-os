@@ -193,7 +193,11 @@ export function startBrain(options: {
 }): Promise<{ server: Server; close: () => Promise<void> }> {
   const log = options.log ?? (() => {});
   const elevenlabs = new ElevenLabsClient({ apiKey: options.apiKey });
-  const server = createServer((_, res) => { res.writeHead(404).end(); });
+  // The tunnel makes this port public, so /health says only that the brain is up.
+  const server = createServer((req, res) => {
+    if (req.method === "GET" && req.url === "/health") res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ ok: true }));
+    else res.writeHead(404).end();
+  });
   const attachment = elevenlabs.speechEngine.attach(options.engineId, server, "/ws", {
     debug: options.debug,
     disableAuth: options.disableAuth,

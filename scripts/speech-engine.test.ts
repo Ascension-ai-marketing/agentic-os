@@ -74,3 +74,17 @@ test("a transcript over the brain socket comes back as streamed agent_response c
   expect(responses.every((m) => m.event_id === 7)).toBe(true);
   expect(responses.at(-1).is_final).toBe(true);
 });
+
+test("the brain answers /health and says nothing else about itself", async () => {
+  const brain = await startBrain({ engineId: "seng_fixture", apiKey, reply: async function* () {}, port: 0, disableAuth: true });
+  const base = `http://127.0.0.1:${(brain.server.address() as AddressInfo).port}`;
+  try {
+    const health = await fetch(`${base}/health`);
+    expect(health.status).toBe(200);
+    expect(await health.json()).toEqual({ ok: true });
+    expect((await fetch(`${base}/health`, { method: "POST" })).status).toBe(404);
+    expect((await fetch(`${base}/`)).status).toBe(404);
+  } finally {
+    await brain.close();
+  }
+});

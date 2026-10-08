@@ -148,7 +148,8 @@ function RootComponent() {
   const embedAddress = useRouterState({
     select: (state) => new URLSearchParams(state.location.searchStr).get("embed") === "1",
   });
-  const [framed, setFramed] = useState(false);
+  // Unknown until the browser has been asked, so the voice and wake listeners never start inside a frame, even briefly.
+  const [framed, setFramed] = useState<boolean | null>(null);
   useEffect(() => setFramed(window.name.startsWith("os-embed")), []);
 
   return (
@@ -212,8 +213,8 @@ function RootComponent() {
               >
                 <Outlet />
               </main>
-              <FloatingOracle enabled />
-              <JarvisWake />
+              {framed === false && <FloatingOracle enabled />}
+              {framed === false && <JarvisWake />}
             </div>
           </div>
         </div>

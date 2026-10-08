@@ -15,6 +15,7 @@ import {
   Inbox,
   CalendarDays,
   Bot,
+  Columns2,
   Orbit,
   MessageSquare,
   ArrowUpRight,
@@ -120,6 +121,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
       <nav aria-label="Tools">
         {tools.map(nav)}
         {state.settings.openclaw && nav({ to: "/agents/openclaw", label: "OpenClaw", icon: Bot })}
+        {state.settings.openclaw && nav({ to: "/agents/workbench", label: "Workbench", icon: Columns2 })}
         {state.settings.mission && nav({ to: "/dashboard", label: "Mission Control", icon: Orbit })}
       </nav>
       <div className="op-sidebar-bottom">

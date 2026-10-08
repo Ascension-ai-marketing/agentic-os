@@ -9,6 +9,8 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
+import { useEffect, useState } from "react";
+
 import operatorCss from "../operator.css?url";
 import { FloatingOracle } from "@/components/floating-oracle";
 import { JarvisWake } from "@/components/jev/jarvis-wake";
@@ -141,10 +143,22 @@ function RootComponent() {
     select: (state) => state.location.pathname === "/websites",
   });
 
+  // A page shown inside the Workbench's frame: the page alone, with no sidebar, header, voice or wake listener of its own.
+  // The address says so on first load; the frame's name keeps it so when a link inside the frame is followed.
+  const embedAddress = useRouterState({
+    select: (state) => new URLSearchParams(state.location.searchStr).get("embed") === "1",
+  });
+  const [framed, setFramed] = useState(false);
+  useEffect(() => setFramed(window.name.startsWith("os-embed")), []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AccountsHub />
-      {setupWorkspace ? (
+      {embedAddress || framed ? (
+        <main className="min-h-screen overflow-x-hidden bg-background p-4 text-foreground md:p-6">
+          <Outlet />
+        </main>
+      ) : setupWorkspace ? (
         <main className="ws-fullscreen-route">
           <Outlet />
         </main>

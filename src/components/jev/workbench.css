@@ -1,0 +1,9 @@
+/* Fills the space under the app header: the 66px header plus the main area's padding (1rem, 1.5rem from md). */
+.wb { height: calc(100dvh - 66px - 2rem); min-height: 420px; }
+@media (min-width: 768px) { .wb { height: calc(100dvh - 66px - 3rem); } }
+.wb-group { border: 1px solid var(--op-border); border-radius: 14px; overflow: hidden; background: var(--op-panel); }
+.wb-side { display: flex; flex-direction: column; height: 100%; min-width: 0; min-height: 0; }
+.wb-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; border-bottom: 1px solid var(--op-border); color: var(--op-ink); font-size: 13px; }
+.wb-open { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; font-size: 12px; }
+.wb-frame { flex: 1; width: 100%; min-height: 0; border: 0; display: block; background: var(--op-inset); }
+.wb-handle { background: var(--op-border); }

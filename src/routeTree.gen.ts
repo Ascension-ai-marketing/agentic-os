@@ -31,6 +31,7 @@ import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkspacesIndexRouteImport } from './routes/workspaces.index'
 import { Route as WorkspacesIdRouteImport } from './routes/workspaces.$id'
+import { Route as AgentsWorkbenchRouteImport } from './routes/agents.workbench'
 import { Route as AgentsOpenclawRouteImport } from './routes/agents.openclaw'
 import { Route as AgentsJarvisRouteImport } from './routes/agents.jarvis'
 import { Route as AgentsHermesRouteImport } from './routes/agents.hermes'
@@ -146,6 +147,11 @@ const WorkspacesIdRoute = WorkspacesIdRouteImport.update({
   path: '/workspaces/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgentsWorkbenchRoute = AgentsWorkbenchRouteImport.update({
+  id: '/agents/workbench',
+  path: '/agents/workbench',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AgentsOpenclawRoute = AgentsOpenclawRouteImport.update({
   id: '/agents/openclaw',
   path: '/agents/openclaw',
@@ -192,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/agents/hermes': typeof AgentsHermesRoute
   '/agents/jarvis': typeof AgentsJarvisRoute
   '/agents/openclaw': typeof AgentsOpenclawRoute
+  '/agents/workbench': typeof AgentsWorkbenchRoute
   '/workspaces/$id': typeof WorkspacesIdRoute
   '/workspaces/': typeof WorkspacesIndexRoute
 }
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/agents/hermes': typeof AgentsHermesRoute
   '/agents/jarvis': typeof AgentsJarvisRoute
   '/agents/openclaw': typeof AgentsOpenclawRoute
+  '/agents/workbench': typeof AgentsWorkbenchRoute
   '/workspaces/$id': typeof WorkspacesIdRoute
   '/workspaces': typeof WorkspacesIndexRoute
 }
@@ -249,6 +257,7 @@ export interface FileRoutesById {
   '/agents/hermes': typeof AgentsHermesRoute
   '/agents/jarvis': typeof AgentsJarvisRoute
   '/agents/openclaw': typeof AgentsOpenclawRoute
+  '/agents/workbench': typeof AgentsWorkbenchRoute
   '/workspaces/$id': typeof WorkspacesIdRoute
   '/workspaces/': typeof WorkspacesIndexRoute
 }
@@ -279,6 +288,7 @@ export interface FileRouteTypes {
     | '/agents/hermes'
     | '/agents/jarvis'
     | '/agents/openclaw'
+    | '/agents/workbench'
     | '/workspaces/$id'
     | '/workspaces/'
   fileRoutesByTo: FileRoutesByTo
@@ -307,6 +317,7 @@ export interface FileRouteTypes {
     | '/agents/hermes'
     | '/agents/jarvis'
     | '/agents/openclaw'
+    | '/agents/workbench'
     | '/workspaces/$id'
     | '/workspaces'
   id:
@@ -335,6 +346,7 @@ export interface FileRouteTypes {
     | '/agents/hermes'
     | '/agents/jarvis'
     | '/agents/openclaw'
+    | '/agents/workbench'
     | '/workspaces/$id'
     | '/workspaces/'
   fileRoutesById: FileRoutesById
@@ -364,6 +376,7 @@ export interface RootRouteChildren {
   AgentsHermesRoute: typeof AgentsHermesRoute
   AgentsJarvisRoute: typeof AgentsJarvisRoute
   AgentsOpenclawRoute: typeof AgentsOpenclawRoute
+  AgentsWorkbenchRoute: typeof AgentsWorkbenchRoute
   WorkspacesIdRoute: typeof WorkspacesIdRoute
   WorkspacesIndexRoute: typeof WorkspacesIndexRoute
 }
@@ -524,6 +537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspacesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/agents/workbench': {
+      id: '/agents/workbench'
+      path: '/agents/workbench'
+      fullPath: '/agents/workbench'
+      preLoaderRoute: typeof AgentsWorkbenchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/agents/openclaw': {
       id: '/agents/openclaw'
       path: '/agents/openclaw'
@@ -580,6 +600,7 @@ const rootRouteChildren: RootRouteChildren = {
   AgentsHermesRoute: AgentsHermesRoute,
   AgentsJarvisRoute: AgentsJarvisRoute,
   AgentsOpenclawRoute: AgentsOpenclawRoute,
+  AgentsWorkbenchRoute: AgentsWorkbenchRoute,
   WorkspacesIdRoute: WorkspacesIdRoute,
   WorkspacesIndexRoute: WorkspacesIndexRoute,
 }

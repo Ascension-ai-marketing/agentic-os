@@ -1111,3 +1111,11 @@ test("a Claude transcript imports the user's words only, refreshes its activity 
   expect(plain.data.window).toBeNull();
   expect(plain.data.results.some((r: any) => r.id === saved.id && r.recent === true)).toBe(true);
 });
+
+test("MCP status starts signed out and rejects unknown providers", async () => {
+  expect((await request("/mcp/status")).data).toEqual({ notion: { connected: false, requiresSignIn: true }, mercury: { connected: false, requiresSignIn: true } });
+  const rejected = await request("/mcp/connect", { provider: "gmail" });
+  expect(rejected.status).toBeGreaterThanOrEqual(400);
+  expect(JSON.stringify(rejected.data)).toMatch(/Notion or Mercury/);
+  expect((await request("/business/native-connections")).data.mercury).toMatchObject({ available: false, requiresSignIn: true });
+});

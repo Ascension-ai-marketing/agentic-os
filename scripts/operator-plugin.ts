@@ -8,8 +8,7 @@ import { extractChatAttachment } from "./chat-attachments";
 import { workspaceProfile } from "./workspace-profile";
 import { privacyPaneAction, setupDiscovery } from "./setup-discovery";
 import { openAIVoice } from "./openai-voice";
-import { connectedGranolaNotes } from "./granola-connected";
-import { connectedNotionPages } from "./notion-connected";
+import { connectedNotionPages, notionAvailable, NOTION_TOOLS } from "./notion-connected";
 import { granolaApi } from "./granola-api";
 import { agentJobs } from "./agent-jobs";
 import { ceoRoutes } from "./ceo-routes";
@@ -488,6 +487,7 @@ export function operatorPlugin({
   const nativeInbox = nativeInboxSync(root, { load, save, archive });
   const nativeCalendar = nativeCalendarSync(root, { load, save });
   const mcp = {
+    notion: mcpConnection({ name: "Notion", url: "https://mcp.notion.com/mcp", storePath: join(root, ".operator-data", "mcp", "notion.json"), allowedTools: NOTION_TOOLS, allowText: true }),
     // "read" keeps the grant read-only; "offline_access" lets the app refresh it.
     mercury: mcpConnection({ name: "Mercury", url: "https://mcp.mercury.com/mcp", storePath: join(root, ".operator-data", "mcp", "mercury.json"), allowedTools: MERCURY_TOOLS, scopes: ["read", "offline_access"] }),
   };
@@ -653,11 +653,8 @@ export function operatorPlugin({
   const voiceRecall = voiceMemory({
     load,
     recentMeetings: async () => {
-      let connected = false;
-      try { connected = (await nativeBusiness.status()).granola.available; } catch { /* Direct API credentials remain an independent connection. */ }
-      if (connected) return { ...await connectedGranolaNotes(root, undefined, Date.now(), 30), scope: "Your Granola meetings from the last 30 days" };
       if (granola.configured()) return { ...await granola.notes(), scope: "The first page of up to 20 Granola notes" };
-      throw new Error("Granola is not available through your current connection. Reconnect it in Memory.");
+      throw new Error("Granola is not connected. Add your Granola API key in Memory.");
     },
   });
   const apps = memoryApps({
@@ -665,16 +662,13 @@ export function operatorPlugin({
     reconcileSources: reconcileImportedParts,
     validCollection: (value) => memorySpaces(load()).some((s) => s.id === value),
     notionConfigured: () => !!notionToken(),
-    granolaConnection: async (force) => {
-      try { if ((await nativeBusiness.status(force)).granola.available) return "codex"; } catch { /* Direct API remains an independent option. */ }
-      return granola.configured() ? "api" : undefined;
+    granolaConnection: async () => granola.configured() ? "api" : undefined,
+    granolaNotes: async (cursor) => granola.notes(cursor),
+    notionConnection: async () => {
+      if (!mcp.notion.status().connected) return undefined;
+      try { return await notionAvailable(mcp.notion.read) ? "mcp" : undefined; } catch { return undefined; }
     },
-    granolaNotes: async (cursor, method) => method === "codex" ? connectedGranolaNotes(root) : granola.notes(cursor),
-    notionConnection: async (force) => {
-      try { if ((await nativeBusiness.status(force)).notion?.available) return "codex"; } catch { /* A page import remains an independent option. */ }
-      return undefined;
-    },
-    notionPages: () => connectedNotionPages(root),
+    notionPages: () => connectedNotionPages(mcp.notion.read),
     sourceEnabled: origin => brainEnabled(readBrainPreferences(root), origin),
     syncInfo: () => syncBusinessMemory(),
     accountStatus: async () => ({
@@ -874,6 +868,21 @@ export function operatorPlugin({
             /^\/connections\/callback\/(google|outlook)$/.test(callbackUrl.pathname)
           ) {
             return await accounts.callback(callbackUrl.pathname, callbackUrl, req, res);
+          }
+          const mcpCallback = (req.method || "GET") === "GET" && callbackUrl.pathname.match(/^\/connections\/callback\/mcp-(notion|mercury)$/);
+          if (mcpCallback) {
+            const id = mcpCallback[1] as keyof typeof mcp;
+            let ok = false;
+            try {
+              if (callbackUrl.searchParams.has("error")) throw new Error("not completed");
+              await mcp[id].complete(callbackUrl.searchParams.get("code") ?? "", callbackUrl.searchParams.get("state") ?? "", mcpRedirect(id));
+              ok = true;
+            } catch { /* Do not echo provider codes or credential-bearing URLs into an HTML document. */ }
+            res.statusCode = ok ? 200 : 400;
+            res.setHeader("Content-Type", "text/html; charset=utf-8");
+            res.setHeader("Cache-Control", "no-store");
+            res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'");
+            return res.end(`<!doctype html><title>Connection</title><body style="margin:0;padding:48px;background:#101016;color:#efebff;font:16px system-ui">${ok ? "Connected. You can close this tab and return to Agentic OS." : "Sign-in was not completed. Close this tab and try again from Connections."}</body>`);
           }
           if (req.headers.origin && req.headers.origin !== ownOrigin)
             return send({ error: "Unknown origin" }, 403);
@@ -1224,6 +1233,13 @@ export function operatorPlugin({
           if (method === "POST" && path === "/business/competitors/sync") return send(await competitorStudio.sync(body.inputs));
           if (method === "POST" && path === "/business/progress") return send(business.progress(body));
           if (method === "GET" && path === "/business/integrations") return send({ integrations: discoverBusinessIntegrations() });
+          if (method === "GET" && path === "/mcp/status") return send({ notion: mcp.notion.status(), mercury: mcp.mercury.status() });
+          if (method === "POST" && (path === "/mcp/connect" || path === "/mcp/disconnect")) {
+            if (body.provider !== "notion" && body.provider !== "mercury") throw new Error("Choose Notion or Mercury.");
+            const id = body.provider as keyof typeof mcp;
+            if (path === "/mcp/disconnect") return send(mcp[id].disconnect());
+            return send({ authorizationUrl: (await mcp[id].begin(mcpRedirect(id))).authorizationUrl });
+          }
           if (method === "GET" && path === "/business/native-connections") return send(await nativeBusiness.status(url.searchParams.get("refresh") === "1"));
           if (method === "GET" && path === "/business/mercury/preview") return send(await nativeBusiness.balances());
           if (method === "POST" && path === "/business/mercury/sync") {

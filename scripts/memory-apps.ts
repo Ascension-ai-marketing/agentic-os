@@ -850,9 +850,9 @@ export function memoryApps(options: {
   syncAccount?: (provider: string) => Promise<{ messages: number; events: number }>;
   mailDocuments?: (provider: string) => Array<{ id: string; title: string; text: string }>;
   notionConfigured?: () => boolean;
-  granolaConnection?: (force?: boolean) => Promise<"codex" | "api" | undefined>;
-  granolaNotes?: (cursor?: string, method?: "codex" | "api") => Promise<{ documents: Array<{ id: string; title: string; text: string }>; hasMore: boolean; cursor?: string }>;
-  notionConnection?: (force?: boolean) => Promise<"codex" | undefined>;
+  granolaConnection?: (force?: boolean) => Promise<"api" | undefined>;
+  granolaNotes?: (cursor?: string) => Promise<{ documents: Array<{ id: string; title: string; text: string }>; hasMore: boolean; cursor?: string }>;
+  notionConnection?: (force?: boolean) => Promise<"mcp" | undefined>;
   notionPages?: () => Promise<{ documents: Array<{ id: string; title: string; text: string }>; hasMore: boolean; skipped?: number }>;
   sourceEnabled?: (origin: string) => boolean;
   syncInfo?: () => unknown | Promise<unknown>;
@@ -1009,10 +1009,10 @@ export function memoryApps(options: {
             mode === "account" ? { ...found.counts, conversations: localSnapshots } : found.counts,
           truncated: found.truncated,
           availabilityNote:
-            granolaConnected ? granolaMethod === "codex" ? "Uses your existing Granola connection through Codex. Sync imports your meeting notes from the past year. No export or new key needed." : "Connected to Granola API. Sync imports up to 20 meeting notes per pass; more notes resume on the next sync." : id === "obsidian" ? "Registered Obsidian vaults are discovered automatically. Sync copies Markdown notes; plugins and settings stay in Obsidian." : id === "chatgpt"
+            granolaConnected ? "Connected to Granola API. Sync imports up to 20 meeting notes per pass; more notes resume on the next sync." : id === "obsidian" ? "Registered Obsidian vaults are discovered automatically. Sync copies Markdown notes; plugins and settings stay in Obsidian." : id === "chatgpt"
               ? "Import conversations.json from your ChatGPT export. A desktop login does not provide complete chat history."
               : id === "notion"
-                ? notionConnected ? "Uses your existing Notion connection through Codex. Sync imports up to 12 of your recently edited pages as memories. No integration key needed." : "Connect an integration and import a shared page. Only the pages you choose are copied."
+                ? notionConnected ? "Connected to Notion. Sync imports up to 12 of your recently edited pages as memories." : "Connect an integration and import a shared page. Only the pages you choose are copied."
                 : mode === "account"
                   ? account?.connected
                     ? "Connected. Sync refreshes saved mail within the provider’s sync limits. Full mailbox history stays available in the source app."
@@ -1144,7 +1144,7 @@ export function memoryApps(options: {
       if (id === "granola" && granolaMethod && options.granolaNotes) {
         if (!p.scopes.memories) throw new Error("Choose the memories scope for meeting notes.");
         update(id, { status: "syncing" });
-        const batch = await options.granolaNotes(p.remoteCursor, granolaMethod);
+        const batch = await options.granolaNotes(p.remoteCursor);
         await importDocuments(id, batch.documents, p.collection, progress);
         checkActive(id);
         progress.hasMore = batch.hasMore;

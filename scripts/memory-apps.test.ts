@@ -898,9 +898,9 @@ test("Obsidian discovers registered linked vaults, excludes nested escapes and s
   api.start("obsidian"); expect((await api.wait("obsidian")).progress.unchanged).toBe(1); expect(map.size).toBe(1);
 });
 
-test("Granola existing connection syncs notes without an export or local API key", async () => {
-  const {api,map}=make({granolaConnection:async()=>"codex",granolaNotes:async()=>({documents:[{id:"meeting-one",title:"Planning",text:"The next launch will happen on Friday."}],hasMore:false})});
-  expect((await api.list()).apps.find(a=>a.id==="granola")).toMatchObject({available:true,canSync:true,mode:"api",connectionMethod:"codex"});
+test("Granola API connection syncs notes without an export", async () => {
+  const {api,map}=make({granolaConnection:async()=>"api",granolaNotes:async()=>({documents:[{id:"meeting-one",title:"Planning",text:"The next launch will happen on Friday."}],hasMore:false})});
+  expect((await api.list()).apps.find(a=>a.id==="granola")).toMatchObject({available:true,canSync:true,mode:"api",connectionMethod:"api"});
   api.configure("granola",{enabled:true}); api.start("granola"); expect((await api.wait("granola")).status).toBe("idle"); expect(map.size).toBe(1);
   api.start("granola"); expect((await api.wait("granola")).progress.unchanged).toBe(1); expect(map.size).toBe(1);
 });
@@ -1160,4 +1160,12 @@ test("a folder the system refuses to read is reported in the platform's own word
   } finally {
     chmodSync(sessions, 0o700);
   }
+});
+
+test("Granola and Notion report app-owned connection methods, never Codex", async () => {
+  const { api } = make({ granolaConnection: async () => "api", notionConnection: async () => "mcp" });
+  const listed = (await api.list(true)).apps;
+  expect(listed.find(app => app.id === "granola")?.connectionMethod).toBe("api");
+  expect(listed.find(app => app.id === "notion")?.connectionMethod).toBe("mcp");
+  expect(JSON.stringify(listed)).not.toMatch(/through Codex/i);
 });

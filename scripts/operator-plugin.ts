@@ -484,7 +484,14 @@ export function operatorPlugin({
   });
   const conversations = conversationStore(root);
   const archive = mailArchive(root);
-  const nativeInbox = nativeInboxSync(root, { load, save, archive });
+  const providerMail = mailProvider({ archive, identity: accounts.mailIdentity, request: accounts.readMail });
+  const nativeInbox = nativeInboxSync(root, { load, save, archive, lane: {
+    identity: accounts.mailIdentity, request: accounts.readMail, mail: providerMail,
+    slack: {
+      status: async () => ((await accounts.handle("/connections", "GET", {}, undefined)) as any).accounts.find((a: any) => a.id === "slack") || { connected: false },
+      sync: () => accounts.handle("/connections/sync", "POST", { provider: "slack" }, undefined) as Promise<{ messages: number }>,
+    },
+  } });
   const nativeCalendar = nativeCalendarSync(root, { load, save });
   const mcp = {
     notion: mcpConnection({ name: "Notion", url: "https://mcp.notion.com/mcp", storePath: join(root, ".operator-data", "mcp", "notion.json"), allowedTools: NOTION_TOOLS, allowText: true }),
@@ -495,7 +502,6 @@ export function operatorPlugin({
   const nativeBusiness = nativeBusinessSync(root, { read: mcp.mercury.read, connected: () => mcp.mercury.status().connected });
   let mailSync: ReturnType<typeof createMailSync> | undefined;
   const getMailSync = () => mailSync ??= createMailSync({ root, archive, identity: accounts.mailIdentity, request: accounts.readMail });
-  const providerMail = mailProvider({ archive, identity: accounts.mailIdentity, request: accounts.readMail });
   const recentVoiceMail = voiceRecentEmails({
     load, nativeInbox, providerMail,
     directAccounts: async () => {
@@ -687,8 +693,8 @@ export function operatorPlugin({
     mailDocuments: (provider) => load().inbox.filter((i) => i.source === provider).map((i) => ({ id: i.id, title: i.subject, text: `From: ${i.from}\nDate: ${i.receivedAt}\nSubject: ${i.subject}\n\n${i.body}` })),
     afterSyncAll: () => connectAll.start(),
   });
-  // A year of mail history, headers and snippets only, through the Codex mail connections.
-  const mailHistory = mailBackfill(root, { archive });
+  // A year of mail history, headers and snippets only, through the accounts connected in this app.
+  const mailHistory = mailBackfill(root, { archive, identity: accounts.mailIdentity, request: accounts.readMail });
   const userHome = memoryHome || homedir();
   const connectAll = memoryConnectAll(root, {
     native: { status: () => nativeInbox.status(), sync: (providers, replace) => nativeInbox.sync(providers, replace) },

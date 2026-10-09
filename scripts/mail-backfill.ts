@@ -1,12 +1,11 @@
 // Mail backfill: bring a year of Gmail and Outlook history into the local mail
-// archive through the Codex connections that are already signed in. Headers and
+// archive through the accounts connected in this app. Headers and
 // snippets only, 100 messages a page, resumable, and read-only end to end.
 // After the first pass it keeps catching up from the newest message it holds.
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import { withConnectedRead, type ConnectedTool } from "./codex-connected-read";
-import { gmailSearchMetadata } from "./native-inbox-sync";
+import { mailMetadataPath, outlookMetadataFields } from "./mail-provider";
 import type { mailArchive } from "./mail-archive";
 
 export type MailProvider = "gmail" | "outlook";
@@ -26,16 +25,10 @@ export type BackfillState = {
 };
 type Store = Partial<Record<MailProvider, BackfillState>>;
 const DAY = 864e5;
-const TOOLS = { gmail: "gmail.search_emails", outlook: "microsoft_outlook_email.list_messages" } as const;
 const PAGE = 100;
-// A Codex read session caps its total response size, so each session takes a few pages.
-const PAGES_PER_SESSION = { gmail: 25, outlook: 8 } as const;
+// Each session takes a few pages so progress is saved often.
+const PAGES_PER_SESSION = { gmail: 5, outlook: 8 } as const;
 
-const identity = (tool?: ConnectedTool) => {
-  const profile = tool?._meta?.link_owner_profile;
-  const value = profile?.email || profile?.id;
-  return typeof value === "string" ? value.slice(0, 300) : "";
-};
 const gmailDate = (iso: string) => iso.slice(0, 10).replaceAll("-", "/");
 
 /** Rough total: what we have, scaled by how much of the time window it covers. */
@@ -52,12 +45,12 @@ export function mailBackfill(
   root: string,
   options: {
     archive: ReturnType<typeof mailArchive>;
-    connectedRead?: typeof withConnectedRead;
+    identity: (provider: MailProvider) => Promise<string>;
+    request: (provider: MailProvider, path: string, account?: string) => Promise<any>;
     months?: number;
     now?: () => number;
   },
 ) {
-  const connectedRead = options.connectedRead || withConnectedRead;
   const now = options.now || Date.now;
   const months = options.months ?? 12;
   const file = join(root, ".operator-data", "mail-backfill.json");
@@ -94,66 +87,51 @@ export function mailBackfill(
 
   /** One read session: a few pages, newest first, stopping at the window's start. */
   async function session(provider: MailProvider): Promise<"more" | "done"> {
-    return connectedRead(
-      root,
-      async (client) => {
-        const account = identity(client.tools[TOOLS[provider]]);
-        let state = read()[provider]!;
-        if (!account) throw new Error(`${provider === "gmail" ? "Gmail" : "Outlook"} is not signed in to Codex.`);
-        if (state.account && state.account !== account)
-          throw new Error("A different account is signed in now. Start the import again.");
-        const sinceMs = Date.parse(state.since);
-        for (let page = 0; page < PAGES_PER_SESSION[provider]; page++) {
-          let rows: any[] = [],
-            next: string | number | undefined,
-            reachedStart = false;
-          if (provider === "gmail") {
-            const raw = await client.call(TOOLS.gmail, {
-              query: `-in:spam -in:trash after:${gmailDate(state.since)}`,
-              max_results: PAGE,
-              next_page_token: typeof state.cursor === "string" ? state.cursor : "",
-            });
-            rows = Array.isArray(raw?.emails) ? raw.emails.slice(0, PAGE) : [];
-            next = typeof raw?.next_page_token === "string" && raw.next_page_token ? raw.next_page_token : undefined;
-            const metadata = rows.map(gmailSearchMetadata);
-            if (metadata.length) options.archive.importMetadata("gmail", account, metadata);
-          } else {
-            const skip = typeof state.cursor === "number" ? state.cursor : 0;
-            const raw = await client.call(TOOLS.outlook, { top: PAGE, skip, order_by: "receivedDateTime desc" });
-            const all = Array.isArray(raw?.value) ? raw.value.slice(0, PAGE) : [];
-            // The date boundary is only reached by an older message, never by a
-            // skipped draft (drafts are dropped, but they do not end the history).
-            reachedStart = all.some((r: any) => r?.isDraft !== true && Date.parse(r?.receivedDateTime) < sinceMs);
-            rows = all.filter((r: any) => Date.parse(r?.receivedDateTime) >= sinceMs && r?.isDraft !== true);
-            next = raw?.has_more && !reachedStart ? Number(raw.next_from_index) || skip + all.length : undefined;
-            if (rows.length)
-              options.archive.importMetadata(
-                "outlook",
-                account,
-                rows.map((r: any) => ({ ...r, body: undefined })),
-              );
-          }
-          const times = rows
-            .map((r: any) => Date.parse(provider === "gmail" ? r.email_ts : r.receivedDateTime))
-            .filter(Number.isFinite);
-          const oldest = times.length ? new Date(Math.min(...times)).toISOString() : state.oldest;
-          const newest = times.length ? new Date(Math.max(...times)).toISOString() : undefined;
-          // The count is what the archive really holds, so repeat passes never double count.
-          const imported = stored(provider, account) || state.imported + rows.length;
-          state = patch(provider, {
-            account,
-            imported,
-            cursor: next,
-            oldest: oldest && (!state.oldest || oldest < state.oldest) ? oldest : state.oldest,
-            newest: newest && (!state.newest || newest > state.newest) ? newest : state.newest,
-            estimate: next ? backfillEstimate(imported, state.since, oldest, now()) : imported,
-          });
-          if (!next) return "done";
-        }
-        return "more";
-      },
-      { timeoutMs: 300000, callTimeoutMs: 90000 },
-    );
+    const account = await options.identity(provider);
+    let state = read()[provider]!;
+    if (state.account && state.account !== account) throw new Error("A different account is signed in now. Start the import again.");
+    const sinceMs = Date.parse(state.since);
+    // A numeric cursor is a leftover from the earlier reader; restart paging (imports are idempotent).
+    if (typeof state.cursor !== "string") state = patch(provider, { cursor: undefined });
+    for (let page = 0; page < PAGES_PER_SESSION[provider]; page++) {
+      let rows: any[] = [], next: string | undefined;
+      const cursor = typeof state.cursor === "string" ? state.cursor : "";
+      if (provider === "gmail") {
+        const params = new URLSearchParams({ q: `-in:spam -in:trash after:${gmailDate(state.since)}`, maxResults: String(PAGE), ...(cursor ? { pageToken: cursor } : {}) });
+        const raw = await options.request("gmail", "/messages?" + params, account);
+        const listing = Array.isArray(raw?.messages) ? raw.messages.slice(0, PAGE).filter((row: any) => typeof row?.id === "string" && row.id) : [];
+        next = typeof raw?.nextPageToken === "string" && raw.nextPageToken ? raw.nextPageToken : undefined;
+        for (let offset = 0; offset < listing.length; offset += 4) rows.push(...await Promise.all(listing.slice(offset, offset + 4).map(async (row: any) => {
+          const record = await options.request("gmail", mailMetadataPath("gmail", row.id), account);
+          if (record?.id !== row.id) throw new Error("Gmail returned a different message. Saved mail was preserved.");
+          return { ...record, payload: { headers: record.payload?.headers } };
+        })));
+        if (rows.length) options.archive.importMetadata("gmail", account, rows);
+      } else {
+        const first = "/messages?" + new URLSearchParams({ $top: String(PAGE), $orderby: "receivedDateTime desc", $select: outlookMetadataFields + ",isDraft" });
+        const raw = await options.request("outlook", cursor || first, account);
+        const all = Array.isArray(raw?.value) ? raw.value.slice(0, PAGE) : [];
+        // The date boundary is only reached by an older message, never by a skipped draft.
+        const reachedStart = all.some((r: any) => r?.isDraft !== true && Date.parse(r?.receivedDateTime) < sinceMs);
+        rows = all.filter((r: any) => Date.parse(r?.receivedDateTime) >= sinceMs && r?.isDraft !== true);
+        const link = raw?.["@odata.nextLink"];
+        next = typeof link === "string" && link && !reachedStart ? link : undefined;
+        if (rows.length) options.archive.importMetadata("outlook", account, rows.map((r: any) => ({ ...r, body: undefined })));
+      }
+      const times = rows.map((r: any) => provider === "gmail" ? Number(r.internalDate) : Date.parse(r.receivedDateTime)).filter(Number.isFinite);
+      const oldest = times.length ? new Date(Math.min(...times)).toISOString() : state.oldest;
+      const newest = times.length ? new Date(Math.max(...times)).toISOString() : undefined;
+      // The count is what the archive really holds, so repeat passes never double count.
+      const imported = stored(provider, account) || state.imported + rows.length;
+      state = patch(provider, {
+        account, imported, cursor: next,
+        oldest: oldest && (!state.oldest || oldest < state.oldest) ? oldest : state.oldest,
+        newest: newest && (!state.newest || newest > state.newest) ? newest : state.newest,
+        estimate: next ? backfillEstimate(imported, state.since, oldest, now()) : imported,
+      });
+      if (!next) return "done";
+    }
+    return "more";
   }
 
   async function drain(provider: MailProvider) {

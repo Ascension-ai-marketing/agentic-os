@@ -29,6 +29,8 @@ function fixture() {
     limits: undefined as OpenclawLimits | undefined,
     /** What the made-up OpenClaw was asked to run, and what it answers. */
     clawRuns: [] as { args: string[]; input?: string }[],
+    /** The settings file the OS wrote before each run. */
+    clawSettings: [] as { file: string; text: string }[],
     /** Held open until a test lets the made-up run finish. */
     clawWait: Promise.resolve(),
     clawAnswer: { code: 0, stdout: JSON.stringify({ ok: true, status: "ok", final: "Done: three competitors listed in prices.md.", costUsd: 0.25 }), stderr: "" },
@@ -47,7 +49,7 @@ function fixture() {
     return path === "/__token" ? Response.json({ token: "fixture-token-0123456789" }) : world.os(path, body);
   };
   // The real adapter over a made-up command, so its own checks run; "not installed" is the one answer it cannot give here.
-  const claw = openclaw({ run: async (args, options) => { world.clawRuns.push({ args, input: options?.input }); await world.clawWait; return world.clawAnswer; } });
+  const claw = openclaw({ root: "/os", save: (file, text) => world.clawSettings.push({ file, text }), run: async (args, options) => { world.clawRuns.push({ args, input: options?.input }); await world.clawWait; return world.clawAnswer; } });
   const ceoClaw = {
     workerProblem: (context?: Parameters<typeof claw.workerProblem>[0]) => (world.openclawInstalled ? claw.workerProblem(context) : NOT_INSTALLED),
     work: (input: Parameters<typeof claw.work>[0]) => claw.work({ ...input, makeFolder: () => {} }),
@@ -222,7 +224,7 @@ test("the next reply can wait for work still being handed out, and a turn answer
   expect(store.tasks()).toHaveLength(1);
 });
 
-const AGREED: OpenclawLimits = { folder: "/Users/sample/agents/openclaw", minutes: 10, tasksPerDay: 2, dollarsPerDay: 1 };
+const AGREED: OpenclawLimits = { folder: "/Users/sample/agents/openclaw", model: "openai/sample-model", minutes: 10, tasksPerDay: 2, dollarsPerDay: 1 };
 const settle = () => new Promise((done) => setTimeout(done, 20));
 
 test("with limits agreed, OpenClaw takes one task at a time and its result lands in the records", async () => {
@@ -234,6 +236,10 @@ test("with limits agreed, OpenClaw takes one task at a time and its result lands
   expect(said).toBe(`Handed to OpenClaw as "Competitor prices". It works in its own folder, ${AGREED.folder}/${task.id}, for up to 10 minutes; task_status reports on it.`);
   expect(world.clawRuns).toHaveLength(1);
   expect(world.clawRuns[0].args.slice(0, 2)).toEqual(["agent", "exec"]);
+  // It runs under the settings the OS wrote for it, never OpenClaw's everyday ones.
+  expect(world.clawSettings).toHaveLength(1);
+  expect(world.clawRuns[0].args).toContain(world.clawSettings[0].file);
+  expect(JSON.parse(world.clawSettings[0].text).tools.allow).toEqual(["read", "write", "edit"]);
   expect(world.clawRuns[0].input).toContain("Never send, post, publish, book, buy or message anyone.");
   expect(world.clawRuns[0].input).toEndWith(`The task:\n${TASK}`);
   await settle();

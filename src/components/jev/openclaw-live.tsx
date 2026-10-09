@@ -9,23 +9,33 @@ import { operatorRequest } from "@/lib/operator";
 type Status = {
   installed: boolean;
   version?: string;
+  model?: string;
   gateway?: "running" | "stopped" | "unknown";
+  localOnly?: boolean;
   address?: string;
 };
 type Limits = {
   folder: string;
+  model?: string;
   minutes: number;
   tasksPerDay: number;
   dollarsPerDay: number;
   agreedAt?: string;
 };
-type Reply = { openclaw: Status; limits: Limits | null; suggested: Limits | null };
+type Reply = {
+  openclaw: Status;
+  limits: Limits | null;
+  suggested: Limits | null;
+  settings: unknown;
+};
 
 const TONE = "#EF4444";
+/** A model as a person reads it: without the sign-in OpenClaw notes after the @. */
+const plain = (model: string) => model.split("@")[0];
 const GATEWAY: Record<NonNullable<Status["gateway"]>, string> = {
   running: "Running",
   stopped: "Not running",
-  unknown: "Not checked yet",
+  unknown: "Could not be checked",
 };
 
 function Fact({ label, value, on }: { label: string; value: string; on?: boolean }) {
@@ -75,14 +85,38 @@ function Field({
   );
 }
 
+/** The whole settings file a hand-off runs under, for the person to read before agreeing. */
+function Settings({ settings }: { settings: unknown }) {
+  if (!settings) return null;
+  return (
+    <details className="mt-3 text-xs text-muted-foreground">
+      <summary className="cursor-pointer">See the exact settings each task runs under</summary>
+      <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-border bg-background p-3 text-[11px] leading-relaxed">
+        {JSON.stringify(settings, null, 2)}
+      </pre>
+    </details>
+  );
+}
+
 /** The limits, to agree to or as agreed. */
-function LimitsPanel({ limits, suggested }: { limits: Limits | null; suggested: Limits | null }) {
+function LimitsPanel({
+  limits,
+  suggested,
+  model,
+  settings,
+}: {
+  limits: Limits | null;
+  suggested: Limits | null;
+  model?: string;
+  settings: unknown;
+}) {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<Record<keyof Limits, string> | null>(null);
   useEffect(() => {
     if (suggested && !draft)
       setDraft({
         folder: suggested.folder,
+        model: "",
         minutes: String(suggested.minutes),
         tasksPerDay: String(suggested.tasksPerDay),
         dollarsPerDay: String(suggested.dollarsPerDay),
@@ -106,10 +140,19 @@ function LimitsPanel({ limits, suggested }: { limits: Limits | null; suggested: 
           <Fact label="Each day" value={`${limits.tasksPerDay} tasks`} />
           <Fact label="Spend a day" value={`$${limits.dollarsPerDay}`} />
         </div>
+        <p className="mt-4 text-xs text-muted-foreground">
+          Each task gets its own folder in there and can read, write and edit files in it, with{" "}
+          {limits.model ? plain(limits.model) : "the agreed model"}. No commands, no browser, no
+          web, no messaging, and none of the accounts connected to OpenClaw.
+          {model && limits.model && model !== limits.model
+            ? ` OpenClaw itself now uses ${plain(model)}; withdraw and agree again to hand work to that one.`
+            : ""}
+        </p>
+        <Settings settings={settings} />
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
             Agreed {limits.agreedAt ? new Date(limits.agreedAt).toLocaleString() : ""}. One task at
-            a time; it never sends or posts on its own.
+            a time.
           </p>
           <button
             className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium"
@@ -127,10 +170,14 @@ function LimitsPanel({ limits, suggested }: { limits: Limits | null; suggested: 
   return (
     <div className="mt-5 border-t border-border pt-4">
       <p className="mb-3 text-xs text-muted-foreground">
-        Jarvis hands OpenClaw nothing until you agree to these. Each task runs once, headless, in
-        its own folder inside the one below, with no channel to send through. Its file tools stay in
-        that folder. It can also run shell commands and use a browser, so keep its elevated tools
-        off in OpenClaw.
+        Jarvis hands OpenClaw nothing until you agree to these. Each task runs once, in its own
+        folder inside the one below, under settings the OS writes for that run: it can read, write
+        and edit files in that folder and nothing else. No commands, no browser, no web, no
+        messaging, and none of the accounts connected to OpenClaw. Your own OpenClaw settings are
+        not changed.{" "}
+        {model
+          ? `It works with ${plain(model)}, the model OpenClaw uses now.`
+          : "The OS could not read which model OpenClaw uses, so there is nothing to agree to yet."}
       </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Field label="Work folder" value={draft.folder} onChange={set("folder")} wide />
@@ -146,11 +193,12 @@ function LimitsPanel({ limits, suggested }: { limits: Limits | null; suggested: 
       <button
         className="mt-4 rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
         style={{ background: TONE }}
-        disabled={change.isPending}
+        disabled={change.isPending || !model}
         onClick={() =>
           change.mutate({
             agree: true,
             folder: draft.folder.trim(),
+            model,
             minutes: Number(draft.minutes),
             tasksPerDay: Number(draft.tasksPerDay),
             dollarsPerDay: Number(draft.dollarsPerDay),
@@ -159,6 +207,7 @@ function LimitsPanel({ limits, suggested }: { limits: Limits | null; suggested: 
       >
         Agree: let Jarvis hand OpenClaw work within these limits
       </button>
+      <Settings settings={settings} />
       {error}
     </div>
   );
@@ -168,7 +217,7 @@ export function OpenClawLive() {
   const live = useQuery({
     queryKey: ["operator-ceo-openclaw"],
     queryFn: () => operatorRequest<Reply>("/ceo/openclaw"),
-    refetchInterval: 15_000,
+    refetchInterval: 30_000,
     retry: false,
   });
   const status = live.data?.openclaw;
@@ -210,7 +259,10 @@ export function OpenClawLive() {
             />
             <Fact
               label="Gateway"
-              value={GATEWAY[status.gateway ?? "unknown"]}
+              value={
+                GATEWAY[status.gateway ?? "unknown"] +
+                (status.gateway === "running" && status.localOnly ? ", this computer only" : "")
+              }
               on={status.gateway === "running"}
             />
             <Fact
@@ -224,6 +276,8 @@ export function OpenClawLive() {
           <LimitsPanel
             limits={live.data?.limits ?? null}
             suggested={live.data?.suggested ?? null}
+            model={status.model}
+            settings={live.data?.settings ?? null}
           />
         </>
       )}

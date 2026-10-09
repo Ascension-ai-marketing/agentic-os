@@ -50,6 +50,7 @@ import { memoryConnectAll } from "./memory-connect-all";
 import { chatgptTarget, extractChatgptExport, findChatgptExportZip, importUploadedExport } from "./chatgpt-export";
 import { nativeInboxSync } from "./native-inbox-sync";
 import { nativeCalendarSync } from "./native-calendar-sync";
+import type { CalendarCoverage } from "./calendar-read";
 import { MERCURY_TOOLS, nativeBusinessSync } from "./native-business-sync";
 import { mcpConnection } from "./mcp-connection";
 import { youtubeComments as createYouTubeComments } from "./youtube-comments";
@@ -492,7 +493,10 @@ export function operatorPlugin({
       sync: () => accounts.handle("/connections/sync", "POST", { provider: "slack" }, undefined) as Promise<{ messages: number }>,
     },
   } });
-  const nativeCalendar = nativeCalendarSync(root, { load, save });
+  const nativeCalendar = nativeCalendarSync(root, { lane: {
+    account: async () => ((await accounts.handle("/connections", "GET", {}, undefined)) as any).accounts?.find((a: any) => a.id === "google") || { connected: false },
+    sync: input => accounts.handle("/connections/sync", "POST", { provider: "google", calendarOnly: true, ...input }, undefined) as Promise<{ events: number; coverage?: CalendarCoverage }>,
+  } });
   const mcp = {
     notion: mcpConnection({ name: "Notion", url: "https://mcp.notion.com/mcp", storePath: join(root, ".operator-data", "mcp", "notion.json"), allowedTools: NOTION_TOOLS, allowText: true }),
     // "read" keeps the grant read-only; "offline_access" lets the app refresh it.

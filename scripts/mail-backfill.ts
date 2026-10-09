@@ -18,6 +18,8 @@ export type BackfillState = {
   oldest?: string;
   newest?: string;
   cursor?: string | number;
+  /** Set when this reader saved the cursor. A cursor without it came from the earlier reader and is not sent. */
+  cursorFrom?: "account";
   startedAt?: string;
   updatedAt?: string;
   doneAt?: string;
@@ -91,8 +93,8 @@ export function mailBackfill(
     let state = read()[provider]!;
     if (state.account && state.account !== account) throw new Error("A different account is signed in now. Start the import again.");
     const sinceMs = Date.parse(state.since);
-    // A numeric cursor is a leftover from the earlier reader; restart paging (imports are idempotent).
-    if (typeof state.cursor !== "string") state = patch(provider, { cursor: undefined });
+    // A cursor the earlier reader saved means something else; restart paging (imports are idempotent).
+    if (typeof state.cursor !== "string" || state.cursorFrom !== "account") state = patch(provider, { cursor: undefined, cursorFrom: undefined });
     for (let page = 0; page < PAGES_PER_SESSION[provider]; page++) {
       let rows: any[] = [], next: string | undefined;
       const cursor = typeof state.cursor === "string" ? state.cursor : "";
@@ -124,7 +126,7 @@ export function mailBackfill(
       // The count is what the archive really holds, so repeat passes never double count.
       const imported = stored(provider, account) || state.imported + rows.length;
       state = patch(provider, {
-        account, imported, cursor: next,
+        account, imported, cursor: next, cursorFrom: next ? "account" : undefined,
         oldest: oldest && (!state.oldest || oldest < state.oldest) ? oldest : state.oldest,
         newest: newest && (!state.newest || newest > state.newest) ? newest : state.newest,
         estimate: next ? backfillEstimate(imported, state.since, oldest, now()) : imported,
@@ -145,7 +147,7 @@ export function mailBackfill(
       }
       // Out of rounds with pages left: keep the cursor so the next start carries on.
       if (!finished) patch(provider, { status: "waiting", error: undefined });
-      else patch(provider, { status: "done", doneAt: new Date(now()).toISOString(), cursor: undefined, error: undefined });
+      else patch(provider, { status: "done", doneAt: new Date(now()).toISOString(), cursor: undefined, cursorFrom: undefined, error: undefined });
     } catch (error) {
       patch(provider, { status: "error", error: (error as Error).message });
     } finally {
@@ -176,6 +178,7 @@ export function mailBackfill(
           error: undefined,
           // A catch-up pass reads from the newest message back to the last one we hold.
           cursor: firstPass ? prior?.cursor : undefined,
+          cursorFrom: firstPass ? prior?.cursorFrom : undefined,
         });
         running.add(provider);
         started.push(provider);

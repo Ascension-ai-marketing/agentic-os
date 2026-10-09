@@ -26,7 +26,8 @@ import { providerKey } from "./provider-config";
 export type Finding = { area: string; status: "ok" | "warn" | "fail"; says: string; fix?: string };
 /** What the probes saw. Every field is optional, so a probe that could not run leaves a gap rather than a guess. */
 export type Seen = {
-  jobs?: Partial<Record<JobName, { loaded: boolean; answered: boolean; ms: number }>>;
+  /** `listening` is false when nothing took the connection at all, as opposed to a page that never came back. */
+  jobs?: Partial<Record<JobName, { loaded: boolean; answered: boolean; ms: number; listening?: boolean }>>;
   logs?: Partial<Record<JobName, string>>;
   claude?: { installed: boolean; ready: boolean; detail: string; ms: number };
   anthropicKey?: boolean;
@@ -66,9 +67,12 @@ export function diagnose(seen: Seen): Finding[] {
   for (const name of JOB_NAMES) {
     const job = seen.jobs?.[name];
     if (!job) continue;
-    const area = name === "brain" ? "Jarvis's brain" : name === "tunnel" ? "Public tunnel" : "Dashboard";
+    const area = name === "brain" ? "Jarvis's brain" : name === "tunnel" ? "Tunnel job" : "Dashboard";
     if (!job.loaded) found.push({ area, status: "fail", says: "The background job is not installed, so nothing keeps it running.", fix: RESTART(name) });
-    else if (!job.answered) found.push({ area, status: "fail", says: `Installed, but it did not answer within ${Math.round(job.ms / 1000)} s.`,
+    else if (!job.answered) found.push({ area, status: "fail",
+      says: job.listening === false
+        ? `Installed, but nothing was listening on its port for ${Math.round(job.ms / 1000)} s: it stopped, or keeps failing to start.`
+        : `Installed, but it did not answer within ${Math.round(job.ms / 1000)} s.`,
       fix: `Look at the end of its log: tail -n 40 .operator-data/ceo/logs/${name}.log. To restart it: ${RESTART(name)}` });
     else found.push({ area, status: job.ms > 5000 ? "warn" : "ok", says: job.ms > 5000 ? `Answering, but slowly (${(job.ms / 1000).toFixed(1)} s).` : "Running and answering." });
   }
@@ -126,7 +130,18 @@ async function timed<T>(work: () => Promise<T>) {
 
 /** Asks this computer, and only this computer, what is running. */
 async function look(root: string): Promise<Seen> {
-  const answers = (url: string) => timed(() => fetch(url, { signal: AbortSignal.timeout(15_000) }).then((r) => r.ok, () => false));
+  // A job restarted a moment ago refuses connections until it is up, so a refusal is asked again for a while
+  // before it counts. A connection that is taken but never answered is not asked again.
+  const answers = (url: string) => timed(async () => {
+    const until = Date.now() + 30_000;
+    for (;;) {
+      const tried = Date.now();
+      const answer = await fetch(url, { signal: AbortSignal.timeout(15_000) }).then((r) => r.ok, (error: Error) => (error.name === "TimeoutError" ? "slow" : "refused"));
+      if (answer === true || answer === false) return { answered: answer, listening: true };
+      if (answer === "slow" || Date.now() >= until) return { answered: false, listening: answer === "slow" };
+      await Bun.sleep(Math.max(0, 1000 - (Date.now() - tried)));
+    }
+  });
   const urls: Record<JobName, string> = { brain: `http://127.0.0.1:${BRAIN_PORT}/health`, tunnel: "http://127.0.0.1:4040/api/tunnels", dashboard: `http://127.0.0.1:${DASHBOARD_PORT}/` };
   const domain = `gui/${process.getuid?.() ?? 501}`;
   const jobs: Seen["jobs"] = {}, logs: Seen["logs"] = {};
@@ -134,7 +149,7 @@ async function look(root: string): Promise<Seen> {
   if (process.platform === "darwin") await Promise.all(JOB_NAMES.map(async (name) => {
     const { value, ms } = await answers(urls[name]);
     const loaded = spawnSync("launchctl", ["print", `${domain}/${LABELS[name]}`]).status === 0;
-    jobs[name] = { loaded, answered: value, ms };
+    jobs[name] = { loaded, ...value, ms };
     logs[name] = tail(join(root, ".operator-data", "ceo", "logs", `${name}.log`));
   }));
 

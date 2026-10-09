@@ -29,6 +29,13 @@ test("a job that is installed but does not answer is the first thing to fix, wit
   expect(statuses({ ...healthy, jobs: { ...healthy.jobs, dashboard: { loaded: true, answered: true, ms: 9000 } } })[0]).toBe("warn Dashboard");
 });
 
+test("a job with nothing listening is told apart from one that took the connection and never answered", () => {
+  const [refused] = diagnose({ ...healthy, jobs: { ...healthy.jobs, brain: { loaded: true, answered: false, listening: false, ms: 30_400 } } });
+  expect(refused.says).toBe("Installed, but nothing was listening on its port for 30 s: it stopped, or keeps failing to start.");
+  const [slow] = diagnose({ ...healthy, jobs: { ...healthy.jobs, brain: { loaded: true, answered: false, listening: true, ms: 15_000 } } });
+  expect(slow.says).toBe("Installed, but it did not answer within 15 s.");
+});
+
 test("credits that ran out since the brain last started are named, with where to add them", () => {
   const [first] = diagnose({ ...healthy, logs: { brain: BANNER + CREDITS } });
   expect(first.status).toBe("fail");

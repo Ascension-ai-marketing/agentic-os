@@ -15,6 +15,7 @@
  *   bun run install:ceo --apply            # install and start them
  *   bun run install:ceo --only brain       # limit either of the above (brain, tunnel, dashboard)
  *   bun run install:ceo --status           # what is loaded and what answers
+ *   bun run doctor                         # what is wrong, and what to do about it
  *   bun run uninstall:ceo                  # stop and remove them
  *
  * The tunnel job carries no ngrok token: ngrok reads its own config file.
@@ -125,7 +126,8 @@ if (import.meta.main) {
       console.log(`Removed ${LABELS[name]}.`);
     }
   } else if (process.argv.includes("--status")) {
-    const answers = async (url: string) => { try { return (await fetch(url, { signal: AbortSignal.timeout(2000) })).ok; } catch { return false; } };
+    // The dashboard's first page after a restart can take several seconds; two would call a slow start "not answering".
+    const answers = async (url: string) => { try { return (await fetch(url, { signal: AbortSignal.timeout(10_000) })).ok; } catch { return false; } };
     const up: Record<JobName, boolean> = {
       brain: await answers(`http://127.0.0.1:${BRAIN_PORT}/health`),
       tunnel: await answers("http://127.0.0.1:4040/api/tunnels"),

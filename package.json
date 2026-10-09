@@ -14,6 +14,7 @@
   "type": "module",
   "scripts": {
     "setup": "bun run scripts/setup.ts",
+    "doctor": "bun run scripts/doctor.ts",
     "dev": "bun run seed:data && vite dev --open",
     "voice": "bun run voice-lab/server.ts",
     "build": "bun run seed:data && vite build",

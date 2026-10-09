@@ -250,3 +250,21 @@ test("skills keep a description written as a YAML block", () => {
   expect(meta["/folded"]).toBe("Agent skill · Build a film from scratch.");
   expect(meta["/plain"]).toBe("Agent skill · One line");
 });
+
+test("a Hermes chat is titled by what was asked, not the chat-window instruction", async () => {
+  const home = tempHome();
+  const dir = join(home, ".hermes");
+  mkdirSync(dir, { recursive: true });
+  const db = new Database(join(dir, "state.db"));
+  db.run(`CREATE TABLE sessions (id TEXT, source TEXT, model TEXT, title TEXT, message_count INTEGER,
+    started_at REAL, ended_at REAL, last_activity_at REAL, archived INTEGER)`);
+  db.run(`CREATE TABLE messages (id INTEGER PRIMARY KEY, session_id TEXT, role TEXT, content TEXT)`);
+  db.run(`INSERT INTO sessions VALUES ('s1','oneshot','m','[How to answer in this chat window] When you… #8',2,1790000000,NULL,NULL,0)`);
+  db.run(`INSERT INTO messages (session_id, role, content) VALUES ('s1','user',?)`, [
+    "[How to answer in this chat window] When you produce code, include it in your reply.\n\n---\n\nBack Hermes up to a private repo\n\nThen confirm.",
+  ]);
+  db.close();
+  const [record] = (await readHermesStream(home)).records;
+  expect(record.title).toBe("Back Hermes up to a private repo");
+  expect(record.preview).toBe("Back Hermes up to a private repo");
+});

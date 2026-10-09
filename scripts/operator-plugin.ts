@@ -51,7 +51,8 @@ import { memoryConnectAll } from "./memory-connect-all";
 import { chatgptTarget, extractChatgptExport, findChatgptExportZip, importUploadedExport } from "./chatgpt-export";
 import { nativeInboxSync } from "./native-inbox-sync";
 import { nativeCalendarSync } from "./native-calendar-sync";
-import { nativeBusinessSync } from "./native-business-sync";
+import { MERCURY_TOOLS, nativeBusinessSync } from "./native-business-sync";
+import { mcpConnection } from "./mcp-connection";
 import { youtubeComments as createYouTubeComments } from "./youtube-comments";
 import { replyOutbox as createReplyOutbox } from "./reply-outbox";
 import { voiceRules as createVoiceRules } from "./voice-rules";
@@ -486,7 +487,12 @@ export function operatorPlugin({
   const archive = mailArchive(root);
   const nativeInbox = nativeInboxSync(root, { load, save, archive });
   const nativeCalendar = nativeCalendarSync(root, { load, save });
-  const nativeBusiness = nativeBusinessSync(root);
+  const mcp = {
+    // "read" keeps the grant read-only; "offline_access" lets the app refresh it.
+    mercury: mcpConnection({ name: "Mercury", url: "https://mcp.mercury.com/mcp", storePath: join(root, ".operator-data", "mcp", "mercury.json"), allowedTools: MERCURY_TOOLS, scopes: ["read", "offline_access"] }),
+  };
+  const mcpRedirect = (id: keyof typeof mcp) => `http://localhost:${Number(process.env.ARGENTIC_PORT || 8081)}/__operator/connections/callback/mcp-${id}`;
+  const nativeBusiness = nativeBusinessSync(root, { read: mcp.mercury.read, connected: () => mcp.mercury.status().connected });
   let mailSync: ReturnType<typeof createMailSync> | undefined;
   const getMailSync = () => mailSync ??= createMailSync({ root, archive, identity: accounts.mailIdentity, request: accounts.readMail });
   const providerMail = mailProvider({ archive, identity: accounts.mailIdentity, request: accounts.readMail });

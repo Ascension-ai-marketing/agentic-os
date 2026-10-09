@@ -1,4 +1,6 @@
-import { withConnectedRead } from "./codex-connected-read";
+import type { McpClient, McpReader } from "./mcp-connection";
+
+export const MERCURY_TOOLS = ["getAccounts", "listTransactions"] as const;
 
 const clean = (value: unknown, max: number) => typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max) : "";
 
@@ -18,7 +20,7 @@ export function mercuryBalances(raw: any, observedAt = new Date().toISOString())
     const currency = typeof reportedCurrency === "string" && /^[A-Z]{3}$/.test(reportedCurrency) ? reportedCurrency : "USD";
     return { name, balance: account.currentBalance, currency, sourceId: id.slice(-12) };
   });
-  return { accounts, recordedAt: observedAt, sourceLabel: "Mercury via Codex · current balances", sourceUrl: "https://app.mercury.com/" };
+  return { accounts, recordedAt: observedAt, sourceLabel: "Mercury · current balances", sourceUrl: "https://app.mercury.com/" };
 }
 
 export const INCOME_WINDOW_DAYS = 30;
@@ -83,16 +85,16 @@ export function mercuryMonthlyIncome(pages: any[], options: { ownAccountIds?: st
   return { amount: Math.round(amount * 100) / 100, currency: "USD", days: INCOME_WINDOW_DAYS, recordedAt: now.toISOString(), transactions, windowStart: new Date(start).toISOString(), windowEnd: new Date(end).toISOString() , today: { amount: Math.round(todayAmount * 100) / 100, transactions: todayCount }, week: { amount: Math.round(weekAmount * 100) / 100, transactions: weekCount } };
 }
 
-export function nativeBusinessSync(root: string, options: { connectedRead?: typeof withConnectedRead; now?: () => Date } = {}) {
-  const connectedRead = options.connectedRead || withConnectedRead;
+export function nativeBusinessSync(root: string, options: { read: McpReader; connected?: () => boolean; now?: () => Date }) {
+  const read = options.read;
   let cache: { at: number; value: any } | undefined, pending: Promise<any> | undefined;
   const clock = () => options.now?.() || new Date();
-  const readIncome = async (client: { tools: Record<string, any>; call: (name: string, args: unknown) => Promise<any> }, ownAccountIds: string[]) => {
+  const readIncome = async (client: McpClient, ownAccountIds: string[]) => {
     const now = clock(), start = new Date(now.getTime() - INCOME_WINDOW_DAYS * 86400000);
     const pages: any[] = [];
     let cursor: string | undefined;
     for (let index = 0; index < INCOME_MAX_PAGES; index++) {
-      const page = await client.call("mercury.listTransactions", { status: ["sent"], start: start.toISOString(), end: now.toISOString(), limit: INCOME_PAGE_SIZE, order: "desc", ...(cursor ? { start_after: cursor } : {}) });
+      const page = await client.call("listTransactions", { status: ["sent"], start: start.toISOString(), end: now.toISOString(), limit: INCOME_PAGE_SIZE, order: "desc", ...(cursor ? { start_after: cursor } : {}) });
       pages.push(page);
       const list = transactionList(page);
       if (!list || list.length < INCOME_PAGE_SIZE) break;
@@ -104,23 +106,22 @@ export function nativeBusinessSync(root: string, options: { connectedRead?: type
   };
   return {
     async status(force = false) {
+      if (options.connected && !options.connected()) return { mercury: { available: false, transactions: false, requiresSignIn: true }, checkedAt: new Date().toISOString() };
       if (force) cache = undefined;
       if (cache && Date.now() - cache.at < 60000) return cache.value;
-      if (!pending) pending = connectedRead(root, async ({ tools }) => {
-        const readable = (prefix: string) => Object.entries(tools).some(([name, tool]) => name.startsWith(`${prefix}.`) && tool.annotations?.readOnlyHint === true && tool.annotations?.destructiveHint !== true);
-        const mercury = tools["mercury.getAccounts"];
+      if (!pending) pending = read(async ({ tools }) => {
         const readOnly = (name: string) => tools[name]?.annotations?.readOnlyHint === true && tools[name]?.annotations?.destructiveHint !== true;
-        return { mercury: { available: mercury?.annotations?.readOnlyHint === true && mercury.annotations?.destructiveHint !== true, transactions: readOnly("mercury.listTransactions") }, notion: { available: ["notion.notion-list-recent-pages", "notion.fetch"].every(readOnly), importSupported: true }, granola: { available: ["granola.list_meetings", "granola.get_meetings"].every(name => tools[name]?.annotations?.readOnlyHint === true && tools[name]?.annotations?.destructiveHint !== true), importSupported: true }, paypal: { available: readable("paypal"), importSupported: false }, stripe: { available: readable("stripe"), importSupported: false }, instagram: { available: readable("instagram"), importSupported: false }, tiktok: { available: readable("tiktok"), importSupported: false }, checkedAt: new Date().toISOString() };
+        return { mercury: { available: readOnly("getAccounts"), transactions: readOnly("listTransactions"), requiresSignIn: false }, checkedAt: new Date().toISOString() };
       }).then(value => { cache = { at: Date.now(), value }; return value; }).finally(() => { pending = undefined; });
       return pending;
     },
     async balances() {
-      return connectedRead(root, async client => mercuryBalances(await client.call("mercury.getAccounts", { limit: 50, order: "asc" }), clock().toISOString()));
+      return read(async client => mercuryBalances(await client.call("getAccounts", { limit: 50, order: "asc" }), clock().toISOString()));
     },
     /** Balances plus trailing-month income from one short session. A failed income read never blocks the balance import. */
     async financeSnapshot(): Promise<ReturnType<typeof mercuryBalances> & { monthlyIncome?: MonthlyIncome; monthlyIncomeError?: string }> {
-      return connectedRead(root, async client => {
-        const raw = await client.call("mercury.getAccounts", { limit: 50, order: "asc" });
+      return read(async client => {
+        const raw = await client.call("getAccounts", { limit: 50, order: "asc" });
         const balances = mercuryBalances(raw, clock().toISOString());
         const ownAccountIds = (raw.accounts as any[]).map(account => clean(account?.id, 100));
         try { return { ...balances, monthlyIncome: await readIncome(client, ownAccountIds) }; }
@@ -129,8 +130,8 @@ export function nativeBusinessSync(root: string, options: { connectedRead?: type
     },
     /** Trailing-month income only, for a lighter refresh when balances are already fresh. */
     async monthlyIncome() {
-      return connectedRead(root, async client => {
-        const raw = await client.call("mercury.getAccounts", { limit: 50, order: "asc" });
+      return read(async client => {
+        const raw = await client.call("getAccounts", { limit: 50, order: "asc" });
         mercuryBalances(raw, clock().toISOString());
         return readIncome(client, (raw.accounts as any[]).map(account => clean(account?.id, 100)));
       });

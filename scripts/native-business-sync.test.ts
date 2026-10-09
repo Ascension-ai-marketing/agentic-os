@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { INCOME_MAX_PAGES, INCOME_PAGE_SIZE, mercuryBalances, mercuryMonthlyIncome, nativeBusinessSync } from "./native-business-sync";
-import type { withConnectedRead } from "./codex-connected-read";
+import type { McpReader } from "./mcp-connection";
 
 const account = { id: "account-123", name: "Checking", currentBalance: 120.5, availableBalance: 119, accountNumber: "SENSITIVE", routingNumber: "PRIVATE" };
 test("Mercury minimizes the balance snapshot and never invents currency", () => {
@@ -12,22 +12,29 @@ test("Mercury minimizes the balance snapshot and never invents currency", () => 
 test("partial, duplicate and invalid balances cannot replace saved data", () => {
   for (const raw of [{ accounts: [] }, { accounts: [account], page: { next_cursor: "next" } }, { accounts: [account, account] }, { accounts: [{ ...account, currentBalance: null }] }, { accounts: Array(50).fill(account) }]) expect(() => mercuryBalances(raw)).toThrow();
 });
-test("discovery reads metadata only and balance sync uses the single allowed account tool", async () => {
+test("status reports Mercury only, from tool metadata, and never calls a tool", async () => {
   const calls: string[] = [];
-  const connectedRead = (async (_root: string, work: any) => work({ tools: { "mercury.getAccounts": { annotations: { readOnlyHint: true } }, "granola.list_meetings": { annotations: { readOnlyHint: true } }, "granola.get_meetings": { annotations: { readOnlyHint: true } } }, call: async (name: string, args: any) => { calls.push(name); expect(args).toEqual({ limit: 50, order: "asc" }); return { accounts: [account] }; } })) as typeof withConnectedRead;
-  const service = nativeBusinessSync("/synthetic", { connectedRead });
-  const status = await service.status();
-  expect(status.mercury.available).toBe(true); expect(status.granola).toEqual({ available: true, importSupported: true }); expect(status.tiktok.available).toBe(false); expect(calls).toEqual([]);
-  await service.balances(); expect(calls).toEqual(["mercury.getAccounts"]);
+  const read = (async (work: any) => work({ tools: { getAccounts: { name: "getAccounts", annotations: { readOnlyHint: true } } }, call: async (name: string) => { calls.push(name); return { accounts: [account], page: {} }; } })) as McpReader;
+  const service = nativeBusinessSync("/synthetic", { read });
+  expect(await service.status()).toMatchObject({ mercury: { available: true, transactions: false, requiresSignIn: false } });
+  expect(Object.keys(await service.status())).toEqual(["mercury", "checkedAt"]);
+  expect(calls).toEqual([]);
+  await service.balances(); expect(calls).toEqual(["getAccounts"]);
 });
-
-test("manual rescan refreshes Granola tool availability instead of returning an old miss", async () => {
-  let connected = false, probes = 0;
-  const connectedRead = (async (_root, work) => { probes++; return work({tools: connected ? {"granola.list_meetings":{name:"granola.list_meetings",annotations:{readOnlyHint:true}},"granola.get_meetings":{name:"granola.get_meetings",annotations:{readOnlyHint:true}}} : {},call:async()=>{throw Error("Metadata only");}}); }) as typeof withConnectedRead;
-  const service=nativeBusinessSync("/synthetic",{connectedRead});
-  expect((await service.status()).granola.available).toBe(false); connected=true;
-  expect((await service.status()).granola.available).toBe(false); expect(probes).toBe(1);
-  expect((await service.status(true)).granola.available).toBe(true); expect(probes).toBe(2);
+test("a signed-out Mercury connection is unavailable without opening a session", async () => {
+  let sessions = 0;
+  const read = (async () => { sessions++; throw new Error("unreachable"); }) as unknown as McpReader;
+  const service = nativeBusinessSync("/synthetic", { read, connected: () => false });
+  expect(await service.status()).toMatchObject({ mercury: { available: false, transactions: false, requiresSignIn: true } });
+  expect(sessions).toBe(0);
+});
+test("a forced status check bypasses the one-minute cache", async () => {
+  let probes = 0, listed = false;
+  const read = (async (work: any) => { probes++; return work({ tools: listed ? { getAccounts: { name: "getAccounts", annotations: { readOnlyHint: true } } } : {}, call: async () => ({}) }); }) as McpReader;
+  const service = nativeBusinessSync("/synthetic", { read });
+  expect((await service.status()).mercury.available).toBe(false); listed = true;
+  expect((await service.status()).mercury.available).toBe(false); expect(probes).toBe(1);
+  expect((await service.status(true)).mercury.available).toBe(true); expect(probes).toBe(2);
 });
 
 const transaction = (id: string, amount: number, extra: Record<string, unknown> = {}) => ({ id, amount, status: "sent", kind: "externalTransfer", createdAt: "2026-09-10T09:00:00Z", postedAt: "2026-09-10T12:00:00Z", counterpartyName: "PRIVATE_COUNTERPARTY", bankDescription: "PRIVATE_DESCRIPTION", dashboardLink: "https://app.mercury.com/PRIVATE", ...extra });
@@ -56,14 +63,14 @@ test("monthly income refuses unreadable, oversized or incomplete transaction pag
 test("finance snapshot reads balances then bounded transaction pages, and an income failure never blocks balances", async () => {
   const calls: Array<{ name: string; args: any }> = [];
   let pages: any[] = [];
-  const connectedRead = (async (_root: string, work: any) => work({ tools: {}, call: async (name: string, args: any) => { calls.push({ name, args }); if (name === "mercury.getAccounts") return { accounts: [account, { ...account, id: "account-456", name: "Savings" }] }; const page = pages.shift(); if (page instanceof Error) throw page; return page; } })) as typeof withConnectedRead;
-  const service = nativeBusinessSync("/synthetic", { connectedRead, now: () => now });
+  const read = (async (work: any) => work({ tools: {}, call: async (name: string, args: any) => { calls.push({ name, args }); if (name === "getAccounts") return { accounts: [account, { ...account, id: "account-456", name: "Savings" }] }; const page = pages.shift(); if (page instanceof Error) throw page; return page; } })) as typeof withConnectedRead;
+  const service = nativeBusinessSync("/synthetic", { read, now: () => now });
   const fullPage = Array.from({ length: INCOME_PAGE_SIZE }, (_, i) => transaction(`t${i}`, 1));
   pages = [{ transactions: fullPage }, { transactions: [transaction("last", 5), transaction("own", 99, { counterpartyId: "account-456" })] }];
   const snapshot = await service.financeSnapshot();
   expect(snapshot.accounts.map(a => a.name)).toEqual(["Checking", "Savings"]);
   expect(snapshot.monthlyIncome).toMatchObject({ amount: INCOME_PAGE_SIZE + 5, transactions: INCOME_PAGE_SIZE + 1, currency: "USD", days: 30 });
-  expect(calls.map(c => c.name)).toEqual(["mercury.getAccounts", "mercury.listTransactions", "mercury.listTransactions"]);
+  expect(calls.map(c => c.name)).toEqual(["getAccounts", "listTransactions", "listTransactions"]);
   expect(calls[1].args).toEqual({ status: ["sent"], start: "2026-08-18T10:00:00.000Z", end: "2026-09-17T10:00:00.000Z", limit: INCOME_PAGE_SIZE, order: "desc" });
   expect(calls[2].args.start_after).toBe(`t${INCOME_PAGE_SIZE - 1}`);
   expect(JSON.stringify(snapshot)).not.toMatch(/SENSITIVE|PRIVATE/);
@@ -73,5 +80,5 @@ test("finance snapshot reads balances then bounded transaction pages, and an inc
   calls.length = 0; pages = Array.from({ length: INCOME_MAX_PAGES + 2 }, () => ({ transactions: fullPage }));
   const capped = await service.financeSnapshot();
   expect(capped.monthlyIncome).toBeUndefined(); expect(capped.monthlyIncomeError).toMatch(/more transactions/);
-  expect(calls.filter(c => c.name === "mercury.listTransactions")).toHaveLength(INCOME_MAX_PAGES);
+  expect(calls.filter(c => c.name === "listTransactions")).toHaveLength(INCOME_MAX_PAGES);
 });

@@ -5,8 +5,8 @@ import { readChatStream } from "./chat-stream";
 
 const SESSIONS_KEY = "agentic.hermes.sessions.v1";
 
-/** The model Hermes runs on in the OS (30 Sep 2026): GPT-6.1 Sol through the Codex (ChatGPT) sign-in. */
-export const HERMES_MODEL = { model: "gpt-6.1-sol", provider: "openai-codex", label: "GPT-6.1 Sol" } as const;
+/** The model Hermes runs on in the OS (8 Oct 2026): Claude Opus 5.5 through the Anthropic (Claude) sign-in. */
+export const HERMES_MODEL = { model: "claude-opus-5-5", provider: "anthropic", label: "Claude Opus 5.5" } as const;
 
 function readSessions(): Record<string, string> {
   try {

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { NEVER_COMMANDS, NEVER_FLAGS, NOT_CLEARED, NOT_INSTALLED, openclaw, openclawPaths, pinnedConfig, pinnedFile, readGateway, readModel, workArgs, type Run } from "./ceo-openclaw";
+import { NEVER_COMMANDS, NEVER_FLAGS, NO_SIGN_IN, NOT_CLEARED, NOT_INSTALLED, openclaw, openclawPaths, pinnedConfig, pinnedFile, readGateway, readModel, workArgs, type Run } from "./ceo-openclaw";
 
 const HOME = "/Users/sample";
 /** A made-up OS folder; the settings file the OS writes for each run is kept under it. */
@@ -165,6 +165,8 @@ test("a run that timed out, failed or answered nonsense is told as failed, with 
   expect(await worker(2, { ok: false, status: "timeout", costUsd: 0.4 }).work()).toEqual({ status: "failed", note: "It was stopped at the 10-minute limit before it finished.", costUsd: 0.4 });
   expect(await worker(1, { ok: false, status: "error", error: { message: "No API key for openai.", kind: "auth" } }).work()).toEqual({ status: "failed", note: "No API key for openai." });
   expect(await worker(1, "garbage", "Error: config could not be parsed\n").work()).toEqual({ status: "failed", note: "Error: config could not be parsed" });
+  // What 2026.9.9 answers when the model's sign-in only works through Codex: told plainly, without the sign-in's name.
+  expect(await worker(1, { ok: false, status: "error", final: "", error: { message: 'Selected auth profile "openai:setup-1" is unavailable.', kind: "exception" } }).work()).toEqual({ status: "failed", note: NO_SIGN_IN });
 });
 
 test("only the fixed reads and the one work shape ever reach OpenClaw", async () => {

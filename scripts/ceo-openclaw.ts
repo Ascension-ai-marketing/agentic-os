@@ -89,6 +89,8 @@ export const NEVER_FLAGS = ["--deliver", "--channel", "--reply-channel", "--repl
 /** Never run, but for the two exact shapes above (the work turn and the model's name): these message people, connect accounts, change what OpenClaw may do, or print the gateway token. */
 export const NEVER_COMMANDS = ["message", "channels", "pairing", "dashboard", "configure", "onboard", "setup", "config", "approvals", "exec-approvals", "exec-policy", "doctor", "reset", "uninstall", "agent"];
 export const NOT_CLEARED = "OpenClaw is installed, but it is not cleared to take work from Jarvis yet: the person sets and agrees to its limits on the OpenClaw page in the OS. Hermes, Claude Code and Codex can take work.";
+/** Seen with 2026.9.9: a sign-in that works only through Codex is no use to OpenClaw's own runtime, which the pinned settings pick. */
+export const NO_SIGN_IN = "OpenClaw could not sign in to its model under the settings Jarvis hands it work with, so nothing ran. It needs a sign-in its own runtime can use, such as an API key; one that works only through Codex will not do.";
 export const NOT_INSTALLED = "OpenClaw is not installed on this computer yet, so nothing can be handed to it. Hermes, Claude Code and Codex can take work.";
 
 type Lookup = { home?: string; path?: string; exists?: (file: string) => boolean; list?: (folder: string) => string[] };
@@ -171,6 +173,8 @@ export function readResult(code: number, stdout: string, stderr: string, minutes
   if (code === 0 && envelope?.ok === true && envelope.status === "ok") return { status: "done", note: final.slice(-1500) || "It finished without a summary.", ...cost };
   if (code === 2 || envelope?.status === "timeout") return { status: "failed", note: `It was stopped at the ${minutes}-minute limit before it finished.`, ...cost };
   const why = typeof envelope?.error?.message === "string" ? envelope.error.message : stderr.trim().split("\n").at(-1) ?? "";
+  // In plain words, and without the name of the sign-in, which is nothing to read out.
+  if (/^Selected auth profile .* is unavailable\.?$/.test(why.trim())) return { status: "failed", note: NO_SIGN_IN, ...cost };
   return { status: "failed", note: why.slice(0, 600) || "It failed without saying why.", ...cost };
 }
 

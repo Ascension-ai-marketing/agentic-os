@@ -174,7 +174,9 @@ function LimitsPanel({
         folder inside the one below, under settings the OS writes for that run: it can read, write
         and edit files in that folder and nothing else. No commands, no browser, no web, no
         messaging, and none of the accounts connected to OpenClaw. Your own OpenClaw settings are
-        not changed.{" "}
+        not changed. OpenClaw's own runtime does the work, so its model needs a sign-in that runtime
+        can use, such as an API key; with one that works only through Codex, a task fails before
+        anything runs.{" "}
         {model
           ? `It works with ${plain(model)}, the model OpenClaw uses now.`
           : "The OS could not read which model OpenClaw uses, so there is nothing to agree to yet."}

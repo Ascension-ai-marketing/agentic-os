@@ -17,16 +17,9 @@ export function ThemeToggle() {
     const observer = new MutationObserver(() => {
       setIsDark(document.documentElement.classList.contains("dark"));
     });
+    // A change made in another page arrives through the root's storage listener (__root.tsx) as a class change.
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    const syncStoredTheme = (event: StorageEvent) => {
-      if (event.key !== "theme" || !event.newValue) return;
-      document.documentElement.classList.toggle("dark", event.newValue === "dark");
-    };
-    window.addEventListener("storage", syncStoredTheme);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("storage", syncStoredTheme);
-    };
+    return () => observer.disconnect();
   }, []);
 
   const toggle = (next: boolean) => {

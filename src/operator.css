@@ -66,6 +66,10 @@ body:has(.operator-shell) {
   width: 100%;
   height: 100%;
   padding: 26px 16px 16px;
+  /* A window too short for everything scrolls rather than cutting off Settings and the profile. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 .op-brand {
   display: flex;

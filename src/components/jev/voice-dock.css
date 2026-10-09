@@ -264,3 +264,23 @@
 /* "Say Jarvis": a quiet line under the orb while the page listens for the word. */
 .vd-text .vd-wake { font-size: 10.5px; letter-spacing: 0.02em; color: #a79fc4; padding: 0 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .vd-text .vd-wake[data-error] { color: #f0b8a8; }
+
+/* Short windows: the orb card and the menu tighten before the sidebar has to
+   scroll, so Settings and the profile stay in view on a laptop. The card is
+   zoomed whole, so the orb, its text and its controls keep their proportions;
+   a percentage width is not zoomed, so the width follows the zoom by hand. */
+@media (max-height: 960px) {
+  .op-sidebar .op-voice-slot { justify-content: center; padding: 6px 0 10px; }
+  .op-sidebar .vd { zoom: 0.74; width: 74%; }
+  .op-sidebar .op-nav-link { padding-block: 9px; margin-block: 2px; }
+  .op-sidebar .op-brand { padding-bottom: 24px; }
+}
+@media (max-height: 820px) {
+  .op-sidebar .vd { zoom: 0.62; width: 62%; }
+  .op-sidebar .op-sidebar-inner { padding-top: 18px; }
+  .op-sidebar .op-brand { padding-bottom: 16px; }
+  .op-sidebar .op-nav-caption { padding-block: 8px; }
+  .op-sidebar .op-nav-link { padding-block: 7px; margin-block: 1px; }
+  .op-sidebar .op-sidebar-bottom { margin-top: 10px; }
+  .op-sidebar .op-identity { padding-top: 12px; }
+}

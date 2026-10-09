@@ -1,4 +1,6 @@
-import { withConnectedRead } from "./codex-connected-read";
+import type { McpReader } from "./mcp-connection";
+
+export const NOTION_TOOLS = ["notion-list-recent-pages", "notion-fetch"] as const;
 
 const MAX_PAGES = 12, MAX_TEXT = 200_000;
 const clean = (value: unknown, max: number) => typeof value === "string" ? value.replace(/\p{Cc}/gu, " ").trim().slice(0, max) : "";
@@ -35,18 +37,22 @@ export function notionPageDocument(raw: unknown, fallback: { id: string; url: st
   return { id, title, text: text ? `${edited ? `Last edited: ${edited}\n` : ""}Source: ${url}\n\n${text}` : "" };
 }
 
-/** Recently edited pages through the existing Codex connection. Read-only; pages that fail are skipped. */
-export async function connectedNotionPages(root: string, read = withConnectedRead) {
-  return read(root, async client => {
-    const pages = notionRecentPages(await client.call("notion.notion-list-recent-pages", { limit: MAX_PAGES }));
+export async function notionAvailable(read: McpReader) {
+  return read(async ({ tools }) => NOTION_TOOLS.every(name => tools[name]?.annotations?.readOnlyHint === true && tools[name]?.annotations?.destructiveHint !== true));
+}
+
+/** Recently edited pages through the app's own Notion connection. Read-only; pages that fail are skipped. */
+export async function connectedNotionPages(read: McpReader) {
+  return read(async client => {
+    const pages = notionRecentPages(await client.call("notion-list-recent-pages", { limit: MAX_PAGES }));
     const documents: Array<{ id: string; title: string; text: string }> = [];
     let skipped = 0;
     for (const page of pages) {
       try {
-        const document = notionPageDocument(await client.call("notion.fetch", { id: page.url }), page);
+        const document = notionPageDocument(await client.call("notion-fetch", { id: page.url }), page);
         if (document.text) documents.push(document); else skipped++;
       } catch { skipped++; }
     }
     return { documents, hasMore: false, skipped };
-  }, { timeoutMs: 150_000 });
+  });
 }

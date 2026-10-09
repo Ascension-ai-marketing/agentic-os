@@ -410,7 +410,7 @@ function LiveFinanceCards({
                   <h2>Monthly income</h2>
                   <span className="biz-overview-live-chip">Live</span>
                 </div>
-                <div className="biz-bank-caption">Last 30 days · Mercury via Codex</div>
+                <div className="biz-bank-caption">Last 30 days · Mercury</div>
                 {income ? (
                   <>
                     <div className="biz-bank-number">{formatAmount(income.amount, income.currency)}</div>

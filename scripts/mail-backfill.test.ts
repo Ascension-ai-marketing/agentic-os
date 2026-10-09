@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { backfillEstimate, mailBackfill } from "./mail-backfill";
@@ -36,47 +36,49 @@ function fakeArchive() {
 }
 
 const NOW = Date.parse("2026-09-28T12:00:00Z");
-const tool = (email: string) => ({ name: "x", annotations: { readOnlyHint: true }, _meta: { link_owner_profile: { email } } });
+const query = (path: string) => new URLSearchParams(path.split("?")[1] || "");
+const seed = (dir: string, store: unknown) => { mkdirSync(join(dir, ".operator-data"), { recursive: true }); writeFileSync(join(dir, ".operator-data", "mail-backfill.json"), JSON.stringify(store)); };
+const LINK = "https://graph.microsoft.com/v1.0/me/messages?$skip=";
+/** A Graph mailbox that pages by next link, 100 rows at a time. */
+const outlookPages = (all: any[], paths: string[] = []) => async (_provider: string, path: string) => {
+  paths.push(path);
+  const skip = path.startsWith(LINK) ? Number(path.slice(LINK.length)) : 0;
+  return { value: all.slice(skip, skip + 100), ...(skip + 100 < all.length ? { "@odata.nextLink": LINK + (skip + 100) } : {}) };
+};
 
 test("gmail pages through a year with page tokens, headers only, then catches up", async () => {
   const archive = fakeArchive();
-  const calls: any[] = [];
+  const lists: URLSearchParams[] = [];
   // 250 messages, one every day going back.
-  const all = Array.from({ length: 250 }, (_, i) => ({
-    id: `g${i}`,
-    thread_id: `t${i}`,
-    from_: "Ana <a@x.io>",
-    to: ["me@x.io"],
-    subject: `Message ${i}`,
-    snippet: "hello",
-    labels: ["INBOX"],
-    email_ts: new Date(NOW - i * 864e5).toISOString(),
-  }));
-  const connectedRead = (async (_root: string, work: any) =>
-    work({
-      tools: { "gmail.search_emails": tool("me@x.io") },
-      call: async (name: string, args: any) => {
-        calls.push({ name, args });
-        const start = Number(args.next_page_token || 0);
-        return { emails: all.slice(start, start + 100), next_page_token: start + 100 < all.length ? String(start + 100) : "" };
-      },
-    })) as any;
-  const backfill = mailBackfill(root(), { archive, connectedRead, now: () => NOW });
+  const all = Array.from({ length: 250 }, (_, i) => ({ id: `g${i}`, threadId: `t${i}`, internalDate: String(NOW - i * 864e5), labelIds: ["INBOX"], snippet: "hello", payload: { headers: [{ name: "Subject", value: `Message ${i}` }], body: { data: "c2VjcmV0" } } }));
+  const seen: any[] = [];
+  const base = archive.importMetadata;
+  archive.importMetadata = ((provider: string, account: string, raw: any[]) => { seen.push(...raw); return base(provider, account, raw); }) as any;
+  const request = async (_provider: string, path: string) => {
+    if (!path.startsWith("/messages?")) return all.find((m) => m.id === path.split("/")[2].split("?")[0]);
+    const q = query(path);
+    lists.push(q);
+    const start = Number(q.get("pageToken") || 0);
+    return { messages: all.slice(start, start + 100).map((m) => ({ id: m.id })), ...(start + 100 < all.length ? { nextPageToken: String(start + 100) } : {}) };
+  };
+  const backfill = mailBackfill(root(), { archive, identity: async () => "me@x.io", request, now: () => NOW });
   backfill.start(["gmail"]);
   await until(() => backfill.status().gmail?.status === "done");
   const s = backfill.status().gmail!;
   expect(s.imported).toBe(250);
-  expect(calls).toHaveLength(3);
-  expect(calls[0].args.query).toContain("after:2025/");
-  expect(calls[0].args.max_results).toBe(100);
+  expect(s.cursor).toBeUndefined();
+  expect(lists).toHaveLength(3);
+  expect(lists[0].get("q")).toContain("after:2025/");
+  expect(lists[0].get("maxResults")).toBe("100");
+  expect(JSON.stringify(seen)).not.toContain("c2VjcmV0");
   // A second run only reads from the newest message it already holds.
   backfill.start(["gmail"]);
-  await until(() => backfill.status().gmail?.status === "done" && calls.length > 3);
-  expect(calls[3].args.query).toContain("after:2026/09/26");
+  await until(() => backfill.status().gmail?.status === "done" && lists.length > 3);
+  expect(lists[3].get("q")).toContain("after:2026/09/26");
   expect(backfill.status().gmail!.imported).toBe(250);
 });
 
-test("outlook stops at the start of the window and never keeps bodies", async () => {
+test("outlook follows the next link, stops at the start of the window and never keeps bodies", async () => {
   const archive = fakeArchive();
   const seen: any[] = [];
   archive.importMetadata = ((provider: string, account: string, raw: any[]) => {
@@ -84,49 +86,66 @@ test("outlook stops at the start of the window and never keeps bodies", async ()
     for (const m of raw) archive.rows.set(`${provider}:${m.id}`, { provider, account });
     return raw;
   }) as any;
-  const all = Array.from({ length: 150 }, (_, i) => ({
-    id: `o${i}`,
-    subject: "Hi",
-    body: { content: "secret body" },
-    receivedDateTime: new Date(NOW - i * 5 * 864e5).toISOString(),
-  }));
-  const connectedRead = (async (_root: string, work: any) =>
-    work({
-      tools: { "microsoft_outlook_email.list_messages": tool("me@outlook.com") },
-      call: async (_name: string, args: any) => ({
-        value: all.slice(args.skip, args.skip + args.top),
-        has_more: args.skip + args.top < all.length,
-        next_from_index: args.skip + args.top,
-      }),
-    })) as any;
-  const backfill = mailBackfill(root(), { archive, connectedRead, now: () => NOW, months: 12 });
+  const all = Array.from({ length: 150 }, (_, i) => ({ id: `o${i}`, subject: "Hi", body: { content: "secret body" }, receivedDateTime: new Date(NOW - i * 5 * 864e5).toISOString() }));
+  const paths: string[] = [];
+  const backfill = mailBackfill(root(), { archive, identity: async () => "me@outlook.com", request: outlookPages(all, paths), now: () => NOW, months: 12 });
   backfill.start(["outlook"]);
   await until(() => backfill.status().outlook?.status === "done");
   // 12 months at one message every five days is about 74 messages.
   expect(backfill.status().outlook!.imported).toBeGreaterThan(70);
   expect(backfill.status().outlook!.imported).toBeLessThan(80);
+  expect(query(paths[0]).get("$top")).toBe("100");
+  // The window ended on the first page, so the next link is never followed.
+  expect(paths).toHaveLength(1);
   expect(JSON.stringify(seen)).not.toContain("secret body");
+});
+
+test("a numeric outlook cursor left by the old reader is discarded, not sent to the provider", async () => {
+  const dir = root();
+  seed(dir, { outlook: { account: "me@outlook.com", since: new Date(NOW - 366 * 864e5).toISOString(), status: "waiting", imported: 300, cursor: 300 } });
+  const paths: string[] = [];
+  const backfill = mailBackfill(dir, { archive: fakeArchive(), identity: async () => "me@outlook.com", request: outlookPages([], paths), now: () => NOW });
+  backfill.start(["outlook"]);
+  await until(() => backfill.status().outlook?.status === "done");
+  expect(paths).toHaveLength(1);
+  expect(paths[0].startsWith("/messages?")).toBe(true);
+  expect(paths[0]).not.toContain("300");
+});
+
+test("a saved outlook next link resumes where the last session stopped", async () => {
+  const dir = root();
+  seed(dir, { outlook: { account: "me@outlook.com", since: new Date(NOW - 366 * 864e5).toISOString(), status: "waiting", imported: 100, cursor: LINK + "100" } });
+  const all = Array.from({ length: 150 }, (_, i) => ({ id: `r${i}`, receivedDateTime: new Date(NOW - i * 864e5).toISOString() }));
+  const paths: string[] = [];
+  const backfill = mailBackfill(dir, { archive: fakeArchive(), identity: async () => "me@outlook.com", request: outlookPages(all, paths), now: () => NOW });
+  backfill.start(["outlook"]);
+  await until(() => backfill.status().outlook?.status === "done");
+  expect(paths).toEqual([LINK + "100"]);
 });
 
 test("a different signed-in account stops the import with a plain reason", async () => {
   const r = root();
   const archive = fakeArchive();
   let email = "one@x.io";
-  const connectedRead = (async (_root: string, work: any) =>
-    work({
-      tools: { "gmail.search_emails": tool(email) },
-      call: async () => ({ emails: [], next_page_token: "" }),
-    })) as any;
-  const backfill = mailBackfill(r, { archive, connectedRead, now: () => NOW });
+  const options = { archive, identity: async () => email, request: async () => ({ resultSizeEstimate: 0 }), now: () => NOW };
+  const backfill = mailBackfill(r, options);
   backfill.start(["gmail"]);
   await until(() => backfill.status().gmail?.status === "done");
   email = "two@x.io";
-  const again = mailBackfill(r, { archive, connectedRead, now: () => NOW });
-  // Forget the finished state so the first pass runs again for the new account.
+  const again = mailBackfill(r, options);
   again.start(["gmail"]);
   await until(() => again.status().gmail?.status !== "running");
   expect(again.status().gmail!.status).toBe("error");
   expect(again.status().gmail!.error).toContain("different account");
+});
+
+test("a mailbox that is not connected reports the in-app connection message", async () => {
+  const backfill = mailBackfill(root(), { archive: fakeArchive(), identity: async () => { throw new Error("Connect Gmail in Settings → Connections to search and index email directly on this computer."); }, request: async () => ({}), now: () => NOW });
+  backfill.start(["gmail"]);
+  await until(() => backfill.status().gmail?.status !== "running");
+  expect(backfill.status().gmail!.status).toBe("error");
+  expect(backfill.status().gmail!.error).toMatch(/Connect Gmail/);
+  expect(backfill.status().gmail!.error).not.toMatch(/Codex/);
 });
 
 test("the estimate scales by how much of the year is covered", () => {
@@ -137,19 +156,8 @@ test("the estimate scales by how much of the year is covered", () => {
 
 test("a draft on a page does not end the outlook history early", async () => {
   const archive = fakeArchive();
-  // Page size is larger than 2, so put a draft among recent mail on every page.
-  const all = Array.from({ length: 150 }, (_, i) => ({
-    id: `d${i}`,
-    subject: "Hi",
-    isDraft: i % 10 === 0,
-    receivedDateTime: new Date(NOW - i * 5 * 864e5).toISOString(),
-  }));
-  const connectedRead = (async (_root: string, work: any) =>
-    work({
-      tools: { "microsoft_outlook_email.list_messages": tool("me@outlook.com") },
-      call: async (_name: string, args: any) => ({ value: all.slice(args.skip, args.skip + args.top), has_more: args.skip + args.top < all.length, next_from_index: args.skip + args.top }),
-    })) as any;
-  const backfill = mailBackfill(root(), { archive, connectedRead, now: () => NOW, months: 12 });
+  const all = Array.from({ length: 150 }, (_, i) => ({ id: `d${i}`, subject: "Hi", isDraft: i % 10 === 0, receivedDateTime: new Date(NOW - i * 5 * 864e5).toISOString() }));
+  const backfill = mailBackfill(root(), { archive, identity: async () => "me@outlook.com", request: outlookPages(all), now: () => NOW, months: 12 });
   backfill.start(["outlook"]);
   await until(() => backfill.status().outlook?.status === "done");
   // About 74 messages in the year, minus one draft in ten.

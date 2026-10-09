@@ -3812,17 +3812,19 @@ function HermesChatActive({
     // actual deliverable and no way to expand it. Steer it to always return the
     // COMPLETE, copyable content here. Injected on the first turn (carried by
     // session memory after) and on any turn that asks for produced code/content,
-    // so a mid-chat "build me X" gets it too.
+    // so a mid-chat "build me X" gets it too. It goes AFTER the user's text:
+    // Hermes names a session from the start of its first message, so a leading
+    // contract became every chat's title.
     const OUTPUT_CONTRACT =
       "[How to answer in this chat window] When you produce code, HTML, a document, config, or any file's contents, include the COMPLETE final content in your reply inside a single fenced code block. Do NOT abbreviate with \"... omitted N lines\", \"N more lines\", or a partial diff — the user reads and copies the result right here, so the whole thing must be present. If you also save it to a file, print the file's absolute path as well, but the full content still has to appear in your reply.";
     const wantsArtifact =
       /\b(html|css|json|yaml|component|script|code|snippet|one[- ]?pager|landing page|readme|full (file|code|content)|whole (file|thing))\b/i.test(text);
-    const contractPrefix = isFirstTurn || wantsArtifact ? `${OUTPUT_CONTRACT}\n\n---\n\n` : "";
+    const contractSuffix = isFirstTurn || wantsArtifact ? `\n\n---\n\n${OUTPUT_CONTRACT}` : "";
     const seedPrefix = isFirstTurn && seedContext ? `${seedContext}\n\n---\n\n` : "";
     const carryPrefix = carryover
       ? `Context carried over from our previous session:\n\n${carryover}\n\n---\n\n`
       : "";
-    const promptForServer = `${contractPrefix}${seedPrefix}${carryPrefix}${imagePrefix}${text}`.trim();
+    const promptForServer = `${seedPrefix}${carryPrefix}${imagePrefix}${text}${contractSuffix}`.trim();
     // Visible chat shows the user's actual text + a count of attachments
     // (the absolute path is noisy for display).
     const displayText =

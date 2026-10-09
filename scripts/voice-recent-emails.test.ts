@@ -67,29 +67,22 @@ test("malformed live rows fail instead of generating misleading metadata", async
   const f = fixture(); f.state.inbox = [item("old-account-snapshot")]; f.respond(async () => ({ account: owner, items: [{ ...item(), account: "wrong@example.test" }], checkedAt: "now" }));
   const result = await f.api.recent(); expect(result.items).toEqual([]); expect(result.providers[0].status).toBe("unavailable");
 });
-function nativeFixture() {
+function nativeFixture(saved: unknown = { gmail: { account: owner, enabled: true } }) {
   const root = mkdtempSync(join(tmpdir(), "voice-recent-")); roots.push(root); mkdirSync(join(root, ".operator-data"));
-  const path = join(root, ".operator-data/native-connections.json"); writeFileSync(path, JSON.stringify({ gmail: { account: owner, enabled: true } }));
-  const tools: any = {};
-  for (const name of ["gmail.search_emails", "gmail.get_profile"]) tools[name] = { name, annotations: { readOnlyHint: true }, _meta: { link_owner_profile: { email: owner } } };
-  const calls: any[] = []; let respond = (name: string): any => name === "gmail.get_profile" ? { emailAddress: owner } : { emails: [{ id: "new", email_ts: "2026-09-17T10:00:00Z", subject: "Hello", from_: "sender@example.test", snippet: "s".repeat(1000), labels: ["INBOX"] }] };
+  writeFileSync(join(root, ".operator-data/native-connections.json"), JSON.stringify(saved));
+  const calls: any[] = [];
   const api = nativeInboxSync(root, { load: () => ({ inbox: [] }) as any, save: () => { throw new Error("Must not write state"); }, archive: { importMetadata: () => { throw new Error("Must not write archive"); } } as any,
-    connectedRead: (async (_root: string, work: any) => work({ tools, call: async (name: string, args: any) => { calls.push({ name, args }); return respond(name); } })) as any });
-  return { api, tools, calls, path, respond(fn: typeof respond) { respond = fn; } };
+    lane: { identity: async () => owner, request: async () => { throw new Error("Must not list mail"); }, slack: { status: async () => ({ connected: false }), sync: async () => ({ messages: 0 }) },
+      mail: { recent: async (provider: any, account: string) => { calls.push({ provider, account }); return { account, items: [item("new")], checkedAt: "now" }; }, message: async () => undefined } as any } });
+  return { api, calls };
 }
-test("native live lookup uses fixed bounded metadata and fresh profile checks, never body/import", async () => {
+test("native live lookup reads the selected mailbox through the direct mail lane, never import", async () => {
   const f = nativeFixture(); const result = await f.api.recentEmails("gmail");
-  expect(result.items[0].body).toHaveLength(400); expect(f.calls.map(call => call.name)).toEqual(["gmail.get_profile", "gmail.search_emails", "gmail.get_profile"]);
-  expect(f.calls[1].args).toEqual({ query: "in:inbox -in:drafts -in:sent -in:spam -in:trash", max_results: 10 });
+  expect(result.account).toBe(owner); expect(f.calls).toEqual([{ provider: "gmail", account: owner }]);
 });
-test("native disabled selections and mismatched tool/profile identities cannot read messages", async () => {
-  const first = nativeFixture(); writeFileSync(first.path, JSON.stringify({ gmail: { account: owner, enabled: false } })); await expect(first.api.recentEmails("gmail")).rejects.toThrow("not selected"); expect(first.calls).toHaveLength(0);
-  const second = nativeFixture(); second.tools["gmail.search_emails"]._meta.link_owner_profile.email = "wrong@example.test"; await expect(second.api.recentEmails("gmail")).rejects.toThrow("identity"); expect(second.calls).toHaveLength(0);
-  const third = nativeFixture(); third.respond(() => ({ emailAddress: "wrong@example.test" })); await expect(third.api.recentEmails("gmail")).rejects.toThrow("profile"); expect(third.calls).toHaveLength(1);
-});
-test("native account changes after metadata retrieval discard the result", async () => {
-  const f = nativeFixture(); let profiles = 0; f.respond(name => name === "gmail.get_profile" ? { emailAddress: ++profiles === 1 ? owner : "changed@example.test" } : { emails: [] });
-  await expect(f.api.recentEmails("gmail")).rejects.toThrow("profile");
+test("a disabled native selection cannot read messages", async () => {
+  const f = nativeFixture({ gmail: { account: owner, enabled: false } });
+  await expect(f.api.recentEmails("gmail")).rejects.toThrow("not selected"); expect(f.calls).toHaveLength(0);
 });
 test("direct Gmail lookup requests metadata only and rechecks account without indexing", async () => {
   const calls: string[] = []; let identities = 0;

@@ -153,6 +153,16 @@ function RootComponent() {
   // Unknown until the browser has been asked, so the voice and wake listeners never start inside a frame, even briefly.
   const [framed, setFramed] = useState<boolean | null>(null);
   useEffect(() => setFramed(window.name.startsWith("os-embed")), []);
+  // A framed page has no header, so no theme switch of its own: it follows the one in the window around it.
+  useEffect(() => {
+    if (!embedAddress && !framed) return;
+    const follow = (event: StorageEvent) => {
+      if (event.key === "theme" && event.newValue)
+        document.documentElement.classList.toggle("dark", event.newValue === "dark");
+    };
+    window.addEventListener("storage", follow);
+    return () => window.removeEventListener("storage", follow);
+  }, [embedAddress, framed]);
 
   return (
     <QueryClientProvider client={queryClient}>

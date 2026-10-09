@@ -6,7 +6,7 @@
  * token-checked route; the voice brain itself never calls the resolve route.
  */
 import { hermesBoard } from "./ceo-hermes";
-import { openclaw, type Openclaw } from "./ceo-openclaw";
+import { openclaw, pinnedConfig, type Openclaw } from "./ceo-openclaw";
 import { DEFAULT_LIMITS, openclawLimits } from "./ceo-openclaw-limits";
 import { hermesCheckIns } from "./ceo-reports";
 import { redactSecrets } from "./hermes-progress";
@@ -73,14 +73,15 @@ export function ceoRoutes(options: {
       }
       // Looked up afresh each time, so an install or a stopped gateway shows without a restart. It only reads.
       if (path === "/ceo/openclaw" && method === "GET") {
-        const agreed = limits.read();
-        return { openclaw: await (options.openclaw ?? openclaw)().status(AbortSignal.timeout(12_000)), limits: agreed ?? null, suggested: agreed ? null : DEFAULT_LIMITS(options.home) };
+        const agreed = limits.read(), status = await (options.openclaw ?? openclaw)().status(AbortSignal.timeout(12_000)), model = agreed?.model ?? status.model;
+        // `settings` is the whole file a hand-off runs under, so the person agrees to what they can read.
+        return { openclaw: status, limits: agreed ?? null, suggested: agreed ? null : DEFAULT_LIMITS(options.home), settings: model ? pinnedConfig(model) : null };
       }
       // The person's button, and only that: the voice brain has no tool that reaches this route.
       if (path === "/ceo/openclaw/limits" && method === "POST") {
         if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Choose to agree to the limits or withdraw.");
         if (body.withdraw === true && Object.keys(body).length === 1) { limits.withdraw(); return { limits: null }; }
-        if (body.agree !== true || Object.keys(body).some((key) => !["agree", "folder", "minutes", "tasksPerDay", "dollarsPerDay"].includes(key)))
+        if (body.agree !== true || Object.keys(body).some((key) => !["agree", "folder", "model", "minutes", "tasksPerDay", "dollarsPerDay"].includes(key)))
           throw new Error("Choose to agree to the limits or withdraw.");
         const { agree: _, ...chosen } = body;
         return { limits: limits.agree(chosen) };

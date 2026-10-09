@@ -21,6 +21,7 @@ import {
   codexLimitsFromSnapshots,
   codexSnapshotFromLog,
   planName,
+  resolveClaudePlan,
   type PlanLimits,
 } from "./plan-limits";
 
@@ -3488,16 +3489,18 @@ async function main() {
     `[aggregate] env keys present: ${envKeysPresent.length} · needed: ${envKeysNeeded.length}`,
   );
 
-  const cap = PLAN_5H_MESSAGE_CAPS[claude.planGuess] || 225;
+  // The plan Claude Code itself stored (Keychain) beats the usage guess.
+  const claudeResolved = resolveClaudePlan(claudePlan, claude.planGuess);
+  const cap = PLAN_5H_MESSAGE_CAPS[claudeResolved.plan] || 225;
   // Weekly caps by plan (calibrated from observed Claude Plan Usage UI percentages)
   const PLAN_WEEKLY_CAPS: Record<string, number> = {
     "Claude Pro": 300,
     "Claude Max 5x": 1500,
     "Claude Max 20x": 5000,
   };
-  const weeklyCap = PLAN_WEEKLY_CAPS[claude.planGuess] || 1500;
+  const weeklyCap = PLAN_WEEKLY_CAPS[claudeResolved.plan] || 1500;
   // Sonnet-only cap (unlimited on most plans, but we show as a separate bar)
-  const sonnetCap = claude.planGuess === "Claude Pro" ? 200 : 5000;
+  const sonnetCap = claudeResolved.plan === "Claude Pro" ? 200 : 5000;
 
   const sonnet5h = parsed.familyTurns5h["sonnet"] || 0;
   const sonnetWeekly = parsed.familyTurnsWeekly["sonnet"] || 0;
@@ -3524,7 +3527,7 @@ async function main() {
   const auth7dPct = normPct(claudeAuthoritative?.seven_day?.utilization);
   const authSonnetPct = normPct(claudeAuthoritative?.seven_day_sonnet?.utilization);
   const claudeWindow = {
-    plan: claude.planGuess,
+    plan: claudeResolved.plan,
     authMode: claude.authMode,
     messagesUsed: used5h,
     messageCap: cap,
@@ -3694,10 +3697,8 @@ async function main() {
       valueExtracted7d: Math.round(parsed.valueExtracted7d * 100) / 100,
     },
     subscriptions: {
-      // The plan Claude Code itself stored (Keychain) beats the usage guess.
       claude: (() => {
-        const known = claudePlan && claudePlan !== "Max" ? `Claude ${claudePlan}` : null;
-        const plan = known ?? claude.planGuess;
+        const { plan, known } = claudeResolved;
         return {
           ...claude,
           plan,

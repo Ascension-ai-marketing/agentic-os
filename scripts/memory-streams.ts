@@ -76,8 +76,12 @@ export function bodyTopics(body: string, max = 8): string[] {
 }
 
 /** A readable one-line title from a raw prompt: no file dumps, no long paths. */
+/** The Hermes chat page puts this instruction block ahead of the first message (OUTPUT_CONTRACT in agents.hermes.tsx). */
+const CHAT_WINDOW_NOTE = /^\s*\[How to answer in this chat window\]/;
+
 export function promptTitle(raw: string, max = 78): string {
   let text = String(raw || "");
+  if (CHAT_WINDOW_NOTE.test(text)) text = text.replace(/^[\s\S]*?\n\s*---\s*\n/, "");
   const ask =
     text.match(/##\s*My request for Codex:?\s*([\s\S]+)/i) ||
     text.match(/\n\s*(?:USER REQUEST|QUESTION|USER QUESTION):\s*([\s\S]+)$/);
@@ -527,7 +531,8 @@ export async function readHermesStream(home: string): Promise<MemoryStream> {
         };
         for (const r of rows) {
           const first = String(r.first || "");
-          const title = r.title
+          // Hermes names a chat from its first message, so an instruction block there becomes the title.
+          const title = r.title && !CHAT_WINDOW_NOTE.test(r.title)
             ? clip(r.title.replace(/\s*·\s*[A-Z][a-z]{2} \d{1,2} \d{2}:\d{2}$/, ""), 78)
             : promptTitle(first);
           records.push({
@@ -552,6 +557,21 @@ export async function readHermesStream(home: string): Promise<MemoryStream> {
   }
   records.sort((a, b) => Date.parse(b.at || "0") - Date.parse(a.at || "0"));
   return { status: records.length ? "ok" : "empty", records, total: records.length, checked };
+}
+
+/** The description from SKILL.md front matter. A YAML block ("|", ">", ">-") continues on the indented lines below. */
+function skillDescription(head: string): string | undefined {
+  const lines = head.split(/\r?\n/);
+  const i = lines.findIndex((l) => /^description:/.test(l));
+  if (i < 0) return undefined;
+  const first = lines[i].replace(/^description:\s*/, "").trim();
+  if (!/^[|>][+-]?\d?$/.test(first)) return first.replace(/^["'](.*)["']$/, "$1") || undefined;
+  const body: string[] = [];
+  for (const l of lines.slice(i + 1)) {
+    if (l.trim() && !/^\s/.test(l)) break;
+    body.push(l.trim());
+  }
+  return body.filter(Boolean).join(" ") || undefined;
 }
 
 /** Skills other agents keep on this Mac: Codex, shared agent skills and Hermes. Names and dates only. */
@@ -582,7 +602,7 @@ export function readSkillsStream(home: string): MemoryStream {
         try {
           at = statSync(skill).mtime.toISOString();
           const head = readFileSync(skill, "utf8").slice(0, 3000);
-          meta = head.match(/^description:\s*["']?(.+?)["']?\s*$/m)?.[1];
+          meta = skillDescription(head);
         } catch {}
         records.push({
           id: key,

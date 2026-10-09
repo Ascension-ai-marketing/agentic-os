@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,7 +12,13 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { memorySpaces, operatorRequest, useOperator } from "@/lib/operator";
+import {
+  memorySpaces,
+  openConnectionSignIn,
+  operatorRequest,
+  useOperator,
+  type McpStatus,
+} from "@/lib/operator";
 import { WorkAccountConnectionsPanel, useAccounts } from "./account-connections";
 import { MemoryPhotoConnections } from "./memory-photo-connections";
 import { SourceBrand } from "./source-brand";
@@ -128,6 +135,14 @@ export function MemorySetup({
   const { state } = useOperator();
   const spaces = memorySpaces(state);
   const accounts = useAccounts();
+  const queryClient = useQueryClient();
+  const mcp = useQuery<McpStatus>({
+    queryKey: ["mcp-status"],
+    enabled: open,
+    queryFn: () => operatorRequest("/mcp/status"),
+    retry: false,
+    refetchOnWindowFocus: "always",
+  });
   const [selectedId, setSelectedId] = useState("");
   const [selectedScopes, setSelectedScopes] = useState<Record<Scope, boolean>>({
     memories: true,
@@ -199,6 +214,30 @@ export function MemorySetup({
       await onRefresh();
       onAdded();
       setNotice(message);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy("");
+    }
+  }
+  async function notionSignIn() {
+    if (busy) return;
+    const connected = !!mcp.data?.notion.connected;
+    setBusy("notion");
+    setError("");
+    setNotice("");
+    try {
+      if (connected) await operatorRequest("/mcp/disconnect", { provider: "notion" });
+      else await openConnectionSignIn("notion");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["memory-connected-apps"] }),
+        queryClient.invalidateQueries({ queryKey: ["mcp-status"] }),
+      ]);
+      setNotice(
+        connected
+          ? "Notion disconnected. Pages you already imported stay in memory."
+          : "Finish signing in to Notion in the new tab, then come back here.",
+      );
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -541,6 +580,23 @@ export function MemorySetup({
                         onChange={(event) => setFile(event.target.files?.[0])}
                       />
                     </label>
+                  )}
+                  {selectedId === "notion" && (
+                    <div className="mx-signin">
+                      <p>
+                        {selected?.connectionMethod === "mcp"
+                          ? "Connected. Refresh on the Memory page brings in your recently edited pages."
+                          : "Sign in to bring in your recently edited pages. Nothing in Notion is changed."}
+                      </p>
+                      <button
+                        type="button"
+                        className="mx-secondary"
+                        disabled={!!busy || mcp.isPending}
+                        onClick={() => void notionSignIn()}
+                      >
+                        {mcp.data?.notion.connected ? "Disconnect" : "Connect Notion"}
+                      </button>
+                    </div>
                   )}
                   {selectedId === "notion" && (
                     <div className="mx-fields">

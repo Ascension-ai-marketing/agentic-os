@@ -248,6 +248,20 @@
   font-size: 10px;
   line-height: 1.6;
 }
+.mx-signin {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 20px;
+}
+.mx-signin p {
+  flex: 1 1 220px;
+  color: var(--op-muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
 .mx-detail-actions {
   display: flex;
   align-items: center;

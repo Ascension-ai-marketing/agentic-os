@@ -195,12 +195,11 @@ export function SetupScanConnections({ stage, onStageChange, onBusyChange, onSca
   }
   function memoryChoice(id: "granola" | "notion" | "obsidian", name: string): Choice {
     const app = apps.find(a => a.id === id), tool = tools.find(t => t.id === id);
-    const viaCodex = app?.mode === "api" && app.connectionMethod === "codex";
     const available = app ? canImport(app) : false;
     const notes = app?.discovery?.fileCount || 0, vault = app?.discovery?.roots?.[0], blocked = app?.discovery?.blocked;
     const status = !checked.apps ? "Check unavailable"
-      : id === "granola" ? app?.mode === "api" ? viaCodex ? "Connected via Codex · meeting notes" : "API connected · meeting notes" : "Connect your Granola account"
-      : id === "notion" ? viaCodex ? "Connected via Codex · recent pages" : available ? "Page export ready" : "Not connected in Codex"
+      : id === "granola" ? app?.mode === "api" ? "API connected · meeting notes" : "Connect your Granola account"
+      : id === "notion" ? app?.connectionMethod === "mcp" ? "Connected · recent pages" : available ? "Page export ready" : "Not connected yet"
       : available ? `${count(notes, "note")} in ${vault || "your vault"}` : blocked ? `Vault found · macOS needs your OK to read ${blocked.replace("your ", "")}` : tool?.installed ? "Installed · no vault registered yet" : "Not installed";
     return { id, name, key: `local:${id}`, installed: id === "granola" || id === "notion" ? true : !!tool?.installed || !!blocked || available, available: id === "granola" ? app?.mode === "api" : available,
       status,

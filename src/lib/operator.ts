@@ -246,6 +246,23 @@ export async function operatorRequest<T = any>(
   if (!response.ok) throw new Error(result.error || `Request failed (${response.status})`);
   return result as T;
 }
+export type McpStatus = Record<"notion" | "mercury", { connected: boolean }>;
+/**
+ * Opens a provider's sign-in page in a new tab. The tab is opened during the click, before
+ * the request, because some browsers block a tab that opens after waiting on the network.
+ */
+export async function openConnectionSignIn(provider: keyof McpStatus) {
+  const tab = window.open("", "_blank");
+  try {
+    const { authorizationUrl } = await operatorRequest<{ authorizationUrl: string }>("/mcp/connect", { provider });
+    if (!tab) return void window.open(authorizationUrl, "_blank", "noopener");
+    tab.opener = null;
+    tab.location.replace(authorizationUrl);
+  } catch (error) {
+    tab?.close();
+    throw error;
+  }
+}
 export function useOperator() {
   const qc = useQueryClient();
   const [hydrated, setHydrated] = useState(false);

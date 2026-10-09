@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { NEVER_COMMANDS, NEVER_FLAGS, NOT_CLEARED, NOT_INSTALLED, openclaw, openclawPaths, type Run } from "./ceo-openclaw";
+import { NEVER_COMMANDS, NEVER_FLAGS, NOT_CLEARED, NOT_INSTALLED, openclaw, openclawPaths, workArgs, type Run } from "./ceo-openclaw";
 
 const HOME = "/Users/sample";
 const NVM = `${HOME}/.nvm/versions/node`;
@@ -66,4 +66,45 @@ test("nothing it asks of OpenClaw can send, connect, change its limits or show t
   }
   expect(NEVER_FLAGS).toEqual(expect.arrayContaining(["--deliver", "--channel", "--reply-channel", "--reply-to", "--reply-account", "--to"]));
   expect(NEVER_COMMANDS).toEqual(expect.arrayContaining(["message", "channels", "pairing", "dashboard", "agent"]));
+});
+
+const LIMITS = { folder: "/Users/sample/agents/openclaw", minutes: 10, tasksPerDay: 5, dollarsPerDay: 3 };
+const ID = "0f6b9a52-3c1d-4e8f-9a7b-1c2d3e4f5a6b";
+/** A made-up OpenClaw that answers a work run with the given envelope and exit code. */
+function worker(code: number, envelope: unknown, stderr = "") {
+  const runs: { args: string[]; input?: string; timeoutMs?: number }[] = [], folders: string[] = [];
+  const claw = openclaw({ run: async (args, options) => { runs.push({ args, input: options?.input, timeoutMs: options?.timeoutMs }); return { code, stdout: JSON.stringify(envelope), stderr }; } });
+  const work = (prompt = "Sort the receipts.") => claw.work({ id: ID, prompt, limits: LIMITS, makeFolder: (folder) => folders.push(folder) });
+  return { claw, runs, folders, work };
+}
+
+test("without agreed limits, OpenClaw is not cleared; within them it is", () => {
+  const { claw } = worker(0, {});
+  expect(claw.workerProblem()).toBe(NOT_CLEARED);
+  expect(claw.workerProblem({ limits: LIMITS, tasks: [] })).toBeUndefined();
+});
+
+test("work is one headless turn in the task's own folder, with no channel and the agreed deadline", async () => {
+  const { runs, folders, work } = worker(0, { ok: true, status: "ok", final: "Sorted 40 receipts into receipts.csv.", costUsd: 0.12 });
+  expect(await work()).toEqual({ status: "done", note: "Sorted 40 receipts into receipts.csv.", costUsd: 0.12 });
+  expect(folders).toEqual([`${LIMITS.folder}/${ID}`]);
+  expect(runs).toEqual([{ args: workArgs(`${LIMITS.folder}/${ID}`, 10), input: "Sort the receipts.", timeoutMs: 11 * 60_000 }]);
+  expect(runs[0].args).toEqual(["agent", "exec", "--message-file", "-", "--cwd", `${LIMITS.folder}/${ID}`, "--json", "--timeout", "600"]);
+  for (const arg of runs[0].args) expect(NEVER_FLAGS).not.toContain(arg);
+});
+
+test("a run that timed out, failed or answered nonsense is told as failed, with its cost when known", async () => {
+  expect(await worker(2, { ok: false, status: "timeout", costUsd: 0.4 }).work()).toEqual({ status: "failed", note: "It was stopped at the 10-minute limit before it finished.", costUsd: 0.4 });
+  expect(await worker(1, { ok: false, status: "error", error: { message: "No API key for openai.", kind: "auth" } }).work()).toEqual({ status: "failed", note: "No API key for openai." });
+  expect(await worker(1, "garbage", "Error: config could not be parsed\n").work()).toEqual({ status: "failed", note: "Error: config could not be parsed" });
+});
+
+test("only the fixed reads and the one work shape ever reach OpenClaw", async () => {
+  const asked: string[][] = [];
+  const claw = openclaw({ run: async (args) => { asked.push(args); return { code: 0, stdout: "", stderr: "" }; } });
+  const bad = await claw.work({ id: "not-an-id", prompt: "x", limits: LIMITS, makeFolder: () => {} });
+  expect(bad.status).toBe("failed");
+  const relative = await claw.work({ id: ID, prompt: "x", limits: { ...LIMITS, folder: "agents" }, makeFolder: () => {} });
+  expect(relative).toEqual({ status: "failed", note: "That is not something the OS asks of OpenClaw." });
+  expect(asked).toEqual([]);
 });

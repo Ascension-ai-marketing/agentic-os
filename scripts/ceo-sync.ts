@@ -71,7 +71,8 @@ export function ceoSync(options: {
   }
   async function run() {
     const open = store.tasks().filter((task) => OPEN.includes(task.status) && task.ref);
-    const cards = open.filter((task) => task.agent === "hermes"), jobs = open.filter((task) => task.agent !== "hermes");
+    // OpenClaw's work is not an OS job: the voice brain runs it and records how it ended.
+    const cards = open.filter((task) => task.agent === "hermes"), jobs = open.filter((task) => task.agent === "claude_code" || task.agent === "codex");
     const reached = await Promise.all([
       cards.length ? hermes(cards).catch(() => false) : true,
       jobs.length ? os(jobs).catch(() => false) : true,

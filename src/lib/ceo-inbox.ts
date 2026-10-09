@@ -14,7 +14,7 @@ export type InboxApproval = {
 };
 export type InboxTask = {
   id: string;
-  agent: "hermes" | "claude_code" | "codex";
+  agent: "hermes" | "claude_code" | "codex" | "openclaw";
   title: string;
   task: string;
   ref?: string;
@@ -35,7 +35,7 @@ export type InboxView = {
   reports: InboxReport[];
 };
 
-export const AGENT_LABEL: Record<InboxTask["agent"], string> = { hermes: "Hermes", claude_code: "Claude Code", codex: "Codex" };
+export const AGENT_LABEL: Record<InboxTask["agent"], string> = { hermes: "Hermes", claude_code: "Claude Code", codex: "Codex", openclaw: "OpenClaw" };
 export const STATUS_LABEL: Record<InboxTask["status"], string> = { queued: "Starting", running: "Working", blocked: "Needs you", done: "Done", failed: "Stopped" };
 
 const DECIDED_SHOWN = 5;
@@ -68,7 +68,8 @@ export function inboxView(reply: { approvals?: unknown; tasks?: unknown; reports
     (item) => typeof item.id === "string" && typeof item.title === "string" && typeof item.createdAt === "string" && Object.hasOwn(AGENT_LABEL, String(item.agent)) && Object.hasOwn(STATUS_LABEL, String(item.status)),
   ) as InboxTask[];
   const tasks = saved.map((task) => {
-    const job = task.agent !== "hermes" && task.ref ? { id: task.ref, agent: task.agent === "codex" ? ("codex" as const) : ("claude" as const) } : undefined;
+    // Only Claude Code and Codex work is an OS job; OpenClaw's runs in the voice brain.
+    const job = (task.agent === "claude_code" || task.agent === "codex") && task.ref ? { id: task.ref, agent: task.agent === "codex" ? ("codex" as const) : ("claude" as const) } : undefined;
     const live = job && runs.get(`${job.id} ${job.agent}`);
     return { ...task, ...(job ? { job } : {}), card: live !== undefined, status: live !== undefined && Object.hasOwn(LIVE, live) ? LIVE[live] : task.status };
   });

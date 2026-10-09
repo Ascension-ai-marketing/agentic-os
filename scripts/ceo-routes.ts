@@ -7,6 +7,7 @@
  */
 import { hermesBoard } from "./ceo-hermes";
 import { openclaw, type Openclaw } from "./ceo-openclaw";
+import { DEFAULT_LIMITS, openclawLimits } from "./ceo-openclaw-limits";
 import { hermesCheckIns } from "./ceo-reports";
 import { redactSecrets } from "./hermes-progress";
 import { ago, ceoStore, type CeoStore } from "./ceo-store";
@@ -46,8 +47,11 @@ export function ceoRoutes(options: {
   goals?: () => Goals | null | undefined;
   checkIns?: Pick<ReturnType<typeof hermesCheckIns>, "importInto">;
   openclaw?: () => Pick<Openclaw, "status">;
+  /** The person's home folder, where OpenClaw's work folder must be. Stand-in for tests. */
+  home?: string;
 }) {
   const store = options.store ?? ceoStore(options.root), checkIns = options.checkIns ?? hermesCheckIns();
+  const limits = openclawLimits(options.root, options.home);
   let sync = options.sync;
   // Hermes is only looked up once something asks for the tasks.
   const refresh = () => (sync ??= ceoSync({ store, board: hermesBoard({ root: options.root }), jobs: options.jobs })).refresh();
@@ -68,7 +72,19 @@ export function ceoRoutes(options: {
         return { briefing: briefing(options.goals?.(), store) };
       }
       // Looked up afresh each time, so an install or a stopped gateway shows without a restart. It only reads.
-      if (path === "/ceo/openclaw" && method === "GET") return { openclaw: await (options.openclaw ?? openclaw)().status(AbortSignal.timeout(12_000)) };
+      if (path === "/ceo/openclaw" && method === "GET") {
+        const agreed = limits.read();
+        return { openclaw: await (options.openclaw ?? openclaw)().status(AbortSignal.timeout(12_000)), limits: agreed ?? null, suggested: agreed ? null : DEFAULT_LIMITS(options.home) };
+      }
+      // The person's button, and only that: the voice brain has no tool that reaches this route.
+      if (path === "/ceo/openclaw/limits" && method === "POST") {
+        if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Choose to agree to the limits or withdraw.");
+        if (body.withdraw === true && Object.keys(body).length === 1) { limits.withdraw(); return { limits: null }; }
+        if (body.agree !== true || Object.keys(body).some((key) => !["agree", "folder", "minutes", "tasksPerDay", "dollarsPerDay"].includes(key)))
+          throw new Error("Choose to agree to the limits or withdraw.");
+        const { agree: _, ...chosen } = body;
+        return { limits: limits.agree(chosen) };
+      }
       if (path === "/ceo/approvals/resolve" && method === "POST") {
         if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).some((key) => key !== "id" && key !== "decision"))
           throw new Error("Choose an approval and a decision.");

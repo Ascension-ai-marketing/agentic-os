@@ -5,6 +5,7 @@ import {
   codexLimitsFromSnapshots,
   codexSnapshotFromLog,
   planName,
+  resolveClaudePlan,
   windowLabel,
 } from "./plan-limits";
 
@@ -20,6 +21,13 @@ describe("plan limits", () => {
     expect(planName("max", null)).toBe("Max");
     expect(planName("pro", null)).toBe("Pro");
     expect(planName(null, null)).toBeNull();
+  });
+
+  test("the sign-in plan beats the usage guess", () => {
+    expect(resolveClaudePlan("Pro", "Claude Max 20x")).toEqual({ plan: "Claude Pro", known: true });
+    expect(resolveClaudePlan("Max 5x", "Claude Pro")).toEqual({ plan: "Claude Max 5x", known: true });
+    expect(resolveClaudePlan("Max", "Claude Max 20x")).toEqual({ plan: "Claude Max 20x", known: false });
+    expect(resolveClaudePlan(null, "Claude Max 5x")).toEqual({ plan: "Claude Max 5x", known: false });
   });
 
   test("Claude OAuth response keeps every window and its reset", () => {

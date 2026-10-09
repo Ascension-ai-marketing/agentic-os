@@ -51,6 +51,12 @@ export function planName(subscriptionType?: string | null, rateLimitTier?: strin
   return sub ? sub[0].toUpperCase() + sub.slice(1) : null;
 }
 
+/** The plan Claude Code itself stored beats the usage guess. A bare "Max" does not say 5x or 20x, so the guess stands. */
+export function resolveClaudePlan(signInPlan: string | null, planGuess: string): { plan: string; known: boolean } {
+  const known = !!signInPlan && signInPlan !== "Max";
+  return { plan: known ? `Claude ${signInPlan}` : planGuess, known };
+}
+
 const MODEL_WINDOW_SKIP = new Set(["oauth_apps"]);
 
 /** Claude OAuth /usage response → windows, in the order the Claude app lists them. */

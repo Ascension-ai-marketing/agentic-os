@@ -117,11 +117,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Apply the stored theme before first paint — dark is the default. */}
+        {/* Apply the stored theme before first paint — dark is the default — and follow it when
+            another page changes it. Every page has this, including the header-less Workbench frames. */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              'try{if(localStorage.getItem("theme")!=="light")document.documentElement.classList.add("dark")}catch(e){}',
+              'try{if(localStorage.getItem("theme")!=="light")document.documentElement.classList.add("dark")}catch(e){}' +
+              'addEventListener("storage",function(e){if(e.key==="theme"&&e.newValue)document.documentElement.classList.toggle("dark",e.newValue==="dark")});',
           }}
         />
         <HeadContent />

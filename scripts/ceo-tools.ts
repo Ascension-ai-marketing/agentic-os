@@ -13,6 +13,7 @@ import { confirmQuestion, type ApprovalGate } from "./ceo-approval-gate";
 import type { RunTool, SpokenTurn } from "./ceo-brain";
 import type { HermesBoard } from "./ceo-hermes";
 import { openclaw, type Openclaw } from "./ceo-openclaw";
+import type { OpenclawLimits } from "./ceo-openclaw-limits";
 import { ago, ceoKey, type CeoAgent, type CeoStore, type CeoTask } from "./ceo-store";
 import { jobState, type CeoSync, type OsJob } from "./ceo-sync";
 
@@ -25,12 +26,14 @@ export type CeoDeps = {
   /** The model a Claude Code task runs on. */
   workModel?: string;
   /** OpenClaw as it is on this computer; looked up when asked if not given. */
-  openclaw?: Pick<Openclaw, "workerProblem">;
+  openclaw?: Pick<Openclaw, "workerProblem" | "work">;
+  /** The limits the person agreed to for OpenClaw, read afresh for each task. Without them OpenClaw takes nothing. */
+  openclawLimits?: () => OpenclawLimits | undefined;
 };
 
 const LOOKUPS = ["calendar", "meetings", "inbox", "search_email", "usage", "business", "skills", "reels", "web_search"];
 const AGENTS = ["hermes", "claude_code", "codex", "openclaw"];
-const NAMES: Record<CeoAgent, string> = { hermes: "Hermes", claude_code: "Claude Code", codex: "Codex" };
+const NAMES: Record<CeoAgent, string> = { hermes: "Hermes", claude_code: "Claude Code", codex: "Codex", openclaw: "OpenClaw" };
 const OS_DOWN = "The Agentic OS dashboard is not running, so nothing can be looked up until it is started.";
 /** Goes first in every OS agent job the voice starts. The job's own permission prompts stay on screen for the person. */
 const JOB_RULES =
@@ -128,7 +131,8 @@ export function brainTools(deps: { baseUrl?: string; request?: Fetch; ceo?: CeoD
         "dispatch_agent",
         "Hand a piece of work to a background agent. It returns at once; the agent works on its own and task_status reports on it later. " +
           "hermes: research, reading, summarising and drafting, with files and the web. claude_code: building or changing code and files on this computer; name the folder or project in the task when the work belongs in one. " +
-          "codex: the same kind of work as claude_code, done by Codex. openclaw: takes no work yet; asking for it says why. " +
+          "codex: the same kind of work as claude_code, done by Codex. openclaw: a general assistant that can use files, a shell and a browser, working in a folder of its own; " +
+          "it takes work only within limits the person agreed to (one task at a time, a time limit, a daily number and a daily spend), and asking for it when it cannot says why. " +
           "An agent cannot send, post, book or pay: it drafts, and anything that leaves this computer goes through propose_external_action. " +
           "The agent has none of this conversation, so write the task to stand on its own.",
         {
@@ -165,8 +169,9 @@ export function brainTools(deps: { baseUrl?: string; request?: Fetch; ceo?: CeoD
   async function dispatch(ceo: CeoDeps, args: Record<string, unknown>, turn: SpokenTurn) {
     const agent = String(args.agent ?? "");
     if (!AGENTS.includes(agent)) throw new Error(`agent must be one of: ${AGENTS.join(", ")}.`);
-    // Installed or not, OpenClaw takes nothing until its limits are set and agreed.
-    if (agent === "openclaw") throw new Error((ceo.openclaw ?? openclaw()).workerProblem());
+    // Installed or not, OpenClaw takes nothing until its limits are set and agreed, and nothing past them.
+    const claw = agent === "openclaw" ? ceo.openclaw ?? openclaw() : undefined, limits = claw ? ceo.openclawLimits?.() : undefined;
+    if (claw && !limits) throw new Error(claw.workerProblem() ?? "OpenClaw is not cleared to take work.");
     const task = clean(args.task, 8000);
     if (task.length < 12) throw new Error("dispatch_agent needs a task that says what to do.");
     const title = clean(args.title, 80) || task.split(/\s+/).slice(0, 8).join(" ").slice(0, 80);
@@ -174,6 +179,16 @@ export function brainTools(deps: { baseUrl?: string; request?: Fetch; ceo?: CeoD
     const key = ceoKey(turn.conversationId, agent, task);
     const known = ceo.store.tasks().find((item) => item.key === key);
     if (known) return `Already handed to ${NAMES[known.agent]} as "${known.title}" (${known.status}, ${ago(known.updatedAt)}). Nothing new was started.`;
+    if (claw && limits) {
+      const problem = claw.workerProblem({ limits, tasks: ceo.store.tasks() });
+      if (problem) throw new Error(problem);
+      const made = ceo.store.addTask({ key, agent: "openclaw", title, task, ref: "openclaw-exec", status: "running", conversationId: turn.conversationId }).task;
+      // It runs on after this reply, for up to its time limit; how it ended lands in the records for task_status.
+      void claw.work({ id: made.id, prompt: `${JOB_RULES}\n\nThe task:\n${task}`, limits })
+        .then((result) => ceo.store.updateTask(made.id, result))
+        .catch(() => { try { ceo.store.updateTask(made.id, { status: "failed", note: "Its result could not be recorded." }); } catch { /* the records are busy; the next restart closes it */ } });
+      return `Handed to OpenClaw as "${made.title}". It works in its own folder, ${limits.folder}/${made.id}, for up to ${limits.minutes} minutes; task_status reports on it.`;
+    }
     // Not tied to the spoken turn: talking over the reply must not leave work half handed out.
     const signal = AbortSignal.timeout(40_000);
     const record = (ref: string, status: CeoTask["status"]) =>

@@ -33,6 +33,7 @@ import { join, resolve } from "node:path";
 import { approvalGate, type ApprovalGate, type Verdict } from "./ceo-approval-gate";
 import { anthropicReply, claudeProblem } from "./ceo-brain";
 import { hermesBoard, type HermesBoard } from "./ceo-hermes";
+import { openclawLimits } from "./ceo-openclaw-limits";
 import { ceoStore } from "./ceo-store";
 import { ceoSync } from "./ceo-sync";
 import { brainTools, osClient } from "./ceo-tools";
@@ -123,6 +124,11 @@ export function ceoReply(options: {
   const log = options.log ?? (() => {});
   const store = ceoStore(options.root), board = options.board ?? hermesBoard({ root: options.root });
   const sync = ceoSync({ store, board, jobs: osClient(options.os).jobs });
+  // OpenClaw's work runs inside this process, so a task still open from before it started has lost its run.
+  try {
+    for (const task of store.tasks()) if (task.agent === "openclaw" && (task.status === "queued" || task.status === "running"))
+      store.updateTask(task.id, { status: "failed", note: "Jarvis restarted while OpenClaw was working, so its result was lost. What it made so far is in its work folder." });
+  } catch { /* records that cannot be read now are reported when the voice reads them */ }
   // One per conversation: its yes-gate, and what the gate made of the person's latest words.
   const talks = new Map<string, { gate: ApprovalGate; note: string }>();
   const talk = (id: string) => {
@@ -153,7 +159,7 @@ export function ceoReply(options: {
       : `The person has just said no to: "${verdict.action}". It is declined and will not be done. Acknowledge that in a few words.`;
   }
   const records = () => { try { return store.digest(); } catch { return "The records of handed-out work and approvals could not be read just now."; } };
-  const { tools, runTool, settled } = brainTools({ ...options.os, ceo: { store, board, sync, gate: (id) => talk(id).gate } });
+  const { tools, runTool, settled } = brainTools({ ...options.os, ceo: { store, board, sync, gate: (id) => talk(id).gate, openclawLimits: openclawLimits(options.root).read } });
   const answer = anthropicReply({
     apiKey: options.apiKey, model: options.model, workspaceId: options.workspaceId, fetcher: options.fetcher, greeting: options.greeting, log, betweenTools: options.betweenTools, tools, runTool,
     system: `${CEO_PERSONA}\n\n${profileContext(options.root)}`,

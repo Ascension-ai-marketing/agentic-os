@@ -4,7 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { approvalGate, confirmQuestion, type ApprovalGate } from "./ceo-approval-gate";
 import type { HermesCard } from "./ceo-hermes";
-import { NOT_CLEARED, NOT_INSTALLED } from "./ceo-openclaw";
+import { NOT_INSTALLED, openclaw } from "./ceo-openclaw";
+import type { OpenclawLimits } from "./ceo-openclaw-limits";
 import { ceoKey, ceoStore } from "./ceo-store";
 import { brainTools } from "./ceo-tools";
 
@@ -25,6 +26,12 @@ function fixture() {
   const world = {
     dashboardDown: false,
     openclawInstalled: false,
+    limits: undefined as OpenclawLimits | undefined,
+    /** What the made-up OpenClaw was asked to run, and what it answers. */
+    clawRuns: [] as { args: string[]; input?: string }[],
+    /** Held open until a test lets the made-up run finish. */
+    clawWait: Promise.resolve(),
+    clawAnswer: { code: 0, stdout: JSON.stringify({ ok: true, status: "ok", final: "Done: three competitors listed in prices.md.", costUsd: 0.25 }), stderr: "" },
     hermes: async (input: { title: string }): Promise<HermesCard> => ({ id: `t_${world.cards.length}`, title: input.title, status: "queued" }),
     os: (_path: string, _body?: any): Response => Response.json({ result: { jobs: [] } }),
     cards: [] as { title: string; task: string; key: string }[],
@@ -39,7 +46,13 @@ function fixture() {
     world.seen.push({ path, method: init?.method ?? "GET", body, headers: (init?.headers ?? {}) as Record<string, string> });
     return path === "/__token" ? Response.json({ token: "fixture-token-0123456789" }) : world.os(path, body);
   };
-  const made = brainTools({ baseUrl: BASE, request, ceo: { store, board, sync, gate, openclaw: { workerProblem: () => (world.openclawInstalled ? NOT_CLEARED : NOT_INSTALLED) } } });
+  // The real adapter over a made-up command, so its own checks run; "not installed" is the one answer it cannot give here.
+  const claw = openclaw({ run: async (args, options) => { world.clawRuns.push({ args, input: options?.input }); await world.clawWait; return world.clawAnswer; } });
+  const ceoClaw = {
+    workerProblem: (context?: Parameters<typeof claw.workerProblem>[0]) => (world.openclawInstalled ? claw.workerProblem(context) : NOT_INSTALLED),
+    work: (input: Parameters<typeof claw.work>[0]) => claw.work({ ...input, makeFolder: () => {} }),
+  };
+  const made = brainTools({ baseUrl: BASE, request, ceo: { store, board, sync, gate, openclaw: ceoClaw, openclawLimits: () => world.limits } });
   const call = (name: string, input: unknown, conversationId = "conv-1") =>
     made.runTool(name, input, new AbortController().signal, { conversationId, transcript: [{ role: "user", content: "Sample request." }] });
   return { ...made, store, gate, world, call };
@@ -207,4 +220,50 @@ test("the next reply can wait for work still being handed out, and a turn answer
   await Promise.all([first, second, waiting]);
   expect(waited).toBe(true);
   expect(store.tasks()).toHaveLength(1);
+});
+
+const AGREED: OpenclawLimits = { folder: "/Users/sample/agents/openclaw", minutes: 10, tasksPerDay: 2, dollarsPerDay: 1 };
+const settle = () => new Promise((done) => setTimeout(done, 20));
+
+test("with limits agreed, OpenClaw takes one task at a time and its result lands in the records", async () => {
+  const { call, store, world } = fixture();
+  world.openclawInstalled = true;
+  world.limits = AGREED;
+  const said = await call("dispatch_agent", { agent: "openclaw", title: "Competitor prices", task: TASK });
+  const [task] = store.tasks();
+  expect(said).toBe(`Handed to OpenClaw as "Competitor prices". It works in its own folder, ${AGREED.folder}/${task.id}, for up to 10 minutes; task_status reports on it.`);
+  expect(world.clawRuns).toHaveLength(1);
+  expect(world.clawRuns[0].args.slice(0, 2)).toEqual(["agent", "exec"]);
+  expect(world.clawRuns[0].input).toContain("Never send, post, publish, book, buy or message anyone.");
+  expect(world.clawRuns[0].input).toEndWith(`The task:\n${TASK}`);
+  await settle();
+  expect(store.tasks()[0]).toMatchObject({ agent: "openclaw", status: "done", note: "Done: three competitors listed in prices.md.", costUsd: 0.25 });
+  // The same request again is the same task; a different one starts.
+  expect(await call("dispatch_agent", { agent: "openclaw", task: TASK })).toContain("Already handed to OpenClaw");
+  await call("dispatch_agent", { agent: "openclaw", task: "Summarise the notes folder into one page." });
+  await settle();
+  await expect(call("dispatch_agent", { agent: "openclaw", task: "Rename the photos by date taken." })).rejects.toThrow("its 2 tasks for today");
+});
+
+test("OpenClaw still working takes nothing more and records nothing", async () => {
+  const { call, store, world } = fixture();
+  world.openclawInstalled = true;
+  world.limits = AGREED;
+  let finish = () => {};
+  world.clawWait = new Promise<void>((done) => { finish = done; });
+  await call("dispatch_agent", { agent: "openclaw", task: TASK });
+  expect(store.tasks()[0].status).toBe("running");
+  await expect(call("dispatch_agent", { agent: "openclaw", task: "Summarise the notes folder into one page." })).rejects.toThrow("already working");
+  expect(store.tasks()).toHaveLength(1);
+  finish();
+  await settle();
+  expect(store.tasks()[0].status).toBe("done");
+});
+
+test("OpenClaw without agreed limits takes nothing, whatever it is asked", async () => {
+  const { call, store, world } = fixture();
+  world.openclawInstalled = true;
+  await expect(call("dispatch_agent", { agent: "openclaw", task: TASK })).rejects.toThrow("the person sets and agrees to its limits on the OpenClaw page");
+  expect(store.tasks()).toEqual([]);
+  expect(world.clawRuns).toEqual([]);
 });

@@ -2,7 +2,7 @@
 
 ## Execution
 
-Jarvis is the voice and visual control surface. An explicit delegated task starts a real native Codex or Claude Code session. That agent uses its own tools, account connections and permissions. Jarvis shows progress, approval questions and results; it does not copy credentials or turn the Inbox read bridge into a write bridge.
+Jarvis is the voice and visual control surface. An explicit delegated task starts a real native Codex or Claude Code session. That agent uses its own tools, account connections and permissions. Jarvis shows progress, approval questions and results; it does not copy credentials or gain write access to your connected accounts.
 
 Both mode starts Codex execution and an independent read-only Claude review at the same time. Each agent selected alone can execute. A result that says an action succeeded still needs the corresponding tool evidence or provider receipt.
 

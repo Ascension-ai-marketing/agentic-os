@@ -31,7 +31,7 @@ Run `bun run setup:voice` and paste 3 keys (OpenAI, OpenRouter, Fish Audio). Fis
 
 ## 4. Review connections before importing
 
-Open **Your connected apps & plugins** to see the supported connections exposed through Codex and Claude Code. Use **Rescan connections** after changing a connection in its owning app. Discovery can only show what that runtime exposes; it cannot promise every connector in every ChatGPT or Claude workspace.
+Agentic OS connects to each account itself: Gmail, Outlook, Slack and Google Calendar in **Settings → Connections**, Notion and Mercury with their own browser sign-in, Granola with an API key. Codex is not needed for any of them. Use **Rescan connections** after connecting one.
 
 Move through **AI**, **Memory**, **Communication** and **Finances**. Inspect **How we found these**, choose the sources you want, then use the import control for that category. Scanning and importing are separate. You can continue without importing anything. **Copy setup list** gives you a checklist to use with Claude or Codex when something is missing.
 
@@ -57,7 +57,7 @@ Read [The spirit of your OS](docs/THE-SPIRIT-OF-YOUR-OS.md). It explains the eig
 
 **Tool found, but replies fail:** sign in through the tool itself, check your plan or API usage, then refresh models. Installed and signed in are different checks.
 
-**Connection missing:** reconnect it in Codex or Claude Code, then rescan. Check the owning account/workspace. Use its supported export or native app if this OS does not have an adapter.
+**Connection missing:** connect it in Settings → Connections (Notion from Memory, Granola from Setup), then rescan. For a tool that belongs to Claude Code, reconnect it there. Use a supported export if this OS does not have an adapter.
 
 **Task check needs input:** open its review panel and respond there. **Check agents** is an optional real agent task that creates a small test file and can use provider allowance.
 

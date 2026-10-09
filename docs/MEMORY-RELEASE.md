@@ -30,8 +30,8 @@ Source switches control inclusion in the graph and subsequent memory retrieval. 
 | Claude, Codex and Hermes | Readable data in the supported local app folders under the current user's home directory. Setup discovers memories, conversations and skills where that app supports them. No accounts or histories are bundled. |
 | ChatGPT | A supported conversation export. This does not silently connect to a ChatGPT web session or read its private browser storage. |
 | Gmail, Outlook and calendar | The recipient's own provider configuration and sign-in/consent. Google setup can accept the Web OAuth client JSON and checks the callback address. A saved snapshot is distinct from a live connection. |
-| Granola / meetings | A supported readable local store or exported notes. An encrypted or unsupported cache needs an export. |
-| Notion | An integration token and pages shared with that integration. Connect and import the desired pages; this does not grant access to every page in a workspace. |
+| Granola / meetings | A Granola API key entered in Setup, a supported readable local store, or exported notes. An encrypted or unsupported cache needs the API key or an export. |
+| Notion | Sign in to Notion from Memory to bring in recently edited pages. Importing a specific page by URL still uses an integration token and pages shared with that integration. |
 | Info / business | Data connected in the Business dashboard. Its memory context carries dates and source information; an account balance is not treated as revenue. |
 | Photos | Files selected by the user or an existing Design image index. Apple Photos and iCloud libraries are not automatically connected. |
 

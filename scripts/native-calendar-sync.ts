@@ -143,7 +143,11 @@ export function nativeCalendarSync(
       const previous = read();
       if (!previous.enabled && input.enable !== true)
         throw new Error("Connect Google Calendar before refreshing.");
-      const range = calendarRange(input);
+      // With no window given, read the last 60 days and the next 39, inside the 100 day limit below.
+      const range = calendarRange({
+        timeMin: input.timeMin ?? new Date(Date.now() - 60 * 86400000).toISOString(),
+        timeMax: input.timeMax ?? new Date(Date.now() + 39 * 86400000).toISOString(),
+      });
       if (Date.parse(range.timeMax) - Date.parse(range.timeMin) > 100 * 86400000)
         throw new Error("Choose a calendar window of up to 100 days.");
       syncing = true;

@@ -2,6 +2,7 @@ import { afterEach, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { pinnedConfig } from "./ceo-openclaw";
 import { briefing, ceoRoutes } from "./ceo-routes";
 import { ceoStore } from "./ceo-store";
 
@@ -65,27 +66,33 @@ test("a check-in is given goals and the state of the work, and nothing when busi
 });
 
 const HOME = "/Users/sample";
-const CHOSEN = { folder: `${HOME}/agents/openclaw`, minutes: 20, tasksPerDay: 4, dollarsPerDay: 3 };
+const CHOSEN = { folder: `${HOME}/agents/openclaw`, model: "openai/sample-model", minutes: 20, tasksPerDay: 4, dollarsPerDay: 3 };
 
 test("the OpenClaw page is told what is installed and the limits to agree to, and nothing more", async () => {
   const openclaw = () => ({ status: async () => ({ installed: true, version: "2026.9.9", gateway: "unknown" as const }) });
   expect(await routes({ openclaw, home: HOME }).handle("/ceo/openclaw", "GET", undefined)).toEqual({
     openclaw: { installed: true, version: "2026.9.9", gateway: "unknown" },
     limits: null,
-    suggested: { folder: `${HOME}/.openclaw/workspace/jarvis`, minutes: 15, tasksPerDay: 10, dollarsPerDay: 5 },
+    suggested: { folder: `${HOME}/Jarvis/openclaw`, minutes: 15, tasksPerDay: 10, dollarsPerDay: 5 },
+    settings: null,
   });
+  // Once OpenClaw names its model, the page is given the whole settings file a hand-off would run under.
+  const named = () => ({ status: async () => ({ installed: true, model: "openai/sample-model" }) });
+  const shown: any = await routes({ openclaw: named, home: HOME }).handle("/ceo/openclaw", "GET", undefined);
+  expect(shown.settings).toEqual(pinnedConfig("openai/sample-model"));
+  expect(shown.settings.tools.allow).toEqual(["read", "write", "edit"]);
   await expect(routes({ openclaw }).handle("/ceo/openclaw", "POST", {})).rejects.toThrow("Unknown CEO request.");
 });
 
 test("the button agrees to OpenClaw's limits and withdraws them; nothing else gets through", async () => {
   const openclaw = () => ({ status: async () => ({ installed: true }) });
   const page = routes({ openclaw, home: HOME });
-  for (const bad of [undefined, [], {}, { agree: false, ...CHOSEN }, { agree: true, ...CHOSEN, extra: 1 }, { withdraw: true, agree: true }, { agree: true, ...CHOSEN, folder: "/" }])
+  for (const bad of [undefined, [], {}, { agree: false, ...CHOSEN }, { agree: true, ...CHOSEN, extra: 1 }, { withdraw: true, agree: true }, { agree: true, ...CHOSEN, folder: "/" }, { agree: true, ...CHOSEN, model: undefined }])
     await expect(page.handle("/ceo/openclaw/limits", "POST", bad)).rejects.toThrow();
   expect((await page.handle("/ceo/openclaw", "GET", undefined) as any).limits).toBeNull();
   const agreed: any = await page.handle("/ceo/openclaw/limits", "POST", { agree: true, ...CHOSEN });
   expect(agreed.limits).toMatchObject(CHOSEN);
-  expect(await page.handle("/ceo/openclaw", "GET", undefined)).toMatchObject({ limits: { ...CHOSEN, agreedAt: agreed.limits.agreedAt }, suggested: null });
+  expect(await page.handle("/ceo/openclaw", "GET", undefined)).toMatchObject({ limits: { ...CHOSEN, agreedAt: agreed.limits.agreedAt }, suggested: null, settings: pinnedConfig(CHOSEN.model) });
   expect(await page.handle("/ceo/openclaw/limits", "POST", { withdraw: true })).toEqual({ limits: null });
   expect((await page.handle("/ceo/openclaw", "GET", undefined) as any).limits).toBeNull();
 });

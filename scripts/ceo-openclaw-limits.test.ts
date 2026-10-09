@@ -9,21 +9,36 @@ const HOME = "/Users/sample";
 const roots: string[] = [];
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
 const temporary = () => { const root = mkdtempSync(join(tmpdir(), "openclaw-limits-")); roots.push(root); return root; };
-const LIMITS = { folder: `${HOME}/agents/openclaw`, minutes: 15, tasksPerDay: 3, dollarsPerDay: 2 };
+const LIMITS = { folder: `${HOME}/agents/openclaw`, model: "openai/sample-model@openai:setup-1", minutes: 15, tasksPerDay: 3, dollarsPerDay: 2 };
 const task = (patch: Partial<CeoTask>): CeoTask => ({
   id: crypto.randomUUID(), key: crypto.randomUUID(), agent: "openclaw", title: "t", task: "t", status: "done",
   createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), ...patch,
 });
 
-test("the suggested work folder is OpenClaw's own, inside its workspace", () => {
-  expect(DEFAULT_LIMITS(HOME)).toEqual({ folder: `${HOME}/.openclaw/workspace/jarvis`, minutes: 15, tasksPerDay: 10, dollarsPerDay: 5 });
-  expect(checkFolder(DEFAULT_LIMITS(HOME).folder, HOME)).toBe(`${HOME}/.openclaw/workspace/jarvis`);
+test("the suggested work folder is one of its own, outside OpenClaw's own folder", () => {
+  expect(DEFAULT_LIMITS(HOME)).toEqual({ folder: `${HOME}/Jarvis/openclaw`, minutes: 15, tasksPerDay: 10, dollarsPerDay: 5 });
+  expect(checkFolder(DEFAULT_LIMITS(HOME).folder, HOME)).toBe(`${HOME}/Jarvis/openclaw`);
+});
+
+test("there is nothing to agree to until OpenClaw has named its model", () => {
+  const root = temporary(), limits = openclawLimits(root, HOME);
+  const { model: _, ...unnamed } = LIMITS;
+  for (const bad of [unnamed, { ...LIMITS, model: "" }, { ...LIMITS, model: "sample-model" }, { ...LIMITS, model: "openai/sample model" }, { ...LIMITS, model: `openai/${"m".repeat(200)}` }, { ...LIMITS, model: 'openai/x", "tools": {' }])
+    expect(() => limits.agree(bad)).toThrow("which model");
+  expect(limits.read()).toBeUndefined();
+  for (const model of ["openai/sample-model", "openai/sample-model@openai:setup-1", "openrouter/meta/sample-3.1:free"]) expect(limits.agree({ ...LIMITS, model }).model).toBe(model);
 });
 
 test("the work folder must be a folder of its own inside the person's home", () => {
   expect(checkFolder(`${HOME}/agents/openclaw/`, HOME)).toBe(`${HOME}/agents/openclaw`);
   for (const bad of ["agents", HOME, `${HOME}/`, "/tmp/work", "/Users/other/work", `${HOME}/../other`, `${HOME}/Documents`, `${HOME}/Desktop/`, `${HOME}/.ssh`, `${HOME}/.openclaw`])
     expect(() => checkFolder(bad, HOME)).toThrow();
+});
+
+test("a work folder anywhere inside OpenClaw's own folder is refused", () => {
+  for (const bad of [`${HOME}/.openclaw`, `${HOME}/.openclaw/workspace`, `${HOME}/.openclaw/workspace/jarvis`, `${HOME}/.openclaw/agents/main/agent/`])
+    expect(() => checkFolder(bad, HOME)).toThrow("outside OpenClaw's own");
+  expect(checkFolder(`${HOME}/work/.openclaw-tasks`, HOME)).toBe(`${HOME}/work/.openclaw-tasks`);
 });
 
 test("an agreement is kept privately, read back, and withdrawn", () => {

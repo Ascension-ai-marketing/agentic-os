@@ -131,7 +131,7 @@ export function brainTools(deps: { baseUrl?: string; request?: Fetch; ceo?: CeoD
         "dispatch_agent",
         "Hand a piece of work to a background agent. It returns at once; the agent works on its own and task_status reports on it later. " +
           "hermes: research, reading, summarising and drafting, with files and the web. claude_code: building or changing code and files on this computer; name the folder or project in the task when the work belongs in one. " +
-          "codex: the same kind of work as claude_code, done by Codex. openclaw: a general assistant that can use files, a shell and a browser, working in a folder of its own; " +
+          "codex: the same kind of work as claude_code, done by Codex. openclaw: reading, writing and editing files in a folder of its own, and nothing else: it cannot run commands, browse, search the web or message anyone, so give it only what it needs in the task itself; " +
           "it takes work only within limits the person agreed to (one task at a time, a time limit, a daily number and a daily spend), and asking for it when it cannot says why. " +
           "An agent cannot send, post, book or pay: it drafts, and anything that leaves this computer goes through propose_external_action. " +
           "The agent has none of this conversation, so write the task to stand on its own.",

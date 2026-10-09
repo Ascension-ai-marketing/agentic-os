@@ -33,6 +33,7 @@ import { join, resolve } from "node:path";
 import { approvalGate, type ApprovalGate, type Verdict } from "./ceo-approval-gate";
 import { anthropicReply, claudeProblem } from "./ceo-brain";
 import { hermesBoard, type HermesBoard } from "./ceo-hermes";
+import { openclaw, type Openclaw } from "./ceo-openclaw";
 import { openclawLimits } from "./ceo-openclaw-limits";
 import { ceoStore } from "./ceo-store";
 import { ceoSync } from "./ceo-sync";
@@ -159,7 +160,11 @@ export function ceoReply(options: {
       : `The person has just said no to: "${verdict.action}". It is declined and will not be done. Acknowledge that in a few words.`;
   }
   const records = () => { try { return store.digest(); } catch { return "The records of handed-out work and approvals could not be read just now."; } };
-  const { tools, runTool, settled } = brainTools({ ...options.os, ceo: { store, board, sync, gate: (id) => talk(id).gate, openclawLimits: openclawLimits(options.root).read } });
+  // One OpenClaw for as long as this runs, so a run that broke its limits stops the next; looked up again while it is not installed.
+  let found: Openclaw | undefined;
+  const claw = () => (found?.installed() ? found : (found = openclaw({ root: options.root })));
+  const handOff: Pick<Openclaw, "workerProblem" | "work"> = { workerProblem: (context) => claw().workerProblem(context), work: (input) => claw().work(input) };
+  const { tools, runTool, settled } = brainTools({ ...options.os, ceo: { store, board, sync, gate: (id) => talk(id).gate, openclaw: handOff, openclawLimits: openclawLimits(options.root).read } });
   const answer = anthropicReply({
     apiKey: options.apiKey, model: options.model, workspaceId: options.workspaceId, fetcher: options.fetcher, greeting: options.greeting, log, betweenTools: options.betweenTools, tools, runTool,
     system: `${CEO_PERSONA}\n\n${profileContext(options.root)}`,

@@ -348,7 +348,7 @@ export function voiceCompanion(root: string, dependencies: Dependencies = {}) {
         },
         tts: {
           voice_id: voiceId,
-          model_id: "eleven_flash_v2_5",
+          model_id: "eleven_v4",
           stability: 0.55,
           similarity_boost: 0.75,
           speed: 1.02,

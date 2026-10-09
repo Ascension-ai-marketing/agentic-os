@@ -50,7 +50,7 @@ function fixture(deferShutdown = false) {
         installed: true,
         signedIn: true,
         detail: "Fixture",
-        tools: ["gmail.send_email"],
+        tools: [],
         checkedAt: new Date().toISOString(),
       },
     ],

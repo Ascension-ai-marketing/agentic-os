@@ -39,13 +39,15 @@ Public profile links are optional. Review any suggested link before saving it: a
 
 Agentic OS can use configured local AI tools such as Codex and Claude Code. A tool being installed, an account being signed in, and a specific external app being callable are separate states. Connection checks show the state they can actually verify.
 
-Existing app or MCP connections belong to their host runtime. Where Codex exposes a supported connection, use it through Codex with that account's permissions. A Claude connection depends on the Claude runtime's own configuration. Choosing a different model does not transfer those tools or permissions. Setup checks supported connection metadata. Import refreshes the selected sources in the visible category; Copy setup list gives you a checklist for missing connections to paste into their native app. A checklist does not verify access or import history.
+Agentic OS connects to each account itself. Gmail, Outlook, Slack and Google Calendar are connected in Settings → Connections (Google and Outlook need your own OAuth client ID). Notion and Mercury use their own browser sign-in. Granola uses an API key. Syncing through these connections only reads; replying, labelling and booking need the extra access you grant in Connections. Codex is not needed for any of them.
 
-Direct Inbox and Calendar controls use their own account connections. They do not receive Google or Microsoft tokens from ChatGPT. You only need those direct integrations if you want those native controls. Imported snapshots remain useful without continuous sync, and you can add accounts later.
+Tools connected inside Codex or Claude Code stay with that runtime: an agent task uses them with that account's permissions, and choosing a different model does not transfer them. Import refreshes the selected sources in the visible category; Copy setup list gives you a checklist for missing connections. A checklist does not verify access or import history.
+
+Inbox and Calendar use those account connections. They do not receive Google or Microsoft tokens from ChatGPT or any other app. Imported snapshots remain useful without continuous sync, and you can add accounts later.
 
 Workspace Chat supports answers, drafting and a reviewed calendar-booking flow. For a booking, select an authorized account and writable calendar, review the exact event and guests, then confirm. A model reply alone cannot create the event. Other agent actions remain in the host runtime and its approval interface. Voice, cloud models and optional image understanding may require separate configuration or usage credits.
 
-See [assistant setup](ASSISTANT-SETUP.md) and the connection status inside the app for the actual options on your machine. OpenAI documents [Codex app discovery](https://learn.chatgpt.com/docs/app-server) and [plugins on supported surfaces](https://learn.chatgpt.com/docs/plugins); availability depends on the installed version and account.
+See [assistant setup](ASSISTANT-SETUP.md) and the connection status inside the app for the actual options on your machine.
 
 ## Keep mail lightweight
 

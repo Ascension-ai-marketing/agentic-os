@@ -1,7 +1,6 @@
 import { spawn } from "node:child_process";
 import { assistantBinary, commandLaunch, terminateChild } from "./assistant-runtime";
 import { homedir } from "node:os";
-import { existingConnectionDiscovery } from "./account-discovery";
 import type { ExistingAppConnection } from "../src/lib/operator";
 
 /** Keep only names and CLI connection health; never retain server URLs or configuration. */
@@ -17,8 +16,7 @@ export function claudeConnectionMetadata(output: string): ExistingAppConnection[
   }
   return apps;
 }
-export function nativeConnectionDiscovery(root: string, options: NonNullable<Parameters<typeof existingConnectionDiscovery>[1]> & { claudeBinary?: string | null; claudeStart?: typeof spawn } = {}) {
-  const codex = existingConnectionDiscovery(root, options);
+export function nativeConnectionDiscovery(root: string, options: { homeDir?: string; platform?: NodeJS.Platform; env?: NodeJS.ProcessEnv; claudeBinary?: string | null; claudeStart?: typeof spawn } = {}) {
   let cached: { at: number; apps: ExistingAppConnection[]; detail: string } | undefined;
   let pending: Promise<NonNullable<typeof cached>> | undefined;
   let cancel: (() => void) | undefined, stopped = false;
@@ -49,10 +47,10 @@ export function nativeConnectionDiscovery(root: string, options: NonNullable<Par
   }
   return {
     async read(force = false) {
-      if (stopped) return codex.read();
-      const [native, mcp] = await Promise.all([codex.read(force), claude(force)]);
-      return { ...native, apps: [...native.apps.map(app => ({ ...app, harness: "codex" as const })), ...mcp.apps], harnesses: [{ id: "codex", detail: native.detail }, { id: "claude", detail: mcp.detail }], detail: native.detail + " " + mcp.detail };
+      if (stopped) return { apps: [], harnesses: [], detail: "Discovery stopped." };
+      const mcp = await claude(force);
+      return { apps: mcp.apps, harnesses: [{ id: "claude", detail: mcp.detail }], detail: mcp.detail };
     },
-    close() { stopped = true; codex.close(); cancel?.(); },
+    close() { stopped = true; cancel?.(); },
   };
 }

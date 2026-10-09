@@ -44,7 +44,7 @@ export type MemoryApp = {
   /** A finished pass that skipped some records (oversized or malformed) but imported the rest. */
   warning?: string;
   status: "idle" | "scanning" | "syncing" | "error";
-  connectionMethod?: "codex" | "api";
+  connectionMethod?: "mcp" | "api";
   mode?: "local" | "account" | "api" | "import";
   setupAction?: "accounts" | "import" | "notion";
   origin?: string;

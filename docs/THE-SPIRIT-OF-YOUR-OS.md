@@ -44,7 +44,7 @@ Use Design, Website or agent tasks when a concrete output will help. Give a brie
 
 Connect one useful source. Organise a small amount of context around a goal. Reason with it in Chat. Execute a specific, reviewable action through the tool that has the right permission. Repeat when the result earns its place in your routine.
 
-Your Claude and Codex accounts remain yours. The OS can discover supported connections exposed by those tools. Discovery, sign-in, readable data and permission to act are distinct. When the OS cannot use a service directly, keep using it in its native app or add a supported export.
+Your Claude and Codex accounts remain yours. The OS connects to your mail, calendar and other accounts itself, and can list the tools Claude exposes. Discovery, sign-in, readable data and permission to act are distinct. When the OS cannot use a service directly, keep using it in its native app or add a supported export.
 
 ## A useful first week
 

@@ -39,7 +39,7 @@ test("explicit rescan refreshes Claude health instead of returning cached metada
     });
     return child;
   }) as any;
-  const service = nativeConnectionDiscovery("/synthetic", { binary: null, claudeBinary: "/synthetic/claude", claudeStart: launch });
+  const service = nativeConnectionDiscovery("/synthetic", { claudeBinary: "/synthetic/claude", claudeStart: launch });
   try {
     expect((await service.read()).apps.map(app => app.name)).toEqual(["first"]);
     expect((await service.read()).apps.map(app => app.name)).toEqual(["first"]);
@@ -62,7 +62,7 @@ test("on Windows the Claude MCP check runs claude.cmd through cmd.exe, hidden, a
     return child;
   }) as any;
   const service = nativeConnectionDiscovery("C:\\Users\\example\\agentic-os", {
-    binary: null, claudeBinary: "C:\\Users\\example\\AppData\\Roaming\\npm\\claude.cmd", claudeStart: launch,
+    claudeBinary: "C:\\Users\\example\\AppData\\Roaming\\npm\\claude.cmd", claudeStart: launch,
     platform: "win32", env: { ComSpec: "C:\\Windows\\System32\\cmd.exe" },
   });
   try {
@@ -74,5 +74,23 @@ test("on Windows the Claude MCP check runs claude.cmd through cmd.exe, hidden, a
     expect(launched[0].options).toMatchObject({ cwd: "C:\\Users\\example\\agentic-os", windowsHide: true, windowsVerbatimArguments: true, env: { NO_COLOR: "1" } });
     expect(kills.length).toBeGreaterThan(0);
     expect(kills.every((signal) => signal === undefined)).toBe(true);
+  } finally { service.close(); }
+});
+
+test("only Claude's connections are listed; no Codex inventory is read", async () => {
+  const launch = (() => {
+    const child: any = new EventEmitter();
+    child.stdout = new PassThrough(); child.stderr = new PassThrough();
+    child.exitCode = null; child.signalCode = null;
+    child.kill = () => { child.signalCode = "SIGTERM"; return true; };
+    queueMicrotask(() => { child.stdout.write("notion: https://example.test - ✓ Connected\n"); child.exitCode = 0; child.emit("close", 0); });
+    return child;
+  }) as any;
+  const service = nativeConnectionDiscovery("/synthetic", { claudeBinary: "/synthetic/claude", claudeStart: launch, env: { AGENTIC_OS_NO_CODEX: "1" } });
+  try {
+    const result = await service.read();
+    expect(result.harnesses.map((harness) => harness.id)).toEqual(["claude"]);
+    expect(result.apps.map((app) => app.harness)).toEqual(["claude"]);
+    expect(result.detail).toBe(result.harnesses[0].detail);
   } finally { service.close(); }
 });

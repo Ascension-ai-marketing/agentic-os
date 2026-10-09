@@ -28,13 +28,15 @@ Choose **Sign in with ChatGPT** and use your own account. Codex also supports AP
 
 Return to Agentic OS, rescan and open **Models**. Pick an available Codex model in Chat. A ChatGPT web login alone does not establish a local Codex session.
 
-## Find your existing connections
+## Connect your accounts
 
-Open **Your connected apps & plugins** during setup. The OS checks the app and plugin metadata exposed by Codex and the MCP connection health exposed by Claude Code. It keeps names and status, not a copy of the host's credentials. The list is bounded and cannot guarantee every remote account or unsupported connector appears.
+Agentic OS connects to each account itself. Gmail, Outlook, Slack and Google Calendar are connected in Settings → Connections (Google and Outlook need your own OAuth client ID). Notion and Mercury use their own browser sign-in. Granola uses an API key. Syncing through these connections only reads; replying, labelling and booking need the extra access you grant in Connections. Codex is not needed for any of them.
 
-For Claude, inspect `/mcp` inside Claude Code if a connection is missing. Supported claude.ai connectors depend on the active sign-in, runtime version and workspace controls; see [Claude's connection guide](https://code.claude.com/docs/en/mcp). For Codex, check the connection in that runtime's app settings. Then use **Rescan connections** in this OS.
+During setup the scan also lists the tools connected in Claude Code, by name and health only. It keeps names and status, not a copy of Claude's credentials, and the list cannot guarantee every remote connector appears.
 
-**Found on this computer** means a tool was detected. **Signed in** means the runtime reports authentication. **Connected · tools unchecked** means metadata was found, but the OS has not proved the tool can run. **Available** means the checked runtime exposed the supported capability; the exact task may still require approval. **Import not ready** means this OS does not have the required adapter.
+For Claude, inspect `/mcp` inside Claude Code if a connection is missing. Supported claude.ai connectors depend on the active sign-in, runtime version and workspace controls; see [Claude's connection guide](https://code.claude.com/docs/en/mcp). Then use **Rescan connections** in this OS.
+
+**Installed** means a tool was detected on this computer; it does not verify sign-in or model access. **Connect in Settings** or **Not connected yet** means the account has no connection in this app. An account name or **Connected** means this app can read it; the exact task may still require approval.
 
 Importing history is separate from connecting a model. Choose optional local histories or add your own supported ChatGPT export in Memory. Native Inbox and Calendar controls need their own supported connection; read access does not grant sending or booking. Selecting Claude does not transfer Codex connections into Claude, or the reverse.
 

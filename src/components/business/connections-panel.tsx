@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowUpRight, ChevronDown, RefreshCw, Check, Loader2 } from "lucide-react";
-import { operatorRequest } from "@/lib/operator";
+import { openConnectionSignIn, operatorRequest, type McpStatus } from "@/lib/operator";
 import { useBusinessWorkspace, type AudiencePlatform } from "@/lib/business-workspace";
 import { AudienceLogo } from "./audience-panel";
 import "./connections-polish.css";
@@ -62,6 +62,13 @@ export function ConnectionsPanel() {
     queryFn: () => operatorRequest("/business/native-connections"),
     staleTime: 60_000,
     retry: false,
+    refetchOnWindowFocus: "always",
+  });
+  const mcp = useQuery<McpStatus>({
+    queryKey: ["mcp-status"],
+    queryFn: () => operatorRequest("/mcp/status"),
+    retry: false,
+    refetchOnWindowFocus: "always",
   });
   const status = useQuery<{
     integrations: Array<{
@@ -155,7 +162,26 @@ export function ConnectionsPanel() {
     try {
       const result = await operatorRequest<{ accounts: number }>("/business/mercury/sync", {});
       await workspace.refresh();
-      setNotice(`${result.accounts} Mercury account balances refreshed through Codex.`);
+      setNotice(`${result.accounts} Mercury account balances refreshed.`);
+    } catch (cause) { setError((cause as Error).message); }
+    finally { setBusy(""); }
+  }
+  async function connectMercury() {
+    if (busy) return;
+    setBusy("mercury-connection"); setError(""); setNotice("");
+    try {
+      await openConnectionSignIn("mercury");
+      setNotice("Finish signing in to Mercury in the new tab, then come back here.");
+    } catch (cause) { setError((cause as Error).message); }
+    finally { setBusy(""); }
+  }
+  async function disconnectMercury() {
+    if (busy) return;
+    setBusy("mercury-connection"); setError(""); setNotice("");
+    try {
+      await operatorRequest("/mcp/disconnect", { provider: "mercury" });
+      await Promise.all([qc.invalidateQueries({ queryKey: ["mcp-status"] }), qc.invalidateQueries({ queryKey: ["business-native-connections"] })]);
+      setNotice("Mercury disconnected.");
     } catch (cause) { setError((cause as Error).message); }
     finally { setBusy(""); }
   }
@@ -213,16 +239,24 @@ export function ConnectionsPanel() {
             <div className="biz-provider-identity">
               <strong>Mercury</strong>
               <span>
-                {native.isPending ? "Checking Codex…" : native.isError ? "Codex access couldn’t be checked" : native.data?.mercury.available
+                {native.isPending ? "Checking Mercury…" : native.isError ? "Mercury couldn’t be checked" : native.data?.mercury.available
                   ? workspace.data?.finances ? `Balances saved · ${stamp(workspace.data.finances.recordedAt)}` : "Read your current account balances"
-                  : "Connect Mercury in Codex, then recheck"}
+                  : "Connect Mercury to read balances and income"}
               </span>
             </div>
-            <span className="biz-provider-status is-snapshot">{native.data?.mercury.available ? "Via Codex" : workspace.data?.finances ? "Saved snapshot" : "Not connected"}</span>
-            <button type="button" className="biz-provider-action" disabled={!!busy || native.isFetching} onClick={() => native.data?.mercury.available ? void refreshMercury() : void native.refetch()}>
-              {busy === "mercury" || native.isFetching ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
-              {busy === "mercury" ? "Refreshing…" : native.data?.mercury.available ? "Refresh balances" : "Recheck"}
-            </button>
+            <span className="biz-provider-status is-snapshot">{native.data?.mercury.available ? "Connected" : workspace.data?.finances ? "Saved snapshot" : "Not connected"}</span>
+            <span className="biz-provider-actions">
+              <button type="button" className="biz-provider-action" disabled={!!busy || mcp.isPending} onClick={() => void (mcp.data?.mercury.connected ? disconnectMercury() : connectMercury())}>
+                {busy === "mercury-connection" && <Loader2 size={12} className="animate-spin" />}
+                {mcp.data?.mercury.connected ? "Disconnect" : "Connect Mercury"}
+              </button>
+              {mcp.data?.mercury.connected && (
+                <button type="button" className="biz-provider-action" disabled={!!busy || native.isFetching} onClick={() => native.data?.mercury.available ? void refreshMercury() : void native.refetch()}>
+                  {busy === "mercury" || native.isFetching ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                  {busy === "mercury" ? "Refreshing…" : native.data?.mercury.available ? "Refresh balances" : "Recheck"}
+                </button>
+              )}
+            </span>
           </div>
           <div className="biz-provider-row" aria-label="Stripe">
             <BusinessLogo provider="stripe" />

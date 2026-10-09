@@ -173,6 +173,13 @@
   white-space: nowrap;
   min-width: 86px;
 }
+.biz-provider-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
 .biz-provider-action:hover {
   border-color: color-mix(in srgb, var(--op-accent) 45%, var(--op-border));
 }

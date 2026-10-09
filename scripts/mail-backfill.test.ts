@@ -112,9 +112,31 @@ test("a numeric outlook cursor left by the old reader is discarded, not sent to 
   expect(paths[0]).not.toContain("300");
 });
 
+/** A Gmail mailbox with no messages that records each list request. */
+const emptyGmail = (lists: URLSearchParams[]) => async (_provider: string, path: string) => { lists.push(query(path)); return { resultSizeEstimate: 0 }; };
+test("a gmail page token left by the old reader is discarded, not sent to the provider", async () => {
+  const dir = root();
+  seed(dir, { gmail: { account: "me@x.io", since: new Date(NOW - 366 * 864e5).toISOString(), status: "error", imported: 400, cursor: "old-reader-token", error: "Gmail is not signed in to Codex." } });
+  const lists: URLSearchParams[] = [];
+  const backfill = mailBackfill(dir, { archive: fakeArchive(), identity: async () => "me@x.io", request: emptyGmail(lists), now: () => NOW });
+  backfill.start(["gmail"]);
+  await until(() => backfill.status().gmail?.status === "done");
+  expect(lists).toHaveLength(1);
+  expect(lists[0].has("pageToken")).toBe(false);
+});
+test("a gmail page token this reader saved is sent when the import resumes", async () => {
+  const dir = root();
+  seed(dir, { gmail: { account: "me@x.io", since: new Date(NOW - 366 * 864e5).toISOString(), status: "waiting", imported: 100, cursor: "100", cursorFrom: "account" } });
+  const lists: URLSearchParams[] = [];
+  const backfill = mailBackfill(dir, { archive: fakeArchive(), identity: async () => "me@x.io", request: emptyGmail(lists), now: () => NOW });
+  backfill.start(["gmail"]);
+  await until(() => backfill.status().gmail?.status === "done");
+  expect(lists[0].get("pageToken")).toBe("100");
+});
+
 test("a saved outlook next link resumes where the last session stopped", async () => {
   const dir = root();
-  seed(dir, { outlook: { account: "me@outlook.com", since: new Date(NOW - 366 * 864e5).toISOString(), status: "waiting", imported: 100, cursor: LINK + "100" } });
+  seed(dir, { outlook: { account: "me@outlook.com", since: new Date(NOW - 366 * 864e5).toISOString(), status: "waiting", imported: 100, cursor: LINK + "100", cursorFrom: "account" } });
   const all = Array.from({ length: 150 }, (_, i) => ({ id: `r${i}`, receivedDateTime: new Date(NOW - i * 864e5).toISOString() }));
   const paths: string[] = [];
   const backfill = mailBackfill(dir, { archive: fakeArchive(), identity: async () => "me@outlook.com", request: outlookPages(all, paths), now: () => NOW });

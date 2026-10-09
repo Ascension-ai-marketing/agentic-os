@@ -493,7 +493,7 @@ function LiveInboxWorkspace() {
     : activeNative?.error
       ? "Refresh needs attention"
     : activeNative?.lastSync
-      ? `Refreshed through Codex · ${new Date(activeNative.lastSync).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+      ? `Refreshed · ${new Date(activeNative.lastSync).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
     : snapshot
       ? "Saved snapshot"
       : provider === "all"
@@ -850,7 +850,7 @@ function LiveInboxWorkspace() {
             {isPreview
               ? "A fictional workspace to try the experience. Demo replies stay in this browser."
               : activeNative
-                  ? "Recent messages through Codex · refreshes each minute while this page is visible. Open the original to reply."
+                  ? "Recent messages · refreshes each minute while this page is visible. Open the original to reply."
                 : hasSourceMessages
                   ? "Your saved conversations. Use the original app for the latest messages."
                   : "Your connected account and saved messages. No sample conversations."}
@@ -1265,7 +1265,7 @@ function LiveInboxWorkspace() {
                     {connected.some((a) => a.id === "google" && ["all", "gmail"].includes(provider))
                       ? `Connected Gmail refreshes every 60 seconds while this page is visible. ${activeSource?.lastSync ? `Last updated ${new Date(activeSource.lastSync).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}.` : "Use refresh to check your accounts now."}`
                       : activeNative
-                        ? `Recent messages refresh through Codex every 60 seconds while this page is visible. ${activeNative.lastSync ? `Updated ${new Date(activeNative.lastSync).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}.` : ""}`
+                        ? `Recent messages refresh every 60 seconds while this page is visible. ${activeNative.lastSync ? `Updated ${new Date(activeNative.lastSync).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}.` : ""}`
                       : snapshot
                         ? `Saved snapshot · ${new Date(snapshot.importedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · Connect for refresh and remote actions`
                         : "Original conversations stay in their source apps."}
@@ -1761,7 +1761,7 @@ function InboxOverview({
             </span>
             <span className="wi-overview-source-status">
               <i className={source.connected || source.native && !source.native.error ? "connected" : ""} />
-              {source.connected ? "Connected" : source.native ? source.native.error ? "Refresh needs attention" : "Read through Codex" : source.count ? "Saved messages" : "Not connected"}
+              {source.connected ? "Connected" : source.native ? source.native.error ? "Refresh needs attention" : "Connected" : source.count ? "Saved messages" : "Not connected"}
               <ChevronRight size={14} />
             </span>
           </button>

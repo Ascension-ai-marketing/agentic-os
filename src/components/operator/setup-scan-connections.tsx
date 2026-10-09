@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type MutableRefObject, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { BrainCircuit, Check, Copy, Cpu, Info, Loader2, MessageCircle, RefreshCw, ScanLine, Wallet, Terminal, CreditCard } from "lucide-react";
+import { BrainCircuit, Check, Copy, Cpu, Info, Loader2, MessageCircle, RefreshCw, ScanLine, Wallet, Terminal } from "lucide-react";
 import { operatorRequest, type ConnectionDiscovery } from "@/lib/operator";
 import { setupImportResult } from "@/lib/setup-import-result";
 import { BrainConnectCards } from "@/components/brain/brain-connect";
@@ -16,11 +16,11 @@ type Tool = { id: string; name: string; installed: boolean; detail?: string };
 const WINDOWS_PROMPT = `I am setting up Agentic OS on Windows. macOS is its verified platform; Windows is portable but not fully verified. Walk me through adapting it step by step, checking each step before moving on:
 1. Confirm bun (bun --version) and Node 22.12+ are installed; if not, give me the winget or PowerShell install commands.
 2. In the Agentic OS folder, run "Start Agentic OS.bat" (or "Start Agentic OS.ps1"). If it fails, read the error with me and fix it.
-3. Check that Codex and Claude Code are installed and signed in (codex --version, claude --version; look for codex.cmd / claude.cmd under %APPDATA%\\npm). The OS reads Gmail, Calendar, Slack, Notion, Granola and Mercury through Codex, and chat history from %USERPROFILE%\\.codex and %USERPROFILE%\\.claude.
+3. Check that Codex and Claude Code are installed and signed in (codex --version, claude --version; look for codex.cmd / claude.cmd under %APPDATA%\\npm). Gmail, Outlook, Slack and Google Calendar connect in Settings → Connections. Notion and Mercury use their own sign-in. Granola uses an API key. Chat history is read from %USERPROFILE%\\.codex and %USERPROFILE%\\.claude.
 4. Open http://127.0.0.1:8081/setup, run the scan, and tell me which cards are missing compared with what I have installed. For each one, find the Windows install path and tell me what to change.
 5. Note anything that only works on macOS (Documents folder permission, the .command launcher) and give me the Windows equivalent or say it is not needed.
 Keep answers short and one step at a time. Never copy tokens or cookies between apps.`;
-type NativeBusiness = Partial<Record<"mercury" | "notion" | "granola" | "instagram" | "tiktok" | "paypal" | "stripe", { available: boolean; importSupported?: boolean }>>;
+type NativeBusiness = { mercury?: { available: boolean; requiresSignIn?: boolean } };
 type BusinessIntegration = { id: "youtube"; configured: boolean };
 type MercuryPreview = { accounts: Array<{ name: string; balance: number; currency: string | null }>; recordedAt: string };
 type CalendarStatus = { available: boolean; enabled: boolean; account?: string; error?: string };
@@ -34,7 +34,7 @@ export const connectionStages = [
   { name: "Finances", Icon: Wallet, copy: "Your balances and business numbers. In one place." },
 ];
 const probeLabels: Array<[ProbeKey, string]> = [
-  ["connections", "Connected apps in Codex and Claude"], ["tools", "AI tools and editors on this computer"], ["memory", "Notes, meetings and pages"],
+  ["connections", "Connected apps"], ["tools", "AI tools and editors on this computer"], ["memory", "Notes, meetings and pages"],
   ["accounts", "Messages"], ["calendar", "Calendar"], ["finance", "Finances"], ["business", "Audience"],
 ];
 /** Memory apps that import history: AI histories on the AI stage, notes and pages on Memory. */
@@ -69,7 +69,7 @@ async function celebrateImport() {
 }
 
 /**
- * Scan finds what this computer, Codex and Claude already have. Everything found starts switched on and
+ * Scan finds what this computer, the accounts connected in this app and Claude already have. Everything found starts switched on and
  * shows what was found. The last section imports every switched-on source in one go.
  */
 export function SetupScanConnections({ stage, onStageChange, onBusyChange, onScanned, onAgentChecks, socialProfiles, tools: savedTools, onToolsChange, importRef, onPendingChange, onImported }: {
@@ -107,13 +107,13 @@ export function SetupScanConnections({ stage, onStageChange, onBusyChange, onSca
   };
   const names = (list: Array<{ name: string }>) => list.map(item => item.name).join(", ");
 
-  /** Everything else Codex and Claude expose, sorted into the category it belongs to. */
+  /** Everything else Claude exposes, sorted into the category it belongs to. */
   const connectedApps = (list: ConnectionDiscovery | undefined) => {
     const seen = new Map<string, { name: string; slug: string; via: string[]; stage: number }>();
     for (const app of list?.apps || []) {
       if (!(app.observed || app.isAccessible) || systemApps.test(app.name) || representedApps.test(app.name)) continue;
       const key = app.name.toLowerCase().replace(/[-_ ]?mcp$/, "").trim();
-      const via = app.harness === "claude" ? "Claude" : "Codex";
+      const via = "Claude";
       const prior = seen.get(key);
       if (prior) { if (!prior.via.includes(via)) prior.via.push(via); continue; }
       const index = memoryApps.test(key) ? 1 : communicationApps.test(key) ? 2 : financeApps.test(key) ? 3 : 0;
@@ -131,9 +131,9 @@ export function SetupScanConnections({ stage, onStageChange, onBusyChange, onSca
         track("connections", operatorRequest<ConnectionDiscovery>("/setup/connections?refresh=1"), value => `${count(value.apps.filter(app => app.observed || app.isAccessible).length, "app")} connected`),
         track("tools", operatorRequest<{ tools: Tool[]; platform?: string }>("/setup/discovery"), value => `${count(value.tools.filter(t => t.installed && aiTools.some(([id]) => id === t.id)).length, "AI tool")} · ${count(value.tools.filter(t => t.installed && editorNames.some(([id]) => id === t.id)).length, "editor")}`),
         track("memory", operatorRequest<{ apps: MemoryApp[] }>("/memory/apps?refresh=1"), value => names(value.apps.filter(app => [...aiHistoryApps, ...memoryStageApps].includes(app.id) && canImport(app))) || "Nothing readable yet"),
-        track("accounts", operatorRequest<{ providers: NativeConnection[]; error?: string }>("/native-connections"), value => names(value.providers.filter(p => p.available)) || "None connected in Codex"),
-        track("calendar", operatorRequest<CalendarStatus>("/calendar/native"), value => value.available ? value.account || "Google Calendar" : "Not connected in Codex"),
-        track("finance", operatorRequest<NativeBusiness>("/business/native-connections?refresh=1"), value => value.mercury?.available ? "Mercury connected" : "No bank connected in Codex"),
+        track("accounts", operatorRequest<{ providers: NativeConnection[]; error?: string }>("/native-connections"), value => names(value.providers.filter(p => p.available)) || "None connected yet"),
+        track("calendar", operatorRequest<CalendarStatus>("/calendar/native"), value => value.available ? value.account || "Google Calendar" : "Not connected yet"),
+        track("finance", operatorRequest<NativeBusiness>("/business/native-connections?refresh=1"), value => value.mercury?.available ? "Mercury connected" : "No bank connected yet"),
         track("business", operatorRequest<{ integrations: BusinessIntegration[] }>("/business/integrations"), value => names(value.integrations.filter(i => i.configured).map(() => ({ name: "YouTube" }))) || "Nothing configured yet"),
       ]);
       if (!alive.current) return;
@@ -177,12 +177,11 @@ export function SetupScanConnections({ stage, onStageChange, onBusyChange, onSca
     const installed = !!tool?.installed, importable = aiHistoryApps.includes(id) && !!app && canImport(app);
     const counts = app?.counts;
     const found = counts ? [counts.conversations ? count(counts.conversations, "chat") : "", counts.memories ? count(counts.memories, "memory", "memories") : "", counts.skills ? count(counts.skills, "skill") : ""].filter(Boolean).join(" · ") : "";
-    const viaCodex = id === "chatgpt" && !!inventory?.apps.some(app => app.harness === "codex");
     return { id, name, installed, key: installed ? `${importable ? "local" : "tool"}:${id}` : undefined, available: installed,
-      status: !checked.tools ? "Check unavailable" : !installed ? "Not installed" : importable && found ? `Found · ${found}` : importable ? "Found · history ready" : id === "chatgpt" ? viaCodex ? "Installed · your ChatGPT apps come in through Codex" : "Installed" : app?.enabled ? "History needs attention" : "Installed",
+      status: !checked.tools ? "Check unavailable" : !installed ? "Not installed" : importable && found ? `Found · ${found}` : importable ? "Found · history ready" : id === "chatgpt" ? "Installed" : app?.enabled ? "History needs attention" : "Installed",
       evidence: [installed ? `${name} was detected on this computer. This does not verify sign-in or model access.` : "No installed app was detected by the supported checks.",
         app?.availabilityNote || (importable ? "Local history files were found. Import copies text only; tool payloads and account files are excluded." : ""),
-        id === "chatgpt" ? "ChatGPT keeps its chats in the cloud, so there is no local history to read. Its connected apps arrive through Codex, which shares the same account." : "",
+        id === "chatgpt" ? "ChatGPT keeps its chats in the cloud, so there is no local history to read. Add its export in Memory to bring your conversations here." : "",
       ].filter(Boolean).join(" "),
     };
   }
@@ -195,12 +194,11 @@ export function SetupScanConnections({ stage, onStageChange, onBusyChange, onSca
   }
   function memoryChoice(id: "granola" | "notion" | "obsidian", name: string): Choice {
     const app = apps.find(a => a.id === id), tool = tools.find(t => t.id === id);
-    const viaCodex = app?.mode === "api" && app.connectionMethod === "codex";
     const available = app ? canImport(app) : false;
     const notes = app?.discovery?.fileCount || 0, vault = app?.discovery?.roots?.[0], blocked = app?.discovery?.blocked;
     const status = !checked.apps ? "Check unavailable"
-      : id === "granola" ? app?.mode === "api" ? viaCodex ? "Connected via Codex · meeting notes" : "API connected · meeting notes" : "Connect your Granola account"
-      : id === "notion" ? viaCodex ? "Connected via Codex · recent pages" : available ? "Page export ready" : "Not connected in Codex"
+      : id === "granola" ? app?.mode === "api" ? "API connected · meeting notes" : "Connect your Granola account"
+      : id === "notion" ? app?.connectionMethod === "mcp" ? "Connected · recent pages" : available ? "Page export ready" : "Not connected yet"
       : available ? `${count(notes, "note")} in ${vault || "your vault"}` : blocked ? `Vault found · macOS needs your OK to read ${blocked.replace("your ", "")}` : tool?.installed ? "Installed · no vault registered yet" : "Not installed";
     return { id, name, key: `local:${id}`, installed: id === "granola" || id === "notion" ? true : !!tool?.installed || !!blocked || available, available: id === "granola" ? app?.mode === "api" : available,
       status,
@@ -212,13 +210,13 @@ export function SetupScanConnections({ stage, onStageChange, onBusyChange, onSca
     const account = accounts.find(a => a.id === id);
     const who = account?.workspace || account?.account;
     return { id, name, key: `account:${id}`, installed: true, available: account?.available,
-      status: account?.available ? `${who ? who + " · " : ""}via Codex` : !checked.accounts ? "Check unavailable" : "Connect in Codex",
-      evidence: account?.available ? `${name}'s read connection is exposed by Codex${who ? ` for ${who}` : ""}. Import refreshes recent messages; it does not import the entire account or transfer credentials.` : "No callable read connection was found in Codex. Connect the app in Codex and rescan.",
+      status: account?.available ? who || "Connected" : !checked.accounts ? "Check unavailable" : "Connect in Settings",
+      evidence: account?.available ? `${name} is connected in this app${who ? ` as ${who}` : ""}. Import refreshes recent messages; it does not import the entire account.` : `${name} is not connected yet. Connect it in Settings → Connections and rescan.`,
     };
   }
   const calendarChoice: Choice = { id: "calendar", name: "Google Calendar", key: "calendar:google", installed: true, available: !!calendar?.available,
-    status: !checked.calendar ? "Check unavailable" : calendar?.available ? `${calendar.account ? calendar.account + " · " : ""}via Codex` : "Connect in Codex",
-    evidence: calendar?.available ? "Google Calendar's read tools are exposed by Codex. Import reads events from a month back to two months ahead; nothing is written to your calendar." : calendar?.error || "No callable calendar read connection was found in Codex. Connect Google Calendar in Codex and rescan." };
+    status: !checked.calendar ? "Check unavailable" : calendar?.available ? calendar.account || "Connected" : "Connect in Settings",
+    evidence: calendar?.available ? "Google Calendar is connected in this app. Import reads events from a month back to two months ahead; nothing is written to your calendar." : calendar?.error || "Google Calendar is not connected yet. Connect Google in Settings → Connections, allow calendar access and rescan." };
   function businessChoice(id: "youtube"): Choice {
     const available = business.some(b => b.id === id && b.configured);
     return { id, name: "YouTube", key: `business:${id}`, installed: true, available,
@@ -227,20 +225,20 @@ export function SetupScanConnections({ stage, onStageChange, onBusyChange, onSca
       evidence: available ? "The OS already has a configured audience integration. Import refreshes its audience snapshot, not messages or full video history." : "YouTube needs a YouTube Data API key in ~/.config/agentic-os.env and your channel URL. Open Connect for the steps.",
     };
   }
-  function financeChoice(id: "mercury" | "paypal" | "stripe"): Choice {
-    const available = !!nativeBusiness?.[id]?.available;
-    const preview = id === "mercury" && mercury && typeof mercury === "object" ? mercury : undefined;
-    return { id, name: id === "mercury" ? "Mercury" : id === "paypal" ? "PayPal" : "Stripe", key: `business:${id}`, installed: true, available: id === "mercury" && available,
-      status: !checked.finance ? "Check unavailable" : !available ? "Connect in Codex" : id !== "mercury" ? "Found in Codex · import not ready"
-        : preview ? `${count(preview.accounts.length, "account")} · ${money(preview.accounts)} · via Codex` : mercury === "loading" ? "Reading balances via Codex…" : mercury === "failed" ? "Connected via Codex · balances unavailable right now" : "Balances via Codex",
-      evidence: id === "mercury" ? "Checks for Mercury's read-only account tool in Codex. Import refreshes account balances and recent income." : "Checks read-tool metadata in Codex. This OS does not yet have an import adapter for this source; connecting it alone won't enable import.",
+  function financeChoice(): Choice {
+    const available = !!nativeBusiness?.mercury?.available;
+    const preview = mercury && typeof mercury === "object" ? mercury : undefined;
+    return { id: "mercury", name: "Mercury", key: "business:mercury", installed: true, available,
+      status: !checked.finance ? "Check unavailable" : !available ? "Connect in Settings"
+        : preview ? `${count(preview.accounts.length, "account")} · ${money(preview.accounts)}` : mercury === "loading" ? "Reading balances…" : mercury === "failed" ? "Connected · balances unavailable" : "Connected",
+      evidence: available ? "Mercury is connected in this app, read-only. Import refreshes account balances and recent income." : "Mercury is not connected yet. Connect it in Settings → Connections and rescan.",
     };
   }
   const allChoices: Choice[][] = [
     [...aiTools.map(([id, name]) => aiChoice(id, name)), ...editorNames.map(([id, name]) => editorChoice(id, name)), ...connected.filter(item => item.stage === 0).map(connectedChoice)],
     [memoryChoice("granola", "Granola"), memoryChoice("notion", "Notion"), memoryChoice("obsidian", "Obsidian"), ...connected.filter(item => item.stage === 1).map(connectedChoice)],
     [accountChoice("gmail", "Gmail"), accountChoice("outlook", "Outlook"), accountChoice("slack", "Slack"), calendarChoice, businessChoice("youtube"), ...connected.filter(item => item.stage === 2).map(connectedChoice)],
-    [...(["mercury", "paypal", "stripe"] as const).map(financeChoice), ...connected.filter(item => item.stage === 3).map(connectedChoice)],
+    [financeChoice(), ...connected.filter(item => item.stage === 3).map(connectedChoice)],
   ];
   // Things that are not on this computer stay out of the way unless asked for.
   const hidden = allChoices[stage].filter(choice => !choice.installed).length;
@@ -360,19 +358,15 @@ export function SetupScanConnections({ stage, onStageChange, onBusyChange, onSca
 
   function mark(choice: Choice) {
     if (["gmail", "outlook", "slack"].includes(choice.id)) return <ProviderLogo provider={choice.id as "gmail" | "outlook" | "slack"} />;
-    if (["mercury", "stripe", "youtube"].includes(choice.id)) return <img src={`/business-sources/${choice.id === "youtube" ? "youtube-symbol.svg" : `${choice.id}.svg`}`} alt="" />;
-    if (choice.id === "paypal") return <CreditCard size={24} />;
+    if (["mercury", "youtube"].includes(choice.id)) return <img src={`/business-sources/${choice.id === "youtube" ? "youtube-symbol.svg" : `${choice.id}.svg`}`} alt="" />;
     return <SourceBrand id={choice.id.replace(/^connected-/, "")} size={27} />;
   }
   const scanning = busy === "scan";
   const onHere = choices.filter(choice => choice.key && selected.includes(choice.key)).length;
-  // Codex is the one bridge that brings mail, calendar, Slack, Notion, Granola and the bank in together. Say so once, plainly.
-  const codexInstalled = tools.some(t => t.id === "codex" && t.installed);
-  const codexReady = inventory?.status === "available" && inventory.harness === "codex";
-  const codexGuide = !checked.tools || codexReady || stage === 0 ? null
-    : !codexInstalled
-      ? { title: "One sign-in brings most of this in.", copy: "Gmail, Outlook, Slack, Google Calendar, Notion, Granola and your bank all arrive through Codex, the ChatGPT coding app. Install it, sign in with your ChatGPT account, connect those apps there, then rescan.", cta: "Get Codex", href: "https://chatgpt.com/codex" }
-      : { title: "Sign in to Codex to unlock these.", copy: inventory?.detail || "Codex is installed but its app connections could not be read. Open Codex, sign in with your ChatGPT account, connect the apps you want there, then rescan.", cta: "How it works", href: "https://help.openai.com/en/articles/11096431-openai-codex-cli-getting-started" };
+  // Each account connects in this app. Say where once, while nothing is connected.
+  const anyConnected = accounts.some(a => a.available) || !!calendar?.available || !!nativeBusiness?.mercury?.available || apps.some(a => ["granola", "notion"].includes(a.id) && a.mode === "api");
+  const connectGuide = !checked.tools || anyConnected || stage === 0 ? null
+    : { title: "Connect each account once.", copy: "Gmail, Outlook, Slack and Google Calendar connect in Settings → Connections. Notion and Mercury use their own sign-in. Granola uses an API key." };
   return <div className="ws-connect" aria-label="Scan and import apps" data-scanned={scanned}>
     {!scanned || scanning ? <div className={`ws-connect-start${scanning ? " is-scanning" : ""}`}>
       <div className="ws-connect-marks" aria-hidden="true">{["chatgpt", "codex", "claude", "hermes"].map(id => <SourceBrand key={id} id={id} size={36} />)}{scanning && <i className="ws-connect-sweep" />}</div>
@@ -386,7 +380,7 @@ export function SetupScanConnections({ stage, onStageChange, onBusyChange, onSca
       <nav className="ws-connect-tabs" aria-label="Connection categories">{connectionStages.map(({ name }, index) => <button type="button" key={name} aria-label={name} title={name} aria-current={stage === index ? "step" : undefined} disabled={!!busy} onClick={() => onStageChange(index)}><i aria-hidden="true" data-done={done} /><span>{name}</span></button>)}</nav>
       <div className="ws-connect-caption"><div><h2>{connectionStages[stage].name}</h2><p>{connectionStages[stage].copy}</p></div><button type="button" aria-label="Rescan connections" disabled={!!busy} onClick={() => void scan()}><RefreshCw size={14} /></button></div>
       {platform === "win32" && stage === 0 && <div className="ws-connect-guide" role="note"><SourceBrand id="terminal" size={30} /><div><strong>You are on Windows.</strong><p>This build is verified on macOS and portable on Windows. Let your assistant walk you through the differences: copy this prompt into Claude or Codex and follow it step by step.</p></div><button type="button" onClick={() => void copyWindowsPrompt()}>Copy Windows setup prompt</button></div>}
-      {codexGuide && <div className="ws-connect-guide" role="note"><SourceBrand id="codex" size={30} /><div><strong>{codexGuide.title}</strong><p>{codexGuide.copy}</p></div><a href={codexGuide.href} target="_blank" rel="noreferrer">{codexGuide.cta}</a></div>}
+      {connectGuide && <div className="ws-connect-guide" role="note"><SourceBrand id="gmail" size={30} /><div><strong>{connectGuide.title}</strong><p>{connectGuide.copy}</p></div><button type="button" onClick={() => window.dispatchEvent(new CustomEvent("agentic:accounts", { detail: { group: "work" } }))}>Open Connections</button></div>}
       <div className="ws-connect-grid" key={stage}>
         {choices.map(choice => <article key={choice.id} className="ws-connect-card" data-selected={!!choice.key && selected.includes(choice.key)} data-muted={!choice.installed}
           onPointerMove={event => { if (event.pointerType !== "mouse" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return; const rect = event.currentTarget.getBoundingClientRect(); event.currentTarget.style.setProperty("--light-x", `${event.clientX - rect.left}px`); event.currentTarget.style.setProperty("--light-y", `${event.clientY - rect.top}px`); }}>
@@ -399,16 +393,16 @@ export function SetupScanConnections({ stage, onStageChange, onBusyChange, onSca
       </div>
       {stage === 0 && hidden > 0 && <button type="button" className="ws-connect-text" onClick={() => setShowAll(!showAll)}>{showAll ? "Hide tools that are not installed" : `Show ${count(hidden, "supported tool")} not installed`}</button>}
       {stage === 0 && <button className="ws-connect-runtime" type="button" onClick={onAgentChecks}><Terminal size={13} /> Models & local runtimes</button>}
-      {stage === 1 && <section className="ws-connect-memory-cards" aria-label="Connect your memory sources"><h3>Coming in on their own</h3><p className="ws-connect-small">Everything already signed in on this Mac comes in by itself: Gmail and Outlook with a year of history, Granola, Notion and your AI chats. The only thing that needs you is asking ChatGPT for your export.</p><BrainConnectCards ids={["chatgpt"]} /></section>}
+      {stage === 1 && <section className="ws-connect-memory-cards" aria-label="Connect your memory sources"><h3>Coming in on their own</h3><p className="ws-connect-small">Everything you connect comes in by itself: Gmail and Outlook with a year of history, Granola, Notion and your AI chats. ChatGPT is the one that needs you to ask for an export.</p><BrainConnectCards ids={["chatgpt"]} /></section>}
       {stage === 2 && socialProfiles}
-      {stage === 3 && <p className="ws-connect-small">Mercury refreshes balances and recent income. PayPal and Stripe still need an OS import adapter.</p>}
+      {stage === 3 && <p className="ws-connect-small">Mercury refreshes balances and recent income.</p>}
       <div className="ws-connect-actions">
         <span className="ws-connect-pending">{busy === "import" ? <><Loader2 size={13} className="animate-spin" /> Importing everything you switched on…</> : done && !pending ? `${selectedAll.length} in your OS` : `${onHere} on here · ${selectedAll.length} across all sections · imported once at the end`}</span>
         <div><button type="button" onClick={() => setDetails(true)}><Info size={13} /> How we found these</button><button type="button" onClick={() => void copyChecklist()}><Copy size={13} /> Copy setup list</button></div>
       </div>
     </>}
     <div className="ws-connect-receipt" aria-live="polite"><span role={error ? "alert" : "status"} title={error || notice}>{error || notice}</span></div>
-    <Dialog open={details} onOpenChange={setDetails}><DialogContent className="ws-connect-evidence"><DialogTitle>How your connections were found</DialogTitle><DialogDescription>Three checks: local app and history metadata, read tools exposed by Codex and Claude, and integrations already configured in this OS. ChatGPT sign-in is not transferred.</DialogDescription><div className="ws-connect-evidence-list">{allChoices.flat().filter(choice => choice.installed).map(choice => <div key={choice.id}><strong>{choice.name} · {choice.status}</strong><p>{choice.evidence}</p></div>)}</div><button type="button" onClick={() => void copyChecklist()}>Copy setup list for Claude or Codex</button></DialogContent></Dialog>
+    <Dialog open={details} onOpenChange={setDetails}><DialogContent className="ws-connect-evidence"><DialogTitle>How your connections were found</DialogTitle><DialogDescription>Three checks: local app and history metadata, tools connected in Claude, and the accounts connected in this OS. Gmail, Outlook, Slack and Google Calendar connect in Settings → Connections. Notion and Mercury use their own sign-in. Granola uses an API key.</DialogDescription><div className="ws-connect-evidence-list">{allChoices.flat().filter(choice => choice.installed).map(choice => <div key={choice.id}><strong>{choice.name} · {choice.status}</strong><p>{choice.evidence}</p></div>)}</div><button type="button" onClick={() => void copyChecklist()}>Copy setup list for Claude or Codex</button></DialogContent></Dialog>
     <Dialog open={granolaOpen} onOpenChange={open => { setGranolaOpen(open); if (!open) { setGranolaKey(""); setGranolaError(""); } }}><DialogContent className="ws-connect-evidence"><DialogTitle>Connect Granola</DialogTitle><DialogDescription>Use your Granola API key to sync meeting notes directly. No export needed. The key stays on this computer.</DialogDescription><form className="ws-granola-form" onSubmit={async event => { event.preventDefault(); if (busy) return; setBusy("granola"); setGranolaError(""); try { await operatorRequest("/memory/granola-config", { apiKey: granolaKey }); setGranolaKey(""); const latest = await operatorRequest<{ apps: MemoryApp[] }>("/memory/apps?refresh=1"); setApps(latest.apps); setGranolaOpen(false); setNotice("Granola API connected. Select it to sync your notes."); } catch (cause) { setGranolaError((cause as Error).message); } finally { setBusy(""); } }}><label>Granola API key<input type="password" autoComplete="off" value={granolaKey} onChange={event => setGranolaKey(event.target.value)} required /></label><p><a href="https://docs.granola.ai/api-reference/list-notes" target="_blank" rel="noreferrer">Find your API key in Granola Settings ↗</a></p>{granolaError && <p role="alert">{granolaError}</p>}<button type="submit" disabled={!!busy || !granolaKey.trim()}>{busy ? "Connecting…" : "Connect Granola"}</button></form></DialogContent></Dialog>
     <Dialog open={businessOpen} onOpenChange={setBusinessOpen}><DialogContent className="ws-connect-evidence ws-connect-audience"><DialogTitle>Connect your audience</DialogTitle><DialogDescription>Add the channel you want in your OS. Then rescan this step.</DialogDescription>
       <details className="ws-connect-howto"><summary>How to connect YouTube</summary><ol>

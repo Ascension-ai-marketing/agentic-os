@@ -235,14 +235,14 @@ export function useSourceLinks() {
     chatgpt: true,
   });
 
-  // Email, meetings and Notion come in on their own through Codex; they only need you
-  // when the app is not signed in to Codex at all.
+  // Email, meetings and Notion come in from the accounts connected in this app; they only need you
+  // when one is not connected.
   const auto = (
     id: "email" | "meetings" | "notion",
     name: string,
     stepIds: string[],
     available: boolean,
-    connector: string,
+    connect: string,
   ) => {
     const n = total(id);
     const live = stepIds.map(step).filter(Boolean) as ConnectStep[];
@@ -270,14 +270,14 @@ export function useSourceLinks() {
       title: n ? `${name} is connected` : `Connect ${name.toLowerCase()}`,
       body: n
         ? `${countLine(id, n)} in Memory. New ones come in every day on their own.`
-        : `${name} comes in through Codex, which you already use.`,
-      steps: n || available ? undefined : [`Open Codex, then Settings, then Connectors, and add ${connector}.`, "Memory brings it in by itself within a minute."],
+        : `${name} comes in once you connect it.`,
+      steps: n || available ? undefined : [connect, "Memory brings it in by itself within a minute."],
     });
   };
   const providers = native.data?.providers || [];
-  auto("email", "Email", ["gmail", "outlook"], providers.some((p) => ["gmail", "outlook"].includes(p.id) && p.available), "Gmail or Outlook");
-  auto("meetings", "Meetings", ["granola"], !!app("granola")?.available, "Granola");
-  auto("notion", "Notion", ["notion"], !!app("notion")?.available, "Notion");
+  auto("email", "Email", ["gmail", "outlook"], providers.some((p) => ["gmail", "outlook"].includes(p.id) && p.available), "Open Settings, then Connections, and connect Gmail or Outlook.");
+  auto("meetings", "Meetings", ["granola"], !!app("granola")?.available, "On the Setup page, open Memory and connect Granola with its API key.");
+  auto("notion", "Notion", ["notion"], !!app("notion")?.available, "Open your sources here, choose the dots beside Notion, and press Connect Notion.");
   if (busy(app("granola"))) Object.assign(links.find((l) => l.id === "meetings")!, { state: "working" });
   // Until this Mac has been read, say so rather than flashing "not connected".
   const loading = apps.isPending || !!live?.isExample;

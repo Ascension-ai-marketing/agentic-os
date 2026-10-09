@@ -140,3 +140,38 @@ test("disconnect removes the store", async () => {
   expect(connection.disconnect()).toEqual({ connected: false, requiresSignIn: true });
   expect(() => statSync(storePath)).toThrow();
 });
+
+/** A provider that refuses the first sign-in's token on reads, and optionally every token. */
+function refusingProvider(refuseEvery = false) {
+  const base = server();
+  let refreshes = 0;
+  const fetchImpl = (async (input: any, init: any = {}) => {
+    const url = String(input);
+    if (url === `${ORIGIN}/token` && String(init.body).includes("grant_type=refresh_token")) {
+      refreshes++;
+      return json({ access_token: "access-token-5678", token_type: "Bearer", expires_in: 3600 });
+    }
+    if (url === URL_ && (refuseEvery || init.headers?.Authorization === "Bearer access-token-1234")) return json({ error: "revoked-detail" }, 401);
+    return base.fetchImpl(input, init);
+  }) as unknown as typeof fetch;
+  return { fetchImpl, refreshes: () => refreshes };
+}
+test("a read the provider refuses is retried once with a refreshed sign-in", async () => {
+  const provider = refusingProvider();
+  const { connection } = fresh({ fetchImpl: provider.fetchImpl });
+  await signIn(connection);
+  expect(await connection.read(async client => client.call("getAccounts", {}))).toEqual({ accounts: [{ id: "a" }] });
+  expect(provider.refreshes()).toBe(1);
+  expect(connection.status().connected).toBe(true);
+});
+test("a read still refused after one refresh needs sign-in again", async () => {
+  const provider = refusingProvider(true);
+  const { connection } = fresh({ fetchImpl: provider.fetchImpl });
+  await signIn(connection);
+  const error = await connection.read(async client => client.call("getAccounts", {})).catch(e => e);
+  expect(error).toBeInstanceOf(McpConnectionError);
+  expect(error.message).toBe("Your Example sign-in expired. Connect it again in Connections.");
+  expect(error.code).toBe("sign_in_required");
+  expect(provider.refreshes()).toBe(1);
+  expect(connection.status()).toEqual({ connected: false, requiresSignIn: true });
+});

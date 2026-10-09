@@ -10,6 +10,8 @@ Your own profile, conversations, imports and account configuration are saved loc
 
 Connecting a provider or importing a source is your choice. An installed app, an authenticated model and permission to read an external service are different states. The connection UI reports the access currently available.
 
+Sign-in tokens for connected accounts are stored only on this computer, in `.operator-data`, readable by your user account only. They are never copied to or from another app.
+
 When you choose a cloud model, selected conversation context is sent to that provider. Voice, media generation, news and optional integrations can make network requests. The app is not an offline-only system.
 
 ## Voice and Jev

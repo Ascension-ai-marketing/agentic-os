@@ -107,10 +107,10 @@ export function NativeCalendarConnection({
           {query.isPending
             ? "Checking your connection…"
             : query.data?.enabled
-              ? `${query.data.account} · Primary calendar · Read access`
+              ? `${query.data.account} · Read access`
               : query.data?.available
-                ? "Use the Google Calendar account already connected in Codex."
-                : "Connect Google Calendar in Codex, then check again here."}
+                ? "Use the Google account connected in Settings → Connections."
+                : "Connect Google in Settings → Connections and allow calendar access, then check again here."}
         </p>
         {coverage && (
           <small>

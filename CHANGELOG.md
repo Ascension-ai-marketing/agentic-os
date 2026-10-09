@@ -1,3 +1,10 @@
+# Connections without Codex · 9 October 2026
+
+- Connectors no longer go through Codex. Gmail, Outlook, Slack, Google Calendar and Granola use the app's own connections; Notion and Mercury use their official MCP sign-in. Reconnect each account once: mail, Slack, calendar and Mercury in Settings → Connections, Notion from Memory, Granola from Setup.
+- Slack now reads the channels you choose instead of searching every channel.
+- Google Calendar reads every calendar your account can read, not only the primary one.
+- The setup scan no longer lists Codex's apps, and the agent-jobs panel no longer lists Codex connector tools.
+
 # Hermes, voice and fixes · 2 October 2026 (Agentic OS V4.5)
 
 - Hermes in Chat: a Hermes mode next to General, with its own chat list. Hermes Agent runs on GPT-6.1 Sol through your Codex sign-in, with its own tools, memory and skills, and each chat keeps its Hermes session.

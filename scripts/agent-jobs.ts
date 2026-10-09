@@ -11,7 +11,6 @@ import {
 import { join } from "node:path";
 import { assistantBinary, claudeSignInStatus } from "./assistant-runtime";
 import { discoverCodexModels } from "./assistant-adapters";
-import { withConnectedRead } from "./codex-connected-read";
 import { safeAgentText, startCodexJob } from "./agent-jobs-codex";
 import { startClaudeJob } from "./agent-jobs-claude";
 import type {
@@ -288,38 +287,13 @@ export function agentJobs(root: string, options: Options = {}) {
       metadataPending ??= (async () => {
         if (options.status) return options.status();
         const [codex, claude] = await Promise.all([discoverCodexModels(), claudeSignInStatus()]);
-        let tools: string[] = [];
-        if (codex.ready) {
-          try {
-            tools = await withConnectedRead(
-              root,
-              async ({ tools }) => {
-                const keyCapability = (name: string) =>
-                  /\.(send_email|create_draft|reply_to_email|read_email|read_email_thread|slack_send_message)$/.test(
-                    name,
-                  )
-                    ? 0
-                    : 1;
-                return Object.keys(tools)
-                  .filter((name) =>
-                    /^(gmail|microsoft_outlook_email|slack|notion|github)\./.test(name),
-                  )
-                  .sort((a, b) => keyCapability(a) - keyCapability(b) || a.localeCompare(b))
-                  .slice(0, 100);
-              },
-              { timeoutMs: 20000 },
-            );
-          } catch {
-            /* Metadata unavailable is distinct from model sign-in. */
-          }
-        }
         return [
           {
             id: "codex" as const,
             installed: !!assistantBinary("codex"),
             signedIn: codex.ready,
             detail: codex.detail,
-            tools,
+            tools: [],
             checkedAt: now(),
           },
           {

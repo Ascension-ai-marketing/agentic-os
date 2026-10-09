@@ -4,8 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Plug, RefreshCw, ArrowUpRight, ChevronLeft } from "lucide-react";
 import gmailLogo from "@/assets/logos/gmail.svg";
 import calendarLogo from "@/assets/logos/googlecalendar.svg";
-import codexLogo from "@/assets/logos/codex.png";
-import claudeLogo from "@/assets/logo-claude.svg";
 import { askOperator, operatorRequest, useOperator } from "@/lib/operator";
 import { Notice, Busy } from "./ui";
 import { NativeCalendarConnection } from "./native-calendar-connection";
@@ -31,13 +29,13 @@ export function ExistingConnectionsPanel() {
     } catch (error) { setNotice((error as Error).message); }
     finally { setBusy(false); }
   }
-  return <section className="ar-existing-connections" aria-label="Existing AI connections">
-    <header className="ar-existing-heading"><div className="ar-existing-marks" aria-hidden="true"><img src={codexLogo} alt=""/><img src={claudeLogo} alt=""/></div><div><h3>Use your existing connections</h3><p>Bring recent messages into your OS through Codex.</p></div></header>
-    {discovery.isPending ? <p role="status"><Busy/> Finding your accounts…</p> : <div className="ar-existing-apps ar-existing-selection">{providers.map(app => <label className={chosen.includes(app.id) ? "is-selected" : ""} key={app.id}><input type="checkbox" checked={chosen.includes(app.id)} disabled={busy || !app.available && !app.enabled} onChange={e => setSelected(e.target.checked ? [...chosen, app.id] : chosen.filter(id => id !== app.id))}/><ProviderLogo provider={app.id}/><span><strong>{app.name}{app.workspace ? ` · ${app.workspace}` : ""}</strong><small>{app.available ? app.lastSync ? `Refreshed ${new Date(app.lastSync).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · ${app.count || 0} recent messages` : "Ready through Codex" : "Connect in Codex to use here"}</small>{app.account && <small>{app.account}</small>}</span></label>)}</div>}
+  return <section className="ar-existing-connections" aria-label="Connected accounts">
+    <header className="ar-existing-heading"><div><h3>Your connected accounts</h3><p>Bring recent messages into your OS.</p></div></header>
+    {discovery.isPending ? <p role="status"><Busy/> Finding your accounts…</p> : <div className="ar-existing-apps ar-existing-selection">{providers.map(app => <label className={chosen.includes(app.id) ? "is-selected" : ""} key={app.id}><input type="checkbox" checked={chosen.includes(app.id)} disabled={busy || !app.available && !app.enabled} onChange={e => setSelected(e.target.checked ? [...chosen, app.id] : chosen.filter(id => id !== app.id))}/><ProviderLogo provider={app.id}/><span><strong>{app.name}{app.workspace ? ` · ${app.workspace}` : ""}</strong><small>{app.available ? app.lastSync ? `Refreshed ${new Date(app.lastSync).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · ${app.count || 0} recent messages` : "Ready" : "Sign in below to use here"}</small>{app.account && <small>{app.account}</small>}</span></label>)}</div>}
     <div className="ar-existing-actions"><button type="button" className="op-button" disabled={busy || discovery.isPending || !chosen.length && selected === null} onClick={() => void sync()}>{busy ? "Refreshing messages…" : chosen.length ? "Refresh selected accounts" : "Save selection"}</button><button type="button" className="op-text-link" disabled={discovery.isFetching || busy} onClick={() => void discovery.refetch()}>Check connections</button></div>
     <p className="ar-existing-footnote">Recent mail and Slack messages refresh when you open Inbox and each minute while it is visible. Open the original message to reply.</p>
     <NativeCalendarConnection />
-    <details className="ar-native-details"><summary>Claude and other connections</summary><p>Claude can use its own connected tools in Chat. This Inbox refresh uses supported Codex connections. Account sign-ins stay in their original app.</p></details>
+    <details className="ar-native-details"><summary>Claude and other connections</summary><p>Claude can use its own connected tools in Chat. Inbox refresh uses the accounts you sign in to below.</p></details>
     {discovery.data?.error && <Notice>{discovery.data.error}</Notice>}
     {discovery.error && <Notice>{discovery.error.message}</Notice>}
     {providers.filter(app => app.error).map(app => <Notice key={app.id}>{app.name}: {app.error}</Notice>)}
@@ -549,7 +547,7 @@ export function WorkAccountConnectionsPanel({
   return (
     <section className="ar-work-account-panel" aria-label="Work account connections">
       <ExistingConnectionsPanel />
-      <p className="op-form-help">Optional direct connections for syncing inside this workspace.</p>
+      <p className="op-form-help">Sign in to the accounts you want synced inside this workspace.</p>
       {error && <Notice error>{error}</Notice>}
       {notice && <Notice>{notice}</Notice>}
       {setup ? (
@@ -640,8 +638,8 @@ export function WorkAccountConnectionsPanel({
             <>
               <p className="op-form-help">
                 {setup === "slack"
-                  ? "Use Slack through a connection in your native AI app for bounded read-only lookups. A saved Slack workspace name alone does not authorize access."
-                  : "Use your native AI app for bounded lookups through its existing connections. Direct sync inside this workspace is optional."}
+                  ? "Slack connects here with a Slack token and reads recent messages from the channels you choose. A saved Slack workspace name alone does not authorize access."
+                  : "Sign in here to bring this account's recent messages into your OS. Claude can still use its own connected tools in Chat."}
               </p>
               {setup === "slack" && slackHints.length > 0 && (
                 <>
@@ -677,10 +675,10 @@ export function WorkAccountConnectionsPanel({
                 <Notice>
                   {snapshotFor(setup)!.count} messages imported on{" "}
                   {new Date(snapshotFor(setup)!.importedAt).toLocaleString()}. This is a saved
-                  snapshot. Enable the account above to refresh recent messages through Codex.
+                  snapshot. Enable the account above to refresh recent messages.
                 </Notice>
               )}
-              <p className="op-form-help">Select your accounts above to refresh recent messages through Codex. Direct sign-in below is optional and provides separate account permissions.</p>
+              <p className="op-form-help">Select your accounts above to refresh recent messages. Sign in to each account below first.</p>
               {["google", "outlook"].includes(setup) &&
                 data?.accounts.find((a) => a.id === setup)?.configured && (
                   <button
@@ -701,7 +699,7 @@ export function WorkAccountConnectionsPanel({
                   </button>
                 )}
               <button type="button" className="op-text-link" onClick={() => setAdvanced(true)}>
-                {setup === "slack" ? "Use a Slack app token instead" : "Set up direct sign-in"}{" "}
+                {setup === "slack" ? "Connect with a Slack token" : "Set up direct sign-in"}{" "}
                 <ArrowUpRight size={12} />
               </button>
             </>
@@ -897,8 +895,8 @@ export function WorkAccountConnectionsPanel({
       {!setup && !guided && (
         <p className="op-form-help">
           Gmail imports recent mail, drafts and labels. Mail actions work after you authorize them
-          in Google. Outlook and Slack imports are read-only. Calendar connections bring in events across your calendars. Enabled Codex
-          sources refresh each minute while Inbox is visible.
+          in Google. Outlook and Slack imports are read-only. Calendar connections bring in events across your calendars. Enabled
+          accounts refresh each minute while Inbox is visible.
         </p>
       )}
     </section>

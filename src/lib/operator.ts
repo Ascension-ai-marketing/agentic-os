@@ -106,7 +106,7 @@ export interface InboxItem {
 }
 
 export type ExistingAppConnection = {
-  harness?: "codex" | "claude";
+  harness?: "claude";
   id: string;
   name: string;
   isAccessible: boolean | null;
@@ -116,18 +116,10 @@ export type ExistingAppConnection = {
   observed: boolean;
   directAuthorization: false;
 };
+/** Claude's own connections, by name and health only. Served by /setup/connections. */
 export type ConnectionDiscovery = {
-  version: 1;
-  harness: "codex";
-  harnesses?: Array<{ id: string; detail: string }>;
-  scope: "global";
-  status: "available" | "unavailable" | "unsupported" | "timeout" | "error";
-  checkedAt: string;
-  expiresAt: string;
-  runtimeFresh: boolean;
   apps: ExistingAppConnection[];
-  plugins?: Array<{ id: string; name: string; enabled: boolean }>;
-  truncated: boolean;
+  harnesses: Array<{ id: string; detail: string }>;
   detail: string;
 };
 export interface GmailLabel {
@@ -245,6 +237,23 @@ export async function operatorRequest<T = any>(
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || `Request failed (${response.status})`);
   return result as T;
+}
+export type McpStatus = Record<"notion" | "mercury", { connected: boolean }>;
+/**
+ * Opens a provider's sign-in page in a new tab. The tab is opened during the click, before
+ * the request, because some browsers block a tab that opens after waiting on the network.
+ */
+export async function openConnectionSignIn(provider: keyof McpStatus) {
+  const tab = window.open("", "_blank");
+  try {
+    const { authorizationUrl } = await operatorRequest<{ authorizationUrl: string }>("/mcp/connect", { provider });
+    if (!tab) return void window.open(authorizationUrl, "_blank", "noopener");
+    tab.opener = null;
+    tab.location.replace(authorizationUrl);
+  } catch (error) {
+    tab?.close();
+    throw error;
+  }
 }
 export function useOperator() {
   const qc = useQueryClient();

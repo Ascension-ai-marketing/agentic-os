@@ -63,7 +63,7 @@ test("monthly income refuses unreadable, oversized or incomplete transaction pag
 test("finance snapshot reads balances then bounded transaction pages, and an income failure never blocks balances", async () => {
   const calls: Array<{ name: string; args: any }> = [];
   let pages: any[] = [];
-  const read = (async (work: any) => work({ tools: {}, call: async (name: string, args: any) => { calls.push({ name, args }); if (name === "getAccounts") return { accounts: [account, { ...account, id: "account-456", name: "Savings" }] }; const page = pages.shift(); if (page instanceof Error) throw page; return page; } })) as typeof withConnectedRead;
+  const read = (async (work: any) => work({ tools: {}, call: async (name: string, args: any) => { calls.push({ name, args }); if (name === "getAccounts") return { accounts: [account, { ...account, id: "account-456", name: "Savings" }] }; const page = pages.shift(); if (page instanceof Error) throw page; return page; } })) as McpReader;
   const service = nativeBusinessSync("/synthetic", { read, now: () => now });
   const fullPage = Array.from({ length: INCOME_PAGE_SIZE }, (_, i) => transaction(`t${i}`, 1));
   pages = [{ transactions: fullPage }, { transactions: [transaction("last", 5), transaction("own", 99, { counterpartyId: "account-456" })] }];

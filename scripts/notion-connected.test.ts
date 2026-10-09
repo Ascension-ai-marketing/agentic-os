@@ -1,8 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { connectedNotionPages, notionPageDocument, notionRecentPages } from "./notion-connected";
-import type { withConnectedRead } from "./codex-connected-read";
-
-type Client = Parameters<Parameters<typeof withConnectedRead>[1]>[0];
+import { connectedNotionPages, notionAvailable, notionPageDocument, notionRecentPages } from "./notion-connected";
+import type { McpReader } from "./mcp-connection";
 
 const page = (id: string, title: string) => ({ type: "page", url: `https://app.notion.com/p/${id}?pvs=204`, title });
 
@@ -42,19 +40,27 @@ describe("notionPageDocument", () => {
 describe("connectedNotionPages", () => {
   test("lists recent pages, fetches each and skips failures", async () => {
     const calls: string[] = [];
-    const read = async <T,>(_root: string, work: (client: Client) => Promise<T>) => work({ tools: {}, async call(name: string, args: unknown) {
+    const read: McpReader = async work => work({ tools: {}, async call(name: string, args: unknown) {
       calls.push(name);
       const id = String((args as { id?: string }).id || "");
-      if (name === "notion.notion-list-recent-pages") return { results: [page("a".repeat(32), "A"), page("b".repeat(32), "B"), page("c".repeat(32), "C")] };
+      if (name === "notion-list-recent-pages") return { results: [page("a".repeat(32), "A"), page("b".repeat(32), "B"), page("c".repeat(32), "C")] };
       if (id.includes("b".repeat(32))) throw new Error("boom");
       if (id.includes("c".repeat(32))) return { title: "C", text: "" };
       return { title: "A", url: id, text: "<content>hello</content>" };
     } });
-    const result = await connectedNotionPages("/tmp", read);
-    expect(calls[0]).toBe("notion.notion-list-recent-pages");
-    expect(calls.filter(name => name === "notion.fetch").length).toBe(3);
+    const result = await connectedNotionPages(read);
+    expect(calls[0]).toBe("notion-list-recent-pages");
+    expect(calls.filter(name => name === "notion-fetch").length).toBe(3);
     expect(result.documents.map(document => document.title)).toEqual(["A"]);
     expect(result.skipped).toBe(2);
     expect(result.hasMore).toBe(false);
   });
+});
+
+test("Notion is available only when both read tools are marked read-only", async () => {
+  const tool = (name: string, readOnlyHint = true) => [name, { name, annotations: { readOnlyHint } }];
+  const reader = (entries: any[]) => (async (work: any) => work({ tools: Object.fromEntries(entries), call: async () => ({}) })) as McpReader;
+  expect(await notionAvailable(reader([tool("notion-list-recent-pages"), tool("notion-fetch")]))).toBe(true);
+  expect(await notionAvailable(reader([tool("notion-list-recent-pages"), tool("notion-fetch", false)]))).toBe(false);
+  expect(await notionAvailable(reader([tool("notion-fetch")]))).toBe(false);
 });

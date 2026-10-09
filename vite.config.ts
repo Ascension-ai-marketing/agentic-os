@@ -7796,24 +7796,32 @@ export default defineConfig({
                 // Find the top-level `agent:` block and swap (or insert) its
                 // reasoning_effort line. Anchored to the block so the same
                 // key in other blocks (e.g. subagents) is never touched.
-                const block = text.match(/^agent:\n((?:[ \t]+.+\n)+)/m);
-                if (!block) throw new Error("no agent block in config.yaml");
-                let inner = block[1];
-                if (/^[ \t]+reasoning_effort:.*$/m.test(inner)) {
-                  inner = inner.replace(
-                    /^([ \t]+)reasoning_effort:.*$/m,
-                    `$1reasoning_effort: ${effort}`,
-                  );
+                // The block runs to the next top-level key, so blank lines
+                // and comments inside it do not end it early (ending at the
+                // first blank line once missed the existing key and wrote a
+                // duplicate, which Hermes refuses to load).
+                const lines = text.split("\n");
+                const start = lines.findIndex((l) => /^agent:\s*(#.*)?$/.test(l));
+                if (start < 0) throw new Error("no agent block in config.yaml");
+                let end = lines.findIndex((l, i) => i > start && /^[^\s#]/.test(l));
+                if (end < 0) end = lines.length;
+                // The block's own keys sit at the indent of its first key;
+                // deeper lines belong to nested maps and are left alone.
+                const firstKey = lines
+                  .slice(start + 1, end)
+                  .find((l) => /^[ \t]+[^\s#]/.test(l));
+                const indent = firstKey?.match(/^[ \t]+/)?.[0] ?? "  ";
+                const isEffort = (l: string) =>
+                  l.startsWith(`${indent}reasoning_effort:`);
+                const at = lines.findIndex((l, i) => i > start && i < end && isEffort(l));
+                if (at >= 0) {
+                  lines[at] = `${indent}reasoning_effort: ${effort}`;
+                  // Drop duplicates an earlier save may have left behind.
+                  for (let i = end - 1; i > at; i--) if (isEffort(lines[i])) lines.splice(i, 1);
                 } else {
-                  const indent = inner.match(/^([ \t]+)/)?.[1] ?? "  ";
-                  inner = `${indent}reasoning_effort: ${effort}\n` + inner;
+                  lines.splice(start + 1, 0, `${indent}reasoning_effort: ${effort}`);
                 }
-                // Replacer fn so `$` sequences in config values are literal.
-                writeFileSync(
-                  cfgPath,
-                  text.replace(block[0], () => `agent:\n${inner}`),
-                  "utf-8",
-                );
+                writeFileSync(cfgPath, lines.join("\n"), "utf-8");
                 res.setHeader("Content-Type", "application/json");
                 res.end(JSON.stringify({ ok: true, effort }));
               } catch (err: any) {

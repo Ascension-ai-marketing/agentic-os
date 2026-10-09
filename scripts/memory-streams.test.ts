@@ -12,6 +12,7 @@ import {
   readEmailStream,
   readHermesStream,
   readMeetingsStream,
+  readSkillsStream,
 } from "./memory-streams";
 
 const tempHome = () => mkdtempSync(join(tmpdir(), "memory-streams-"));
@@ -230,4 +231,22 @@ test("the same series id in two calendars stays two Memory entries", async () =>
   const { collapseSeries } = await import("../src/lib/operator");
   const e = (id: string, cal: string) => ({ id, title: id, start: "2026-10-03T07:00:00.000Z", series: "same", calendarId: cal, source: "google" });
   expect(collapseSeries([e("a", "work"), e("b", "home")], Date.parse("2026-10-01T00:00:00Z"))).toHaveLength(2);
+});
+
+test("skills keep a description written as a YAML block", () => {
+  const home = tempHome();
+  const skill = (name: string, front: string) => {
+    const dir = join(home, ".agents", "skills", name);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "SKILL.md"), `---\nname: ${name}\n${front}\n---\n\n# ${name}\n`);
+  };
+  skill("literal", "description: |\n  Any live-web task.\n  Web only.\nallowed-tools:\n  - Bash");
+  skill("folded", "description: >-\n  Build a film\n  from scratch.");
+  skill("plain", 'description: "One line"');
+  const meta = Object.fromEntries(
+    readSkillsStream(home).records.map((r) => [r.title, r.meta]),
+  );
+  expect(meta["/literal"]).toBe("Agent skill · Any live-web task. Web only.");
+  expect(meta["/folded"]).toBe("Agent skill · Build a film from scratch.");
+  expect(meta["/plain"]).toBe("Agent skill · One line");
 });

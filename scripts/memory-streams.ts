@@ -554,6 +554,21 @@ export async function readHermesStream(home: string): Promise<MemoryStream> {
   return { status: records.length ? "ok" : "empty", records, total: records.length, checked };
 }
 
+/** The description from SKILL.md front matter. A YAML block ("|", ">", ">-") continues on the indented lines below. */
+function skillDescription(head: string): string | undefined {
+  const lines = head.split(/\r?\n/);
+  const i = lines.findIndex((l) => /^description:/.test(l));
+  if (i < 0) return undefined;
+  const first = lines[i].replace(/^description:\s*/, "").trim();
+  if (!/^[|>][+-]?\d?$/.test(first)) return first.replace(/^["'](.*)["']$/, "$1") || undefined;
+  const body: string[] = [];
+  for (const l of lines.slice(i + 1)) {
+    if (l.trim() && !/^\s/.test(l)) break;
+    body.push(l.trim());
+  }
+  return body.filter(Boolean).join(" ") || undefined;
+}
+
 /** Skills other agents keep on this Mac: Codex, shared agent skills and Hermes. Names and dates only. */
 export function readSkillsStream(home: string): MemoryStream {
   const roots: Array<[string, string]> = [
@@ -582,7 +597,7 @@ export function readSkillsStream(home: string): MemoryStream {
         try {
           at = statSync(skill).mtime.toISOString();
           const head = readFileSync(skill, "utf8").slice(0, 3000);
-          meta = head.match(/^description:\s*["']?(.+?)["']?\s*$/m)?.[1];
+          meta = skillDescription(head);
         } catch {}
         records.push({
           id: key,

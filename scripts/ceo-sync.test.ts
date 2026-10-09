@@ -21,7 +21,7 @@ function fixture() {
     async show(id: string) { world.showed.push(id); const card = world.shown[id]; if (!card) throw new Error("Hermes could not do that: no such task"); return card; },
   };
   const jobs = () => { if (world.osDown) throw new Error("down"); return world.jobs; };
-  const hand = (agent: "hermes" | "claude_code" | "codex", ref: string) => store.addTask({ key: `${agent}-${ref}`, agent, title: `Sample ${ref}`, task: "Sample task for the fixture.", ref }).task;
+  const hand = (agent: "hermes" | "claude_code" | "codex" | "openclaw", ref: string) => store.addTask({ key: `${agent}-${ref}`, agent, title: `Sample ${ref}`, task: "Sample task for the fixture.", ref }).task;
   const status = (id: string) => { const task = store.tasks().find((item) => item.id === id)!; return `${task.status}${task.note ? `: ${task.note}` : ""}`; };
   return { root, store, world, board, jobs, hand, status, sync: ceoSync({ store, board, jobs }) };
 }
@@ -174,6 +174,15 @@ test("OS agent tasks follow their job, each by its own agent's run", async () =>
   expect(status(claude.id)).toBe("blocked: It is waiting for the person's permission, on screen in the OS.");
   expect(status(codex.id)).toBe("done: Fixed the sample script.");
   expect(status(lost.id)).toBe("failed: The OS no longer has this task.");
+  expect(world.listed).toBe(0);
+});
+
+test("OpenClaw's work is not an OS job, so the OS's list leaves it alone", async () => {
+  const { world, hand, status, sync } = fixture();
+  const claw = hand("openclaw", "openclaw-exec");
+  world.jobs = [];
+  await sync.refresh();
+  expect(status(claw.id)).toBe("queued");
   expect(world.listed).toBe(0);
 });
 

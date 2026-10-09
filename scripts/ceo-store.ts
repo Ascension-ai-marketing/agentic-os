@@ -10,7 +10,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, renameSync, rmdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-export type CeoAgent = "hermes" | "claude_code" | "codex";
+export type CeoAgent = "hermes" | "claude_code" | "codex" | "openclaw";
 export type CeoTaskStatus = "queued" | "running" | "blocked" | "done" | "failed";
 export type CeoTask = {
   id: string;
@@ -23,6 +23,8 @@ export type CeoTask = {
   status: CeoTaskStatus;
   /** What the agent last said about it: a result, or why it stopped. */
   note?: string;
+  /** What its model calls cost, when the agent reports it (OpenClaw does). */
+  costUsd?: number;
   conversationId?: string; createdAt: string; updatedAt: string;
 };
 export type CeoApproval = {
@@ -47,7 +49,7 @@ export type CeoReport = {
 export type CeoStore = ReturnType<typeof ceoStore>;
 
 const FINISHED: CeoTaskStatus[] = ["done", "failed"];
-const AGENT: Record<CeoAgent, string> = { hermes: "Hermes", claude_code: "Claude Code", codex: "Codex" };
+const AGENT: Record<CeoAgent, string> = { hermes: "Hermes", claude_code: "Claude Code", codex: "Codex", openclaw: "OpenClaw" };
 const iso = () => new Date().toISOString();
 const text = (value: unknown, max: number) => (typeof value === "string" ? value : "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "").trim().slice(0, max);
 
@@ -124,12 +126,13 @@ export function ceoStore(root: string) {
         return { task: structuredClone(task), existing: false };
       });
     },
-    updateTask(id: string, patch: { status?: CeoTaskStatus; note?: string }) {
+    updateTask(id: string, patch: { status?: CeoTaskStatus; note?: string; costUsd?: number }) {
       return change<CeoTask, CeoTask | undefined>("tasks", (items) => {
         const task = items.find((item) => item.id === id);
         if (!task) return undefined;
         if (patch.status) task.status = patch.status;
         if (patch.note !== undefined) task.note = text(patch.note, 2000);
+        if (patch.costUsd !== undefined && Number.isFinite(patch.costUsd) && patch.costUsd >= 0) task.costUsd = patch.costUsd;
         task.updatedAt = iso();
         return structuredClone(task);
       });

@@ -33,6 +33,13 @@ test("only work run by the OS's own agents carries a job to open", () => {
   expect(view.tasks.map((item) => item.card)).toEqual([false, false, false, false]);
 });
 
+test("OpenClaw's work is listed under its own name and carries no OS job", () => {
+  const view = inboxView({ tasks: [task("claw", 2, { agent: "openclaw", ref: "openclaw-exec" })] }, [{ id: "openclaw-exec", runs: [{ agent: "claude", status: "completed" }] }]);
+  expect(view.tasks).toHaveLength(1);
+  expect(view.tasks[0]).toMatchObject({ id: "claw", agent: "openclaw", status: "running", card: false });
+  expect(view.tasks[0].job).toBeUndefined();
+});
+
 test("a task follows its OS job at once, ahead of the saved record", () => {
   const job = (id: string, status: string, agent = "claude") => ({ id, runs: [{ agent, status }] });
   const view = inboxView(

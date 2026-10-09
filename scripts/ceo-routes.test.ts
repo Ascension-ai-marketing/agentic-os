@@ -64,8 +64,28 @@ test("a check-in is given goals and the state of the work, and nothing when busi
   expect(reply.briefing).toContain("- None are written down in the OS.");
 });
 
-test("the OpenClaw page is told what is installed, and nothing more", async () => {
+const HOME = "/Users/sample";
+const CHOSEN = { folder: `${HOME}/agents/openclaw`, minutes: 20, tasksPerDay: 4, dollarsPerDay: 3 };
+
+test("the OpenClaw page is told what is installed and the limits to agree to, and nothing more", async () => {
   const openclaw = () => ({ status: async () => ({ installed: true, version: "2026.9.9", gateway: "unknown" as const }) });
-  expect(await routes({ openclaw }).handle("/ceo/openclaw", "GET", undefined)).toEqual({ openclaw: { installed: true, version: "2026.9.9", gateway: "unknown" } });
+  expect(await routes({ openclaw, home: HOME }).handle("/ceo/openclaw", "GET", undefined)).toEqual({
+    openclaw: { installed: true, version: "2026.9.9", gateway: "unknown" },
+    limits: null,
+    suggested: { folder: `${HOME}/.openclaw/workspace/jarvis`, minutes: 15, tasksPerDay: 10, dollarsPerDay: 5 },
+  });
   await expect(routes({ openclaw }).handle("/ceo/openclaw", "POST", {})).rejects.toThrow("Unknown CEO request.");
+});
+
+test("the button agrees to OpenClaw's limits and withdraws them; nothing else gets through", async () => {
+  const openclaw = () => ({ status: async () => ({ installed: true }) });
+  const page = routes({ openclaw, home: HOME });
+  for (const bad of [undefined, [], {}, { agree: false, ...CHOSEN }, { agree: true, ...CHOSEN, extra: 1 }, { withdraw: true, agree: true }, { agree: true, ...CHOSEN, folder: "/" }])
+    await expect(page.handle("/ceo/openclaw/limits", "POST", bad)).rejects.toThrow();
+  expect((await page.handle("/ceo/openclaw", "GET", undefined) as any).limits).toBeNull();
+  const agreed: any = await page.handle("/ceo/openclaw/limits", "POST", { agree: true, ...CHOSEN });
+  expect(agreed.limits).toMatchObject(CHOSEN);
+  expect(await page.handle("/ceo/openclaw", "GET", undefined)).toMatchObject({ limits: { ...CHOSEN, agreedAt: agreed.limits.agreedAt }, suggested: null });
+  expect(await page.handle("/ceo/openclaw/limits", "POST", { withdraw: true })).toEqual({ limits: null });
+  expect((await page.handle("/ceo/openclaw", "GET", undefined) as any).limits).toBeNull();
 });

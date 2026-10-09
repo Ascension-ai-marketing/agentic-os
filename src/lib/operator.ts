@@ -106,7 +106,7 @@ export interface InboxItem {
 }
 
 export type ExistingAppConnection = {
-  harness?: "codex" | "claude";
+  harness?: "claude";
   id: string;
   name: string;
   isAccessible: boolean | null;
@@ -116,18 +116,10 @@ export type ExistingAppConnection = {
   observed: boolean;
   directAuthorization: false;
 };
+/** Claude's own connections, by name and health only. Served by /setup/connections. */
 export type ConnectionDiscovery = {
-  version: 1;
-  harness: "codex";
-  harnesses?: Array<{ id: string; detail: string }>;
-  scope: "global";
-  status: "available" | "unavailable" | "unsupported" | "timeout" | "error";
-  checkedAt: string;
-  expiresAt: string;
-  runtimeFresh: boolean;
   apps: ExistingAppConnection[];
-  plugins?: Array<{ id: string; name: string; enabled: boolean }>;
-  truncated: boolean;
+  harnesses: Array<{ id: string; detail: string }>;
   detail: string;
 };
 export interface GmailLabel {

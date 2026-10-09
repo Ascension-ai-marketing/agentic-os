@@ -100,3 +100,28 @@ test("timers and refreshes never start the first import", async () => {
   expect(log).toEqual([]);
   expect((await all.status()).ranAt).toBeUndefined();
 });
+
+test("sources that are not connected say so without naming another app", async () => {
+  const all = memoryConnectAll(root(), {
+    native: {
+      status: async () => ({ providers: [{ id: "gmail", name: "Gmail", available: false }, { id: "outlook", name: "Outlook", available: false }] }),
+      sync: async () => ({ results: [] }),
+    },
+    backfill: { status: () => ({}), start: () => ({ started: [], status: {} }) } as any,
+    apps: { list: async () => ({ apps: [app("granola", { available: false }), app("notion", { available: false })] }), configure: () => {}, start: () => {} },
+  });
+  const lines = Object.fromEntries((await all.status()).steps.map((step) => [step.id, step.line]));
+  expect(lines).toMatchObject({ gmail: "Not connected yet", outlook: "Not connected yet", granola: "Not connected yet", notion: "Not connected yet" });
+});
+
+test("a saved history error does not outlive the account it came from", async () => {
+  const make = (available: boolean) =>
+    memoryConnectAll(root(), {
+      native: { status: async () => ({ providers: [{ id: "gmail", name: "Gmail", available }] }), sync: async () => ({ results: [] }) },
+      backfill: { status: () => ({ gmail: { status: "error", error: "Check its connection in another app.", imported: 0, since: "2025-09-28T00:00:00Z" } }), start: () => ({ started: [], status: {} }) } as any,
+      apps: { list: async () => ({ apps: [] }), configure: () => {}, start: () => {} },
+    });
+  const gmail = async (available: boolean) => (await make(available).status()).steps.find((step) => step.id === "gmail");
+  expect(await gmail(false)).toMatchObject({ state: "skipped", line: "Not connected yet" });
+  expect(await gmail(true)).toMatchObject({ state: "error", line: "Check its connection in another app." });
+});

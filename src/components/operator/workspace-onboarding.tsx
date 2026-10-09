@@ -41,7 +41,6 @@ import { PhotoIndexSetup } from "./photo-index-setup";
 import calendarLogo from "@/assets/logos/googlecalendar.svg";
 import { ProviderOrbit } from "./provider-orbit";
 import { ProfileLinks } from "./profile-links";
-import { SetupConnectionsSummary } from "./setup-connections-summary";
 import { ExistingConnectionsPanel } from "./account-connections";
 import {
   personalContext,
@@ -436,13 +435,7 @@ function SetupSocialLinks({
   );
 }
 
-export function ToolDiscovery({
-  compact = false,
-  showConnections = true,
-}: {
-  compact?: boolean;
-  showConnections?: boolean;
-}) {
+export function ToolDiscovery({ compact = false }: { compact?: boolean }) {
   const discovery = useQuery<{
     tools: Array<{ id: string; name: string; installed: boolean; detail: string }>;
     providers: Array<{ id: string; name: string; configured: boolean }>;
@@ -565,7 +558,6 @@ export function ToolDiscovery({
           ChatGPT detected. Add its export in Memory to bring your conversations here.
         </p>
       )}
-      {showConnections && <SetupConnectionsSummary />}
     </section>
   );
 }
@@ -1313,7 +1305,7 @@ export function WorkspaceOnboarding() {
                   Other AI tools
                   <ChevronDown size={14} />
                 </summary>
-                <ToolDiscovery compact showConnections={false} />
+                <ToolDiscovery compact />
               </details>
             </>
           )}

@@ -158,33 +158,6 @@
   font-size: 13px;
   padding: 20px 0;
 }
-.ws-codex-connections {
-  margin-top: 16px;
-}
-.ws-codex-connections > p {
-  margin: 12px 0;
-}
-.ws-codex-connections ul {
-  list-style: none;
-  margin: 12px 0;
-  padding: 0;
-}
-.ws-codex-connections li {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 5px 12px;
-  padding: 8px 0;
-  border-bottom: 1px solid #ffffff0b;
-}
-.ws-codex-connections li strong {
-  font-size: 11px;
-  font-weight: 500;
-}
-.ws-codex-connections li > span {
-  color: #a8a1b4;
-  font-size: 10px;
-}
 .ws-exit {
   display: flex;
   align-items: center;

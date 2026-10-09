@@ -84,7 +84,7 @@ export function memoryConnectAll(
     // are signed in to. Later runs (Refresh all, daily) keep your opt-outs.
     const first = !saved.ranAt;
     write({ ...saved, ranAt: new Date(now()).toISOString(), finishedAt: undefined });
-    // 1. Mail: the accounts already signed in to Codex, recent first, then a year back.
+    // 1. Mail: the accounts connected in this app, recent first, then a year back.
     let mail: MailProvider[] = [];
     try {
       const { providers } = await deps.native.status();
@@ -102,7 +102,7 @@ export function memoryConnectAll(
     } catch (error) {
       notes.mail = (error as Error).message;
     }
-    // Calendar: meetings from Google Calendar through Codex, when it is signed in.
+    // Calendar: meetings from Google Calendar, when the Google account is connected.
     if (deps.calendar) {
       try {
         const cal = await deps.calendar.status();
@@ -170,8 +170,9 @@ export function memoryConnectAll(
       const p = providers.find((x) => x.id === id);
       const b = back[id];
       const name = id === "gmail" ? "Gmail" : "Outlook";
-      if (!p?.available && !b) {
-        steps.push({ id, name, state: "skipped", line: "Not signed in to Codex" });
+      // An error saved while the account was connected says nothing useful once it is not.
+      if (!p?.available && (!b || b.status === "error")) {
+        steps.push({ id, name, state: "skipped", line: "Not connected yet" });
         continue;
       }
       if (b?.status === "running")
@@ -231,7 +232,7 @@ export function memoryConnectAll(
         steps.push({ id, name, state: "done", line: app.progress.added ? `${n(app.progress.added)} added` : "Up to date" });
       else if (id === "chatgpt" && !app.available)
         steps.push({ id, name, state: "skipped", line: notes.chatgpt || "Waiting for your export in Downloads" });
-      else if (!app.available) steps.push({ id, name, state: "skipped", line: "Not connected in Codex" });
+      else if (!app.available) steps.push({ id, name, state: "skipped", line: "Not connected yet" });
       else steps.push({ id, name, state: running ? "running" : "waiting", line: notes[id] || "Ready" });
     }
     const unfinished = apps.filter((a) => a.enabled && a.progress?.hasMore && !["granola", "notion", "chatgpt"].includes(a.id));

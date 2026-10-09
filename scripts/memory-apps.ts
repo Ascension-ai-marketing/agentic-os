@@ -924,7 +924,6 @@ export function memoryApps(options: {
   async function listing(force = false) {
     if (force) cache.clear();
     const connected = options.accountStatus ? await options.accountStatus() : { accounts: [] };
-    // Both checks share one Codex probe when they run together; in sequence a forced refresh would spawn it twice.
     const [granolaMethod, notionMethod] = await Promise.all([options.granolaConnection?.(force), options.notionConnection?.(force)]);
     const names: Record<MemoryAppId, string> = {
       codex: "Codex",

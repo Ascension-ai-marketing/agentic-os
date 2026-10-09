@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { connectedNotionPages, notionAvailable, notionPageDocument, notionRecentPages } from "./notion-connected";
+import { connectedNotionPages, notionAvailable, notionConnectionCheck, notionPageDocument, notionRecentPages } from "./notion-connected";
 import type { McpReader } from "./mcp-connection";
 
 const page = (id: string, title: string) => ({ type: "page", url: `https://app.notion.com/p/${id}?pvs=204`, title });
@@ -63,4 +63,39 @@ test("Notion is available only when both read tools are marked read-only", async
   expect(await notionAvailable(reader([tool("notion-list-recent-pages"), tool("notion-fetch")]))).toBe(true);
   expect(await notionAvailable(reader([tool("notion-list-recent-pages"), tool("notion-fetch", false)]))).toBe(false);
   expect(await notionAvailable(reader([tool("notion-fetch")]))).toBe(false);
+});
+
+describe("notionConnectionCheck", () => {
+  const readOnly = (name: string) => [name, { name, annotations: { readOnlyHint: true } }];
+  const tools = Object.fromEntries([readOnly("notion-list-recent-pages"), readOnly("notion-fetch")]);
+  function probe(options: { fail?: () => boolean } = {}) {
+    const state = { asked: 0, clock: 0, connected: true };
+    const read = (async (work: any) => { state.asked++; if (options.fail?.()) throw new Error("offline"); return work({ tools, call: async () => ({}) }); }) as McpReader;
+    return { state, check: notionConnectionCheck({ status: () => ({ connected: state.connected }), read }, () => state.clock) };
+  }
+  test("asks Notion at most once a minute, and again when forced", async () => {
+    const { state, check } = probe();
+    expect([await check(), await check(), state.asked]).toEqual(["mcp", "mcp", 1]);
+    state.clock = 61_000;
+    expect([await check(), state.asked]).toEqual(["mcp", 2]);
+    expect([await check(true), state.asked]).toEqual(["mcp", 3]);
+  });
+  test("a signed-out connection is never asked, and signing in again asks afresh", async () => {
+    const { state, check } = probe();
+    state.connected = false;
+    expect([await check(), state.asked]).toEqual([undefined, 0]);
+    state.connected = true;
+    expect([await check(), state.asked]).toEqual(["mcp", 1]);
+    state.connected = false;
+    expect(await check()).toBeUndefined();
+    state.connected = true;
+    expect([await check(), state.asked]).toEqual(["mcp", 2]);
+  });
+  test("a failed check is tried again after ten seconds, not on every poll", async () => {
+    let failing = true;
+    const { state, check } = probe({ fail: () => failing });
+    expect([await check(), await check(), state.asked]).toEqual([undefined, undefined, 1]);
+    failing = false; state.clock = 11_000;
+    expect([await check(), state.asked]).toEqual(["mcp", 2]);
+  });
 });

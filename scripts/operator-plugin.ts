@@ -8,7 +8,7 @@ import { extractChatAttachment } from "./chat-attachments";
 import { workspaceProfile } from "./workspace-profile";
 import { privacyPaneAction, setupDiscovery } from "./setup-discovery";
 import { openAIVoice } from "./openai-voice";
-import { connectedNotionPages, notionAvailable, NOTION_TOOLS } from "./notion-connected";
+import { connectedNotionPages, notionConnectionCheck, NOTION_TOOLS } from "./notion-connected";
 import { granolaApi } from "./granola-api";
 import { agentJobs } from "./agent-jobs";
 import { ceoRoutes } from "./ceo-routes";
@@ -674,10 +674,7 @@ export function operatorPlugin({
     notionConfigured: () => !!notionToken(),
     granolaConnection: async () => granola.configured() ? "api" : undefined,
     granolaNotes: async (cursor) => granola.notes(cursor),
-    notionConnection: async () => {
-      if (!mcp.notion.status().connected) return undefined;
-      try { return await notionAvailable(mcp.notion.read) ? "mcp" : undefined; } catch { return undefined; }
-    },
+    notionConnection: notionConnectionCheck(mcp.notion),
     notionPages: () => connectedNotionPages(mcp.notion.read),
     sourceEnabled: origin => brainEnabled(readBrainPreferences(root), origin),
     syncInfo: () => syncBusinessMemory(),

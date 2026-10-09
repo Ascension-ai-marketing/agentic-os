@@ -41,6 +41,22 @@ export async function notionAvailable(read: McpReader) {
   return read(async ({ tools }) => NOTION_TOOLS.every(name => tools[name]?.annotations?.readOnlyHint === true && tools[name]?.annotations?.destructiveHint !== true));
 }
 
+/** "mcp" when the signed-in connection can read pages. The Memory page polls this, so Notion is asked at most once a minute. */
+export function notionConnectionCheck(connection: { status: () => { connected: boolean }; read: McpReader }, now: () => number = Date.now) {
+  let cached: { until: number; value: "mcp" | undefined } | undefined, pending: Promise<"mcp" | undefined> | undefined;
+  return async (force = false) => {
+    if (!connection.status().connected) { cached = undefined; return undefined; }
+    if (force) cached = undefined;
+    if (cached && cached.until > now()) return cached.value;
+    pending ??= notionAvailable(connection.read).then(
+      ok => (cached = { until: now() + 60_000, value: ok ? "mcp" : undefined }).value,
+      // A failed check is not a sign-out; look again shortly.
+      () => (cached = { until: now() + 10_000, value: undefined }).value,
+    ).finally(() => { pending = undefined; });
+    return pending;
+  };
+}
+
 /** Recently edited pages through the app's own Notion connection. Read-only; pages that fail are skipped. */
 export async function connectedNotionPages(read: McpReader) {
   return read(async client => {

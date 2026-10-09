@@ -170,7 +170,7 @@ export function mcpConnection(options: {
     }
     return refreshing;
   }
-  async function rpc(method: string, params: Json, notification = false): Promise<Json> {
+  async function rpc(method: string, params: Json, notification = false, retried = false): Promise<Json> {
     const token = await accessToken(), id = randomUUID();
     let response: Response;
     try {
@@ -182,7 +182,17 @@ export function mcpConnection(options: {
     if (!response.ok) {
       await response.body?.cancel().catch(() => {});
       if ([401, 403, 404].includes(response.status)) sessionId = undefined;
-      throw fail(`${name} request failed (HTTP ${response.status}).`, response.status === 401 ? "sign_in_required" : "mcp_http_error");
+      if (response.status === 401) {
+        // The provider no longer accepts this sign-in: one refresh, then ask the user to sign in again.
+        const current = store.tokens;
+        if (!retried && current && (current.accessToken !== token || current.refreshToken)) {
+          if (current.accessToken === token) current.expiresAt = 0;
+          return rpc(method, params, notification, true);
+        }
+        if (current?.accessToken === token) { delete store.tokens; persist(); }
+        throw fail(`Your ${name} sign-in expired. Connect it again in Connections.`, "sign_in_required");
+      }
+      throw fail(`${name} request failed (HTTP ${response.status}).`, "mcp_http_error");
     }
     const nextSession = response.headers.get("mcp-session-id");
     if (nextSession && /^[\x21-\x7e]{1,1000}$/.test(nextSession)) sessionId = nextSession;

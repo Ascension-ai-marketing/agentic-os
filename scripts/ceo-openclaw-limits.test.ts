@@ -35,6 +35,12 @@ test("the work folder must be a folder of its own inside the person's home", () 
     expect(() => checkFolder(bad, HOME)).toThrow();
 });
 
+test("a work folder anywhere inside OpenClaw's own folder is refused", () => {
+  for (const bad of [`${HOME}/.openclaw`, `${HOME}/.openclaw/workspace`, `${HOME}/.openclaw/workspace/jarvis`, `${HOME}/.openclaw/agents/main/agent/`])
+    expect(() => checkFolder(bad, HOME)).toThrow("outside OpenClaw's own");
+  expect(checkFolder(`${HOME}/work/.openclaw-tasks`, HOME)).toBe(`${HOME}/work/.openclaw-tasks`);
+});
+
 test("an agreement is kept privately, read back, and withdrawn", () => {
   const root = temporary(), limits = openclawLimits(root, HOME);
   expect(limits.read()).toBeUndefined();

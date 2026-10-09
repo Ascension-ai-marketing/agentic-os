@@ -36,13 +36,14 @@ const RANGE = { minutes: [1, 60], tasksPerDay: [1, 50], dollarsPerDay: [0.5, 100
 
 const fileOf = (root: string) => join(root, ".operator-data", "ceo", "openclaw-limits.json");
 
-/** A folder inside the person's home, and not the home itself or one of the folders their own files live in. */
+/** A folder inside the person's home, and not the home itself, one of the folders their own files live in, or anywhere in OpenClaw's own. */
 export function checkFolder(folder: unknown, home = homedir()): string {
   if (typeof folder !== "string" || !isAbsolute(folder) || folder.includes("\0")) throw new Error("The work folder must be a full path.");
   const clean = normalize(folder).replace(/[\\/]+$/, "");
   const inside = clean.startsWith(home + sep) ? clean.slice(home.length + 1).split(sep) : [];
   if (!inside.length || inside.includes("..")) throw new Error("The work folder must be inside your home folder.");
-  if (inside.length === 1 && ["Desktop", "Documents", "Downloads", "Library", "Pictures", "Movies", "Music", ".ssh", ".openclaw"].includes(inside[0]))
+  if (inside[0] === ".openclaw") throw new Error("Pick a work folder outside OpenClaw's own folder, which its everyday agent reads.");
+  if (inside.length === 1 && ["Desktop", "Documents", "Downloads", "Library", "Pictures", "Movies", "Music", ".ssh"].includes(inside[0]))
     throw new Error("Pick a folder of its own for OpenClaw's work, not one your own files live in.");
   return clean;
 }

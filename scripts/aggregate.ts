@@ -3373,9 +3373,25 @@ async function main() {
   // OAuth — and the dashboard quietly falls back to sample prescriptions
   // forever. Detect it here so the UI can show an actionable fix-it banner
   // instead of the misleading "it'll appear after its first run" message.
+  const dreamPlist = join(HOME, "Library", "LaunchAgents", "com.claude-os.dream.plist");
+  // A plist on disk is not a running job: launchd forgets it after a failed
+  // load or a reinstall, and the Dream silently stops.
+  const dreamPlistUnloaded = (() => {
+    if (!IS_MACOS || !existsSync(dreamPlist)) return false;
+    try {
+      return Bun.spawnSync(["launchctl", "list", "com.claude-os.dream"]).exitCode !== 0;
+    } catch { return false; }
+  })();
+  // Outcome of the last run, written by scripts/run-dream.ts.
+  const dreamLastRun = (() => {
+    try {
+      const f = join(HOME, ".claude-os", "dreams", "last-run.json");
+      return existsSync(f) ? JSON.parse(readFileSync(f, "utf-8")) : null;
+    } catch { return null; }
+  })();
   const dreamCronScheduled = (() => {
     if (IS_MACOS) {
-      return existsSync(join(HOME, "Library", "LaunchAgents", "com.claude-os.dream.plist"));
+      return existsSync(dreamPlist) && !dreamPlistUnloaded;
     }
     if (IS_WIN) {
       try {
@@ -3389,14 +3405,24 @@ async function main() {
   type DreamHealth = "healthy" | "never_ran" | "silent_failure" | "stale";
   let dreamHealthStatus: DreamHealth;
   let dreamFixHint: string | undefined;
-  if (loadedDream && loadedDream.date) {
+  const lastRunFailed = dreamLastRun && dreamLastRun.ok === false && (!loadedDream?.date || String(dreamLastRun.date ?? "") > loadedDream.date);
+  const lastRunError = Array.isArray(dreamLastRun?.errors) && dreamLastRun.errors[0] ? String(dreamLastRun.errors[0]).slice(0, 200) : "";
+  if (lastRunFailed) {
+    dreamHealthStatus = loadedDream?.date ? "stale" : "silent_failure";
+    dreamFixHint = `Last Dream run failed${lastRunError ? `: ${lastRunError}` : ""}. Details in ~/.claude-os/dream-cron.log.`;
+  } else if (loadedDream && loadedDream.date) {
     const ageDays = (Date.now() - new Date(loadedDream.date).getTime()) / 86_400_000;
     if (ageDays > 3) {
       dreamHealthStatus = "stale";
-      dreamFixHint = "Last dream is more than 3 days old. Check ~/.claude-os/dream-cron.log.";
+      dreamFixHint = dreamPlistUnloaded
+        ? `The Dream schedule is installed but not loaded. Run \`launchctl load -w ${dreamPlist}\` or \`bun run install-dream\`.`
+        : "Last dream is more than 3 days old. Check ~/.claude-os/dream-cron.log.";
     } else {
       dreamHealthStatus = "healthy";
     }
+  } else if (dreamPlistUnloaded) {
+    dreamHealthStatus = "silent_failure";
+    dreamFixHint = `The Dream schedule is installed but not loaded. Run \`bun run install-dream\` again.`;
   } else if (!dreamCronScheduled) {
     dreamHealthStatus = "never_ran";
     dreamFixHint = "Install the daily Dream cron with `bun run install-dream`.";

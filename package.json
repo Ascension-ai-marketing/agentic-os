@@ -28,6 +28,7 @@
     "refresh:models": "bun run scripts/refresh-model-intel.ts",
     "install-dream": "bun run scripts/install-dream-cron.ts",
     "uninstall-dream": "bun run scripts/install-dream-cron.ts --uninstall",
+    "dream:check": "bun run scripts/run-dream.ts --check",
     "setup:assistant": "python3 scripts/install-assistant.py",
     "setup:voice": "bun run scripts/setup-voice.ts",
     "typecheck": "tsc --noEmit",
